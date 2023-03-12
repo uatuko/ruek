@@ -1,0 +1,14 @@
+# .gitignore
+#
+
+# build
+.build
+
+# local settings
+.local.env
+
+# temporary files
+*.swo
+*.swp
+*~
+tmp/
