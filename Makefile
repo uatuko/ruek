@@ -1,5 +1,7 @@
+PROTOSDIR = protos
 SOURCEDIR = src
 SOURCES  := $(shell find $(SOURCEDIR) -type f -name '*.h' -o -name '*.cpp')
+SOURCES  += $(shell find $(PROTOSDIR) -type f -name '*.proto')
 
 
 .SILENT: lint

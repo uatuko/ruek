@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package gatekeeper.v1;
+
+import "google/api/annotations.proto";
+
+service Gatekeeper {
+	rpc CreateIdentity(CreateIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			post : "/v1/identities"
+			body : "*"
+		};
+	}
+}
+
+message CreateIdentityRequest {
+	string iss = 2;
+	string sub = 3;
+}
+
+message Identity {
+	string id  = 1;
+	string iss = 2;
+	string sub = 3;
+}

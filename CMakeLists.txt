@@ -7,4 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(BUILD_SHARED_LIBS OFF)
 
+include(cmake/dependencies.cmake)
+include(cmake/googleapis.cmake)
+
+add_subdirectory(protos)
 add_subdirectory(src)
