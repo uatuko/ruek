@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package gatekeeper.v1;
+package gk.v1;
 
 import "google/api/annotations.proto";
 

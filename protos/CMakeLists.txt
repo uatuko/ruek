@@ -1,9 +1,9 @@
 # libprotos
-cmake_path(SET gatekeeper_proto ${CMAKE_CURRENT_SOURCE_DIR}/v1/gatekeeper.proto)
-cmake_path(SET gatekeeper_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/v1/gatekeeper.grpc.pb.h)
-cmake_path(SET gatekeeper_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/v1/gatekeeper.grpc.pb.cc)
-cmake_path(SET gatekeeper_header ${CMAKE_CURRENT_BINARY_DIR}/v1/gatekeeper.pb.h)
-cmake_path(SET gatekeeper_source ${CMAKE_CURRENT_BINARY_DIR}/v1/gatekeeper.pb.cc)
+cmake_path(SET gatekeeper_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/gatekeeper.proto)
+cmake_path(SET gatekeeper_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.h)
+cmake_path(SET gatekeeper_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.cc)
+cmake_path(SET gatekeeper_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb.h)
+cmake_path(SET gatekeeper_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb.cc)
 
 set(protos
 	${gatekeeper_proto}
@@ -38,7 +38,7 @@ add_library(protos
 )
 
 target_include_directories(protos
-	PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
+	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
 target_link_libraries(protos
@@ -46,5 +46,5 @@ target_link_libraries(protos
 	grpc++
 )
 
-add_library(gatekeeper::libprotos ALIAS protos)
+add_library(${PROJECT_NAME}::libprotos ALIAS protos)
 
