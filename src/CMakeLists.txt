@@ -1,3 +1,18 @@
+add_subdirectory(service)
+
+# service
+add_library(libservice INTERFACE)
+target_link_libraries(libservice
+	INTERFACE service
+)
+
+target_include_directories(libservice
+	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+add_library(${PROJECT_NAME}::service ALIAS libservice)
+
+
 # main
 add_executable(${PROJECT_NAME}
 	main.cpp
@@ -11,3 +26,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_link_libraries(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
 endif()
+
+target_link_libraries(${PROJECT_NAME}
+	PRIVATE
+		${PROJECT_NAME}::service
+		libviper::viper
+)
+

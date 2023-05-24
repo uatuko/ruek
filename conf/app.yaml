@@ -1,0 +1,5 @@
+app:
+  debug: true
+
+tcp:
+  address: localhost:7000
