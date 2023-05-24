@@ -1,10 +1,26 @@
+BUILDDIR = .build
+BINARY   = $(BUILDDIR)/bin/gatekeeper
+
 PROTOSDIR = protos
 SOURCEDIR = src
-SOURCES  := $(shell find $(SOURCEDIR) -type f -name '*.h' -o -name '*.cpp')
-SOURCES  += $(shell find $(PROTOSDIR) -type f -name '*.proto')
+
+SOURCES  := $(shell find $(PROTOSDIR) -type f -name '*.proto')
+SOURCES  += $(shell find $(SOURCEDIR) -type f -name '*.h' -o -name '*.cpp')
 
 
+.PHONY: $(BINARY) clean
 .SILENT: lint
+
+all: $(BINARY)
+
+$(BINARY): $(BUILDDIR)
+	cmake --build $(BUILDDIR)
+
+$(BUILDDIR):
+	cmake -B $(BUILDDIR) -G Ninja
+
+clean:
+	cmake --build $(BUILDDIR) --target clean
 
 lint:
 ifeq (, $(shell which clang-format))
