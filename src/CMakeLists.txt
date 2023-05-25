@@ -1,4 +1,17 @@
+add_subdirectory(err)
 add_subdirectory(service)
+
+# err
+add_library(liberr INTERFACE)
+target_link_libraries(liberr
+	INTERFACE err
+)
+
+target_include_directories(liberr
+	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+add_library(${PROJECT_NAME}::err ALIAS liberr)
 
 # service
 add_library(libservice INTERFACE)

@@ -38,3 +38,6 @@ lint\:fix:
 run: $(BINARY)
 	$(BINARY)
 
+test: $(BINARY)
+	ctest --test-dir .build
+

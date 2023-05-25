@@ -10,6 +10,8 @@ set(BUILD_SHARED_LIBS OFF)
 include(cmake/dependencies.cmake)
 include(cmake/googleapis.cmake)
 
+enable_testing()
+
 add_subdirectory(protos)
 add_subdirectory(src)
 
