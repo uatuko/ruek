@@ -35,3 +35,6 @@ lint\:ci:
 lint\:fix:
 	clang-format -style=file -i $(SOURCES)
 
+run: $(BINARY)
+	$(BINARY)
+
