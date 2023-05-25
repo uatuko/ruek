@@ -3,5 +3,9 @@
 #include "gk/v1/gatekeeper.grpc.pb.h"
 
 namespace service {
-class Grpc final : public gk::v1::Gatekeeper::CallbackService {};
+class Grpc final : public gk::v1::Gatekeeper::CallbackService {
+	grpc::ServerUnaryReactor *CreateIdentity(
+		grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
+		gk::v1::Identity *response) override;
+};
 } // namespace service
