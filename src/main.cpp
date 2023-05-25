@@ -4,11 +4,19 @@
 #include <grpcpp/server_builder.h>
 #include <viper/viper.h>
 
+#include "datastore/datastore.h"
 #include "service/grpc.h"
 
 int main() {
 	try {
 		viper::init("app", std::filesystem::current_path() / "conf");
+	} catch (const std::exception &e) {
+		std::cout << "[FATAL] " << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	try {
+		datastore::init();
 	} catch (const std::exception &e) {
 		std::cout << "[FATAL] " << e.what() << std::endl;
 		return EXIT_FAILURE;

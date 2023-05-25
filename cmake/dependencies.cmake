@@ -25,6 +25,16 @@ FetchContent_Declare(googletest
 )
 FetchContent_MakeAvailable(googletest)
 
+# libpqxx
+FetchContent_Declare(libpqxx
+	URL      https://github.com/jtv/libpqxx/archive/refs/tags/7.7.5.tar.gz
+	URL_HASH SHA256=c7dc3e8fa2eee656f2b6a8179d72f15db10e97a80dc4f173f806e615ea990973
+)
+
+set(BUILD_SHARED_LIBS OFF)
+set(SKIP_BUILD_TEST ON)
+FetchContent_MakeAvailable(libpqxx)
+
 # libviper
 FetchContent_Declare(libviper
 	URL      https://github.com/uditha-atukorala/libviper/archive/refs/tags/v0.3.1.tar.gz

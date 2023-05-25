@@ -1,5 +1,18 @@
+add_subdirectory(datastore)
 add_subdirectory(err)
 add_subdirectory(service)
+
+# datastore
+add_library(libdatastore INTERFACE)
+target_link_libraries(libdatastore
+	INTERFACE datastore
+)
+
+target_include_directories(libdatastore
+	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+add_library(${PROJECT_NAME}::datastore ALIAS libdatastore)
 
 # err
 add_library(liberr INTERFACE)
@@ -42,6 +55,7 @@ endif()
 
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE
+		${PROJECT_NAME}::datastore
 		${PROJECT_NAME}::service
 		libviper::viper
 )
