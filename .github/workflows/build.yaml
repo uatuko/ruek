@@ -1,0 +1,37 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }} using ${{ matrix.compiler }}
+    strategy:
+      matrix:
+        compiler:
+          - g++
+          - clang++
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure CMake
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            cmake -B .build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
+          else
+            cmake -B .build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release
+          fi
+      - name: Build
+        run: |
+          cmake --build .build --config Release
+      - name: Test
+        working-directory: ${{ github.workspace }}/.build
+        run: |
+          ctest -C Release
