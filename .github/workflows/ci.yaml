@@ -1,0 +1,74 @@
+name: CI
+on: push
+
+jobs:
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        env:
+          POSTGRES_DB: test-gatekeeper
+          POSTGRES_PASSWORD: gatekeeper
+          POSTGRES_USER: gatekeeper
+        image: postgres:14
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Setup lcov
+        run: |
+          version="1.16"
+          mkdir ${{ runner.temp }}/lcov-src && cd $_
+          curl -Ls https://github.com/linux-test-project/lcov/releases/download/v${version}/lcov-${version}.tar.gz | tar -xz
+          cd lcov-${version}
+          sudo make install
+      - uses: actions/checkout@v3
+      - name: Setup Postgres
+        run: psql < datastore/schema.sql
+        env:
+          PGDATABASE: test-gatekeeper
+          PGHOST: localhost
+          PGPASSWORD: gatekeeper
+          PGUSER: gatekeeper
+      - uses: actions/cache@v3
+        with:
+          path: .build/_deps
+          key: ${{ runner.arch }}_${{ runner.os }}-${{ hashFiles('cmake/dependencies.cmake') }}
+      - name: Configure CMake
+        run: cmake -B .build -DGATEKEEPER_ENABLE_COVERAGE=ON -DGATEKEEPER_ENABLE_TESTING=ON
+      - name: Build
+        run: cmake --build .build
+      - name: Test
+        working-directory: ${{ github.workspace }}/.build
+        run: ctest
+        env:
+          PGDATABASE: gatekeeper # `test-` will be added by test init steps
+          PGHOST: localhost
+          PGPASSWORD: gatekeeper
+          PGUSER: gatekeeper
+      - name: Generate code coverage reports
+        working-directory: ${{ github.workspace }}/.build
+        run: |
+          lcov --capture --directory src --output-file coverage.out
+          lcov --extract coverage.out "${{ github.workspace }}/src/*" --output-file coverage.out
+          lcov --remove coverage.out "*_test*" --output-file coverage.out
+          lcov --list coverage.out
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ${{ github.workspace }}/.build
+          fail_ci_if_error: true
+          files: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: make lint:ci
