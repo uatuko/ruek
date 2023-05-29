@@ -47,7 +47,7 @@ jobs:
         working-directory: ${{ github.workspace }}/.build
         run: ctest
         env:
-          PGDATABASE: gatekeeper # `test-` will be added by test init steps
+          PGDATABASE: test-gatekeeper
           PGHOST: localhost
           PGPASSWORD: gatekeeper
           PGUSER: gatekeeper
