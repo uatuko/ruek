@@ -7,10 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(BUILD_SHARED_LIBS OFF)
 
+option(GATEKEEPER_ENABLE_COVERAGE "Enable code coverage" OFF)
+option(GATEKEEPER_ENABLE_TESTING "Enable testing" OFF)
+
 include(cmake/dependencies.cmake)
 include(cmake/googleapis.cmake)
 
-enable_testing()
+if (GATEKEEPER_ENABLE_TESTING)
+	enable_testing()
+endif()
 
 add_subdirectory(protos)
 add_subdirectory(src)

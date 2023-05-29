@@ -17,7 +17,7 @@ $(BINARY): $(BUILDDIR)
 	cmake --build $(BUILDDIR)
 
 $(BUILDDIR):
-	cmake -B $(BUILDDIR) -G Ninja
+	cmake -B $(BUILDDIR) -G Ninja -DGATEKEEPER_ENABLE_COVERAGE=ON -DGATEKEEPER_ENABLE_TESTING=ON
 
 clean:
 	cmake --build $(BUILDDIR) --target clean

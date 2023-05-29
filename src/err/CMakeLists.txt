@@ -8,15 +8,27 @@ target_sources(err
 )
 
 # tests
-add_executable(err_tests
-	basic_error_test.cpp
-)
+if (GATEKEEPER_ENABLE_TESTING)
+	add_executable(err_tests
+		basic_error_test.cpp
+	)
 
-target_link_libraries(err_tests
-	PRIVATE err
-	PRIVATE gtest_main
-)
+	target_link_libraries(err_tests
+		PRIVATE err
+		PRIVATE gtest_main
+	)
 
-include(GoogleTest)
-gtest_discover_tests(err_tests)
+	if (GATEKEEPER_ENABLE_COVERAGE)
+		target_compile_options(err_tests
+			PRIVATE --coverage
+		)
+
+		target_link_options(err_tests
+			PRIVATE -fprofile-arcs
+		)
+	endif()
+
+	include(GoogleTest)
+	gtest_discover_tests(err_tests)
+endif()
 

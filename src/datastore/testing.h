@@ -8,7 +8,13 @@ namespace datastore {
 namespace testing {
 void setup() {
 	const char *v = std::getenv("PGDATABASE");
-	init("dbname=test-" + std::string(v == nullptr ? "" : v));
+
+	auto dbname = std::string(v == nullptr ? "" : v);
+	if (!dbname.starts_with("test-")) {
+		dbname = "test-" + dbname;
+	}
+
+	init("dbname=" + dbname);
 }
 
 void teardown() {}
