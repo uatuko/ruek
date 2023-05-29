@@ -16,16 +16,28 @@ target_link_libraries(datastore
 )
 
 # tests
-add_executable(datastore_tests
-	identities_test.cpp
-)
+if (GATEKEEPER_ENABLE_TESTING)
+	add_executable(datastore_tests
+		identities_test.cpp
+	)
 
-target_link_libraries(datastore_tests
-	PRIVATE
-		datastore
-		gtest_main
-)
+	target_link_libraries(datastore_tests
+		PRIVATE
+			datastore
+			gtest_main
+	)
 
-include(GoogleTest)
-gtest_discover_tests(datastore_tests)
+	if (GATEKEEPER_ENABLE_COVERAGE)
+		target_compile_options(datastore_tests
+			PRIVATE --coverage
+		)
+
+		target_link_options(datastore_tests
+			PRIVATE -fprofile-arcs
+		)
+	endif()
+
+	include(GoogleTest)
+	gtest_discover_tests(datastore_tests)
+endif()
 
