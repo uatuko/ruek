@@ -14,6 +14,7 @@ SOURCES  += $(shell find $(SOURCEDIR) -type f -name '*.h' -o -name '*.cpp')
 all: $(BINARY)
 
 $(BINARY): $(BUILDDIR)
+	find $(BUILDDIR)/$(SOURCEDIR) -name "*.gcda" -exec rm {} +
 	cmake --build $(BUILDDIR)
 
 $(BUILDDIR):
