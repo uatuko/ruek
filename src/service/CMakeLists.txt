@@ -1,6 +1,5 @@
 add_library(service
-	grpc.cpp
-	grpc.h
+	grpc.cpp grpc.h
 )
 
 target_link_libraries(service

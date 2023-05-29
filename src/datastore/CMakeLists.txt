@@ -1,9 +1,7 @@
 add_library(datastore
 	datastore.h
-	identities.cpp
-	identities.h
-	pg.cpp
-	pg.h
+	identities.cpp identities.h
+	pg.cpp pg.h
 	testing.h
 )
 
