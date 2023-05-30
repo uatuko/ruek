@@ -7,9 +7,12 @@ create table if not exists collections (
 );
 
 create table if not exists identities (
-	_id  text    primary key,
+	_id  text    not null,
 	_rev integer not null,
-	sub  text    not null
+	sub  text    not null,
+
+	constraint "identities.pkey" primary key (_id),
+	constraint "identities.key-sub" unique (sub)
 );
 
 alter table identities add constraint "key-sub" unique (sub);
