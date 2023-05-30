@@ -14,6 +14,16 @@ target_link_libraries(datastore
 		libxid::xid
 )
 
+if (GATEKEEPER_ENABLE_COVERAGE)
+	target_compile_options(datastore
+		PRIVATE --coverage
+	)
+
+	target_link_options(datastore
+		INTERFACE -fprofile-arcs
+	)
+endif()
+
 # tests
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(datastore_tests
