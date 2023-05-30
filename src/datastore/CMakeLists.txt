@@ -27,6 +27,7 @@ endif()
 # tests
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(datastore_tests
+		collections_test.cpp
 		identities_test.cpp
 	)
 
