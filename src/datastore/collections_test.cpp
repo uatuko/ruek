@@ -64,6 +64,20 @@ TEST_F(CollectionsTest, members) {
 		EXPECT_THROW(collection.add("invalid-member"), err::DatastoreInvalidCollectionOrMember);
 	}
 
+	// Error: add member to invalid collection
+	{
+		const auto collection = datastore::Collection({
+			.name = "name:CollectionsTest.members-add_invalid-collection",
+		});
+
+		const auto identity = datastore::Identity({
+			.sub = "sub:CollectionsTest.members-add_invalid-collection",
+		});
+		EXPECT_NO_THROW(identity.store());
+
+		EXPECT_THROW(collection.add(identity.id()), err::DatastoreInvalidCollectionOrMember);
+	}
+
 	// Error: duplicate member
 	{
 		const auto collection = datastore::Collection({
