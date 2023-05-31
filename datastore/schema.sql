@@ -15,4 +15,15 @@ create table if not exists identities (
 	constraint "identities.key-sub" unique (sub)
 );
 
-alter table identities add constraint "key-sub" unique (sub);
+create table if not exists collection_members (
+	collection_id text,
+	identity_id   text,
+
+	constraint "collection_members.pkey" primary key (collection_id, identity_id),
+	constraint "collection_members.fkey-collection_id" foreign key (collection_id)
+		references collections(_id)
+		on delete cascade,
+	constraint "collection_members.fkey-identity_id" foreign key (identity_id)
+		references identities(_id)
+		on delete cascade
+);

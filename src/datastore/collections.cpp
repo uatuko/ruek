@@ -19,6 +19,26 @@ Collection::Collection(Data &&data) noexcept : _data(std::move(data)), _rev(0) {
 	}
 }
 
+void Collection::add(const member_t &mid) const {
+	std::string_view qry = R"(
+		insert into collection_members (
+			collection_id,
+			identity_id
+		) values (
+			$1::text,
+			$2::text
+		);
+	)";
+
+	try {
+		pg::exec(qry, id(), mid);
+	} catch (pg::fkey_violation_t &) {
+		throw err::DatastoreInvalidCollectionOrMember();
+	} catch (pg::unique_violation_t &) {
+		throw err::DatastoreDuplicateCollectionMember();
+	}
+}
+
 void Collection::store() const {
 	std::string_view qry = R"(
 		insert into collections as t (
@@ -49,5 +69,36 @@ void Collection::store() const {
 	}
 
 	_rev = res.at(0, 0).as<int>();
+}
+
+const Collection::members_t Collection::members() const {
+	std::string_view qry = R"(
+		select
+			identity_id
+		from
+			collection_members
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id());
+
+	members_t members;
+	for (const auto &r : res) {
+		members.insert(r["identity_id"].as<member_t>());
+	}
+
+	return members;
+}
+
+void Collection::remove(const member_t &mid) const {
+	std::string_view qry = R"(
+		delete from collection_members
+		where
+			collection_id = $1::text and
+			identity_id = $2::text;
+	)";
+
+	pg::exec(qry, id(), mid);
 }
 } // namespace datastore

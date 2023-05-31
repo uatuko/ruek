@@ -9,6 +9,7 @@ using row_t    = pqxx::row;
 using result_t = pqxx::result;
 using nontxn_t = pqxx::nontransaction;
 
+using fkey_violation_t   = pqxx::foreign_key_violation;
 using unique_violation_t = pqxx::unique_violation;
 
 std::shared_ptr<conn_t> conn();

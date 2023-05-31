@@ -11,12 +11,12 @@ protected:
 		datastore::testing::setup();
 
 		// Clear data
-		datastore::pg::exec("truncate table identities;");
+		datastore::pg::exec("truncate table identities cascade;");
 	}
 
 	void SetUp() {
 		// Clear data before each test
-		datastore::pg::exec("delete from identities;");
+		datastore::pg::exec("delete from identities cascade;");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
