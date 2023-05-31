@@ -10,7 +10,7 @@ namespace datastore {
 class Collection {
 public:
 	using member_t  = std::string;
-	using members_t = std::set<const member_t>;
+	using members_t = std::set<member_t>;
 
 	struct Data {
 		std::string id;
