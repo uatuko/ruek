@@ -5,12 +5,28 @@ package gk.v1;
 import "google/api/annotations.proto";
 
 service Gatekeeper {
+	rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
+		option (google.api.http) = {
+			post : "/v1/collections"
+			body : "*"
+		};
+	}
+
 	rpc CreateIdentity(CreateIdentityRequest) returns (Identity) {
 		option (google.api.http) = {
 			post : "/v1/identities"
 			body : "*"
 		};
 	}
+}
+
+message Collection {
+	string id   = 1;
+	string name = 2;
+}
+
+message CreateCollectionRequest {
+	string name = 1;
 }
 
 message CreateIdentityRequest {
