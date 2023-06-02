@@ -1,5 +1,7 @@
 #include "grpc.h"
 
+#include "err/errors.h"
+
 #include "mappers.h"
 
 namespace service {
@@ -11,8 +13,10 @@ grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	auto identity = map(request);
 	try {
 		identity.store();
+	} catch (const err::DatastoreDuplicateIdentity &e) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::ALREADY_EXISTS, e.what()));
+		return reactor;
 	} catch (...) {
-		// FIXME: capture errors
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data."));
 		return reactor;
 	}
