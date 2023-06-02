@@ -14,12 +14,10 @@ service Gatekeeper {
 }
 
 message CreateIdentityRequest {
-	string iss = 2;
-	string sub = 3;
+	string sub = 1;
 }
 
 message Identity {
 	string id  = 1;
-	string iss = 2;
-	string sub = 3;
+	string sub = 2;
 }
