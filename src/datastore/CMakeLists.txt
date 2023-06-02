@@ -1,4 +1,5 @@
 add_library(datastore
+	collections.cpp collections.h
 	datastore.h
 	identities.cpp identities.h
 	pg.cpp pg.h
@@ -13,9 +14,20 @@ target_link_libraries(datastore
 		libxid::xid
 )
 
+if (GATEKEEPER_ENABLE_COVERAGE)
+	target_compile_options(datastore
+		PRIVATE --coverage
+	)
+
+	target_link_options(datastore
+		INTERFACE -fprofile-arcs
+	)
+endif()
+
 # tests
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(datastore_tests
+		collections_test.cpp
 		identities_test.cpp
 	)
 
