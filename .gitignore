@@ -6,6 +6,7 @@
 
 # local settings
 .local.env
+.vscode/
 
 # temporary files
 *.swo
