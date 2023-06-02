@@ -23,7 +23,7 @@ protected:
 };
 
 TEST_F(IdentitiesTest, discard) {
-	const auto identity = datastore::Identity({
+	const datastore::Identity identity({
 		.sub = "sub:IdentitiesTest.discard",
 	});
 
@@ -45,7 +45,7 @@ TEST_F(IdentitiesTest, discard) {
 TEST_F(IdentitiesTest, rev) {
 	// Success: revision increment
 	{
-		const auto identity = datastore::Identity({
+		const datastore::Identity identity({
 			.sub = "sub:IdentitiesTest.rev",
 		});
 
@@ -58,7 +58,7 @@ TEST_F(IdentitiesTest, rev) {
 
 	// Error: revision mismatch
 	{
-		const auto identity = datastore::Identity({
+		const datastore::Identity identity({
 			.sub = "sub:IdentitiesTest.rev-mismatch",
 		});
 
@@ -82,7 +82,7 @@ TEST_F(IdentitiesTest, rev) {
 }
 
 TEST_F(IdentitiesTest, store) {
-	const auto identity = datastore::Identity({
+	const datastore::Identity identity({
 		.sub = "sub:IdentitiesTest.store",
 	});
 
@@ -110,7 +110,7 @@ TEST_F(IdentitiesTest, store) {
 
 	// Error: duplicate `sub`
 	{
-		const auto duplicate = datastore::Identity({
+		const datastore::Identity duplicate({
 			.sub = identity.sub(),
 		});
 

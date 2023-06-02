@@ -26,12 +26,12 @@ protected:
 TEST_F(CollectionsTest, members) {
 	// Success: add member
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.members-add",
 		});
 		EXPECT_NO_THROW(collection.store());
 
-		const auto identity = datastore::Identity({
+		const datastore::Identity identity({
 			.sub = "sub:CollectionsTest.members-add",
 		});
 		EXPECT_NO_THROW(identity.store());
@@ -56,7 +56,7 @@ TEST_F(CollectionsTest, members) {
 
 	// Error: add invalid member
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.members-add_invalid-member",
 		});
 		EXPECT_NO_THROW(collection.store());
@@ -66,11 +66,11 @@ TEST_F(CollectionsTest, members) {
 
 	// Error: add member to invalid collection
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.members-add_invalid-collection",
 		});
 
-		const auto identity = datastore::Identity({
+		const datastore::Identity identity({
 			.sub = "sub:CollectionsTest.members-add_invalid-collection",
 		});
 		EXPECT_NO_THROW(identity.store());
@@ -80,12 +80,12 @@ TEST_F(CollectionsTest, members) {
 
 	// Error: duplicate member
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.members-add_duplicate-member",
 		});
 		EXPECT_NO_THROW(collection.store());
 
-		const auto identity = datastore::Identity({
+		const datastore::Identity identity({
 			.sub = "sub:CollectionsTest.members-add_duplicate-member",
 		});
 		EXPECT_NO_THROW(identity.store());
@@ -96,7 +96,7 @@ TEST_F(CollectionsTest, members) {
 
 	// Success: list members
 	{
-		const auto collections = datastore::Collections({
+		const datastore::Collections collections({
 			{{.name = "name:CollectionsTest.members-list[0]"}},
 			{{.name = "name:CollectionsTest.members-list[1]"}},
 		});
@@ -105,7 +105,7 @@ TEST_F(CollectionsTest, members) {
 			EXPECT_NO_THROW(collection.store());
 		}
 
-		const auto identities = datastore::Identities({
+		const datastore::Identities identities({
 			{{.sub = "sub:CollectionsTest.members-list[0]"}},
 			{{.sub = "sub:CollectionsTest.members-list[1]"}},
 		});
@@ -138,12 +138,12 @@ TEST_F(CollectionsTest, members) {
 
 	// Success: remove member
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.members-remove",
 		});
 		EXPECT_NO_THROW(collection.store());
 
-		const auto identity = datastore::Identity({
+		const datastore::Identity identity({
 			.sub = "sub:CollectionsTest.members-remove",
 		});
 		EXPECT_NO_THROW(identity.store());
@@ -160,7 +160,7 @@ TEST_F(CollectionsTest, members) {
 
 	// Success: remove invalid member
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.members-remove_invalid-member",
 		});
 		EXPECT_NO_THROW(collection.store());
@@ -172,7 +172,7 @@ TEST_F(CollectionsTest, members) {
 TEST_F(CollectionsTest, rev) {
 	// Success: revision increment
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.rev",
 		});
 
@@ -185,7 +185,7 @@ TEST_F(CollectionsTest, rev) {
 
 	// Error: revision mismatch
 	{
-		const auto collection = datastore::Collection({
+		const datastore::Collection collection({
 			.name = "name:CollectionsTest.rev-mismatch",
 		});
 
@@ -209,7 +209,7 @@ TEST_F(CollectionsTest, rev) {
 }
 
 TEST_F(CollectionsTest, store) {
-	const auto collection = datastore::Collection({
+	const datastore::Collection collection({
 		.name = "name:CollectionsTest.store",
 	});
 
