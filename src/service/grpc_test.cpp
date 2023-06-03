@@ -12,16 +12,39 @@ protected:
 		datastore::testing::setup();
 
 		// Clear data
+		datastore::pg::exec("truncate table collections cascade;");
 		datastore::pg::exec("truncate table identities cascade;");
 	}
 
 	void SetUp() {
 		// Clear data before each test
+		datastore::pg::exec("delete from collections cascade;");
 		datastore::pg::exec("delete from identities cascade;");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
+
+TEST_F(GrpcTest, CreateCollection) {
+	service::Grpc service;
+
+	// Success: create collection
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::CreateCollectionRequest request;
+		request.set_name("sub:GrpcTest.CreateCollection");
+
+		auto reactor = service.CreateCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(request.name(), response.name());
+		EXPECT_FALSE(response.id().empty());
+	}
+}
 
 TEST_F(GrpcTest, CreateIdentity) {
 	service::Grpc service;
