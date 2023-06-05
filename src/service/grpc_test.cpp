@@ -35,7 +35,7 @@ TEST_F(GrpcTest, CreateCollection) {
 		gk::v1::Collection                    response;
 
 		gk::v1::CreateCollectionRequest request;
-		request.set_name("sub:GrpcTest.CreateCollection");
+		request.set_name("name:GrpcTest.CreateCollection");
 
 		auto reactor = service.CreateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
