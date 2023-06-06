@@ -169,6 +169,37 @@ TEST_F(CollectionsTest, members) {
 	}
 }
 
+TEST_F(CollectionsTest, retrieve) {
+	// Success: retrieve data
+	{
+		std::string_view qry = R"(
+			insert into collections (
+				_id,
+				_rev,
+				name
+			) values (
+				$1::text,
+				$2::integer,
+				$3::text
+			);
+		)";
+
+		try {
+			datastore::pg::exec(
+				qry, "_id:CollectionsTest.retrieve", 2248, "name:CollectionsTest.retrieve");
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		auto collection = datastore::RetrieveCollection("_id:CollectionsTest.retrieve");
+		EXPECT_EQ(2248, collection.rev());
+		EXPECT_EQ("name:CollectionsTest.retrieve", collection.name());
+	}
+
+	// Error: not found
+	{ EXPECT_THROW(datastore::RetrieveCollection("_id:dummy"), err::DatastoreCollectionNotFound); }
+}
+
 TEST_F(CollectionsTest, rev) {
 	// Success: revision increment
 	{
