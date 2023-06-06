@@ -1,6 +1,7 @@
 #include <grpcpp/test/default_reactor_test_peer.h>
 #include <gtest/gtest.h>
 
+#include "datastore/collections.h"
 #include "datastore/identities.h"
 #include "datastore/testing.h"
 
@@ -43,6 +44,43 @@ TEST_F(GrpcTest, CreateCollection) {
 		EXPECT_EQ(peer.reactor(), reactor);
 		EXPECT_EQ(request.name(), response.name());
 		EXPECT_FALSE(response.id().empty());
+	}
+
+	// Success: create collection with `id`
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::CreateCollectionRequest request;
+		request.set_id("id:GrpcTest.CreateCollection");
+		request.set_name("name:GrpcTest.CreateCollection");
+
+		auto reactor = service.CreateCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(request.id(), response.id());
+		EXPECT_EQ(request.name(), response.name());
+	}
+
+	// Error: duplicate `id`
+	{
+		const datastore::Collection collection({.name = "name:GrpcTest.CreateCollection"});
+		EXPECT_NO_THROW(collection.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::CreateCollectionRequest request;
+		request.set_id(collection.id());
+		request.set_name("name:GrpcTest.CreateCollection-duplicate");
+
+		auto reactor = service.CreateCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
+		EXPECT_EQ("Duplicate collection id", peer.test_status().error_message());
 	}
 }
 

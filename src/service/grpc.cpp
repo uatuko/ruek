@@ -10,6 +10,22 @@ grpc::ServerUnaryReactor *Grpc::CreateCollection(
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
 
+	if (request->has_id()) {
+		try {
+			auto col = datastore::RetrieveCollection(request->id());
+
+			reactor->Finish(
+				grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Duplicate collection id"));
+			return reactor;
+		} catch (const err::DatastoreCollectionNotFound &) {
+			// Collection with an `id` matching the request `id` doesn't exist, we can continue with
+			// creating a new one.
+		} catch (...) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+			return reactor;
+		}
+	}
+
 	auto collection = map(request);
 	try {
 		collection.store();
