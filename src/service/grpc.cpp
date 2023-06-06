@@ -45,6 +45,22 @@ grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
+	if (request->has_id()) {
+		try {
+			auto idn = datastore::RetrieveIdentity(request->id());
+
+			reactor->Finish(
+				grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Duplicate identity id"));
+			return reactor;
+		} catch (const err::DatastoreIdentityNotFound &) {
+			// Identity with an `id` matching the request `id` doesn't exist, we can continue with
+			// creating a new one.
+		} catch (...) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+			return reactor;
+		}
+	}
+
 	auto identity = map(request);
 	try {
 		identity.store();

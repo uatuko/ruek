@@ -104,7 +104,51 @@ TEST_F(GrpcTest, CreateIdentity) {
 		EXPECT_FALSE(response.id().empty());
 	}
 
-	// Error: duplicate identity
+	// Success: create identity with `id`
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::CreateIdentityRequest request;
+		request.set_id("id:GrpcTest.CreateCollection-with_id");
+		request.set_sub("sub:GrpcTest.CreateCollection-with_id");
+
+		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(request.id(), response.id());
+		EXPECT_EQ(request.sub(), response.sub());
+	}
+
+	// Error: duplicate `id`
+	{
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.CreateIdentity-duplicate_id",
+		});
+
+		try {
+			identity.store();
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::CreateIdentityRequest request;
+		request.set_id(identity.id());
+		request.set_sub("sub:GrpcTest.CreateCollection-duplicate_id");
+
+		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
+		EXPECT_EQ("Duplicate identity id", peer.test_status().error_message());
+	}
+
+	// Error: duplicate `sub`
 	{
 		const datastore::Identity identity({
 			.sub = "sub:GrpcTest.CreateIdentity-duplicate",
