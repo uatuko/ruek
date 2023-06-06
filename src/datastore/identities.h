@@ -18,6 +18,8 @@ public:
 	Identity(const Data &data) noexcept;
 	Identity(Data &&data) noexcept;
 
+	Identity(const pg::row_t &t);
+
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
 

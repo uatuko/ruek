@@ -42,6 +42,37 @@ TEST_F(IdentitiesTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
+TEST_F(IdentitiesTest, retrieve) {
+	// Success: retrieve data
+	{
+		std::string_view qry = R"(
+			insert into identities (
+				_id,
+				_rev,
+				sub
+			) values (
+				$1::text,
+				$2::integer,
+				$3::text
+			);
+		)";
+
+		try {
+			datastore::pg::exec(
+				qry, "_id:IdentitiesTest.retrieve", 2308, "sub:IdentitiesTest.retrieve");
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		auto identity = datastore::RetrieveIdentity("_id:IdentitiesTest.retrieve");
+		EXPECT_EQ(2308, identity.rev());
+		EXPECT_EQ("sub:IdentitiesTest.retrieve", identity.sub());
+	}
+
+	// Error: not found
+	{ EXPECT_THROW(datastore::RetrieveIdentity("_id:dummy"), err::DatastoreIdentityNotFound); }
+}
+
 TEST_F(IdentitiesTest, rev) {
 	// Success: revision increment
 	{
