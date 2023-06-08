@@ -19,6 +19,13 @@ Identity::Identity(Data &&data) noexcept : _data(std::move(data)), _rev(0) {
 	}
 }
 
+Identity::Identity(const pg::row_t &r) :
+	_data({
+		.id  = r["_id"].as<std::string>(),
+		.sub = r["sub"].as<std::string>(),
+	}),
+	_rev(r["_rev"].as<int>()) {}
+
 void Identity::discard() const {
 	std::string_view qry = R"(
 		delete from identities
@@ -65,5 +72,24 @@ void Identity::store() const {
 	}
 
 	_rev = res.at(0, 0).as<int>();
+}
+
+Identity RetrieveIdentity(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			sub
+		from identities
+		where
+			_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+	if (res.empty()) {
+		throw err::DatastoreIdentityNotFound();
+	}
+
+	return Identity(res[0]);
 }
 } // namespace datastore

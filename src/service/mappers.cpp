@@ -3,12 +3,14 @@
 namespace service {
 datastore::Collection map(const gk::v1::CreateCollectionRequest *from) {
 	return {{
+		.id   = from->id(),
 		.name = from->name(),
 	}};
 }
 
 datastore::Identity map(const gk::v1::CreateIdentityRequest *from) {
 	return {{
+		.id  = from->id(),
 		.sub = from->sub(),
 	}};
 }

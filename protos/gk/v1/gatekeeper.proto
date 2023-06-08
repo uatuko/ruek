@@ -66,11 +66,13 @@ message Collection {
 }
 
 message CreateCollectionRequest {
-	string name = 1;
+	optional string id   = 1;
+	string          name = 2;
 }
 
 message CreateIdentityRequest {
-	string sub = 1;
+	optional string id  = 1;
+	string          sub = 2;
 }
 
 message Identity {
