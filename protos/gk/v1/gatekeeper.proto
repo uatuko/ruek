@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Gatekeeper {
-	rpc CreateAccessPolicy(AccessPolicy) returns (AccessPolicy) {
+	rpc CreateAccessPolicy(CreateAccessPolicyRequest) returns (AccessPolicy) {
 		option (google.api.http) = {
 			post : "/v1/access-policies"
 			body : "*"
@@ -27,14 +27,14 @@ service Gatekeeper {
 		};
 	}
 
-	rpc CreateRbacPolicy(RbacPolicy) returns (RbacPolicy) {
+	rpc CreateRbacPolicy(CreateRbacPolicyRequest) returns (RbacPolicy) {
 		option (google.api.http) = {
 			post : "/v1/rbac-policies"
 			body : "*"
 		};
 	}
 
-	rpc CreateRole(Role) returns (Role) {
+	rpc CreateRole(CreateRoleRequest) returns (Role) {
 		option (google.api.http) = {
 			post : "/v1/roles"
 			body : "*"
@@ -65,6 +65,14 @@ message Collection {
 	string name = 2;
 }
 
+message CreateAccessPolicyRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated Principal        principals = 3;
+	repeated AccessPolicyRule rules      = 4;
+}
+
 message CreateCollectionRequest {
 	optional string id   = 1;
 	string          name = 2;
@@ -73,6 +81,21 @@ message CreateCollectionRequest {
 message CreateIdentityRequest {
 	optional string id  = 1;
 	string          sub = 2;
+}
+
+message CreateRbacPolicyRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated Principal      principals = 3;
+	repeated RbacPolicyRule rules      = 4;
+}
+
+message CreateRoleRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated string permissions = 3;
 }
 
 message Identity {
