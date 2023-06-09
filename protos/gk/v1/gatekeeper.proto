@@ -6,6 +6,20 @@ import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Gatekeeper {
+	rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse) {
+		option (google.api.http) = {
+			post : "/v1/access:check"
+			body : "*"
+		};
+	}
+
+	rpc CheckRbac(CheckRbacRequest) returns (CheckRbacResponse) {
+		option (google.api.http) = {
+			post : "/v1/rbac:check"
+			body : "*"
+		};
+	}
+
 	rpc CreateAccessPolicy(CreateAccessPolicyRequest) returns (AccessPolicy) {
 		option (google.api.http) = {
 			post : "/v1/access-policies"
@@ -60,6 +74,24 @@ message AccessPolicyRule {
 	string                 resource = 1;
 }
 
+message CheckAccessRequest {
+	string identity_id = 1;
+	string resource    = 2;
+}
+
+message CheckAccessResponse {
+	repeated Policy policies = 1;
+}
+
+message CheckRbacRequest {
+	string identity_id = 1;
+	string permission  = 2;
+}
+
+message CheckRbacResponse {
+	repeated Policy policies = 1;
+}
+
 message Collection {
 	string id   = 1;
 	string name = 2;
@@ -101,6 +133,11 @@ message CreateRoleRequest {
 message Identity {
 	string id  = 1;
 	string sub = 2;
+}
+
+message Policy {
+	google.protobuf.Struct attrs = 2;
+	string                 id    = 1;
 }
 
 message Principal {
