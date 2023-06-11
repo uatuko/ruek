@@ -17,6 +17,6 @@ if (GATEKEEPER_ENABLE_TESTING)
 	enable_testing()
 endif()
 
-add_subdirectory(protos)
+add_subdirectory(proto)
 add_subdirectory(src)
 
