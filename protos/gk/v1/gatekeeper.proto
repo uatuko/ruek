@@ -60,6 +60,20 @@ service Gatekeeper {
 			get : "/v1/roles?_limit={page.limit}&_offset={page.offset}"
 		};
 	}
+
+	rpc SetRolePermissions(SetRolePermissionsRequest) returns (Role) {
+		option (google.api.http) = {
+			put : "/v1/roles/{id}/permissions"
+			body : "*"
+		};
+	}
+
+	rpc UpdateRole(UpdateRoleRequest) returns (Role) {
+		option (google.api.http) = {
+			patch : "/v1/roles/{id}"
+			body : "*"
+		};
+	}
 }
 
 enum PrincipalType {
@@ -187,4 +201,15 @@ message Role {
 	string name = 2;
 
 	repeated string permissions = 3;
+}
+
+message SetRolePermissionsRequest {
+	string id = 1;
+
+	repeated string permissions = 2;
+}
+
+message UpdateRoleRequest {
+	string id   = 1;
+	string name = 2;
 }
