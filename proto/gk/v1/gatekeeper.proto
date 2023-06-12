@@ -37,10 +37,62 @@ service Gatekeeper {
 		};
 	}
 
+	rpc RetrieveCollection(RetrieveCollectionRequest) returns (Collection) {
+		option (google.api.http) = {
+			get : "/v1/collections/{id}"
+		};
+	}
+
+	rpc UpdateCollection(UpdateCollectionRequest) returns (Collection) {
+		option (google.api.http) = {
+			patch : "/v1/collections/{id}"
+			body : "*"
+		};
+	}
+
+	// Collections - members
+	rpc AddCollectionMember(AddCollectionMemberRequest) returns (AddCollectionMemberResponse) {
+		option (google.api.http) = {
+			post : "/v1/collections/{collection_id}/members"
+			body : "*"
+		};
+	}
+
+	rpc ListCollectionMembers(ListCollectionMembersRequest) returns (ListCollectionMembersResponse) {
+		option (google.api.http) = {
+			get : "/v1/collections/{id}/members?_limit={page.limit}&_offset={page.offset}"
+		};
+	}
+
+	rpc RemoveCollectionMember(RemoveCollectionMemberRequest) returns (RemoveCollectionMemberResponse) {
+		option (google.api.http) = {
+			delete : "/v1/collections/{collection_id}/members/{identity_id}"
+		};
+	}
+
 	// Identities
 	rpc CreateIdentity(CreateIdentityRequest) returns (Identity) {
 		option (google.api.http) = {
 			post : "/v1/identities"
+			body : "*"
+		};
+	}
+
+	rpc LookupIdentities(LookupIdentitiesRequest) returns (LookupIdentitiesResponse) {
+		option (google.api.http) = {
+			get : "/v1/identities"
+		};
+	}
+
+	rpc RetrieveIdentity(RetrieveIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			get : "/v1/identities/{id}"
+		};
+	}
+
+	rpc UpdateIdentity(UpdateIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			patch : "/v1/identities/{id}"
 			body : "*"
 		};
 	}
@@ -64,6 +116,12 @@ service Gatekeeper {
 	rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
 		option (google.api.http) = {
 			get : "/v1/roles?_limit={page.limit}&_offset={page.offset}"
+		};
+	}
+
+	rpc RetrieveRole(RetrieveRoleRequest) returns (Role) {
+		option (google.api.http) = {
+			get : "/v1/roles/{id}"
 		};
 	}
 
@@ -148,6 +206,41 @@ message CreateCollectionRequest {
 	string          name = 2;
 }
 
+message RetrieveCollectionRequest {
+	string id = 1;
+}
+
+message UpdateCollectionRequest {
+	string          id   = 1;
+	optional string name = 2;
+}
+
+// Collections - members
+message AddCollectionMemberRequest {
+	string collection_id = 1;
+	string identity_id   = 2;
+}
+
+message AddCollectionMemberResponse {}
+
+message ListCollectionMembersRequest {
+	string id = 1;
+
+	optional Page page = 2;
+}
+
+message ListCollectionMembersResponse {
+	repeated Identity data = 1;
+	Meta              meta = 2;
+}
+
+message RemoveCollectionMemberRequest {
+	string collection_id = 1;
+	string identity_id   = 2;
+}
+
+message RemoveCollectionMemberResponse {}
+
 // Identities
 message Identity {
 	string id  = 1;
@@ -157,6 +250,25 @@ message Identity {
 message CreateIdentityRequest {
 	optional string id  = 1;
 	string          sub = 2;
+}
+
+message LookupIdentitiesRequest {
+	optional string sub = 1;
+}
+
+message LookupIdentitiesResponse {
+	repeated Identity data = 1;
+	Meta              meta = 2;
+}
+
+message RetrieveIdentityRequest {
+	string id = 1;
+}
+
+message UpdateIdentityRequest {
+	string id = 1;
+
+	optional string sub = 2;
 }
 
 // RBAC policies
@@ -212,6 +324,10 @@ message ListRolesRequest {
 message ListRolesResponse {
 	repeated Role data = 1;
 	Meta          meta = 2;
+}
+
+message RetrieveRoleRequest {
+	string id = 1;
 }
 
 message SetRolePermissionsRequest {
