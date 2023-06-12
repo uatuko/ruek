@@ -87,6 +87,26 @@ enum PrincipalType {
 	identity   = 1;
 }
 
+message Meta {
+	optional Page page = 1;
+}
+
+message Page {
+	optional uint32 limit  = 1;
+	optional uint64 offset = 2;
+}
+
+message Policy {
+	google.protobuf.Struct attrs = 2;
+	string                 id    = 1;
+}
+
+message Principal {
+	PrincipalType type = 1;
+	string        id   = 2;
+}
+
+// Access policies
 message AccessPolicy {
 	string id   = 1;
 	string name = 2;
@@ -109,20 +129,6 @@ message CheckAccessResponse {
 	repeated Policy policies = 1;
 }
 
-message CheckRbacRequest {
-	string identity_id = 1;
-	string permission  = 2;
-}
-
-message CheckRbacResponse {
-	repeated Policy policies = 1;
-}
-
-message Collection {
-	string id   = 1;
-	string name = 2;
-}
-
 message CreateAccessPolicyRequest {
 	optional string id   = 1;
 	string          name = 2;
@@ -131,9 +137,21 @@ message CreateAccessPolicyRequest {
 	repeated AccessPolicyRule rules      = 4;
 }
 
+// Collections
+message Collection {
+	string id   = 1;
+	string name = 2;
+}
+
 message CreateCollectionRequest {
 	optional string id   = 1;
 	string          name = 2;
+}
+
+// Identities
+message Identity {
+	string id  = 1;
+	string sub = 2;
 }
 
 message CreateIdentityRequest {
@@ -141,54 +159,7 @@ message CreateIdentityRequest {
 	string          sub = 2;
 }
 
-message CreateRbacPolicyRequest {
-	optional string id   = 1;
-	string          name = 2;
-
-	repeated Principal      principals = 3;
-	repeated RbacPolicyRule rules      = 4;
-}
-
-message CreateRoleRequest {
-	optional string id   = 1;
-	string          name = 2;
-
-	repeated string permissions = 3;
-}
-
-message Identity {
-	string id  = 1;
-	string sub = 2;
-}
-
-message ListRolesRequest {
-	optional Page page = 1;
-}
-
-message ListRolesResponse {
-	repeated Role data = 1;
-	Meta          meta = 2;
-}
-
-message Meta {
-	optional Page page = 1;
-}
-
-message Page {
-	optional uint32 limit  = 1;
-	optional uint64 offset = 2;
-}
-
-message Policy {
-	google.protobuf.Struct attrs = 2;
-	string                 id    = 1;
-}
-
-message Principal {
-	PrincipalType type = 1;
-	string        id   = 2;
-}
-
+// RBAC policies
 message RbacPolicy {
 	string id   = 1;
 	string name = 2;
@@ -202,11 +173,45 @@ message RbacPolicyRule {
 	string                 role_id = 1;
 }
 
+message CheckRbacRequest {
+	string identity_id = 1;
+	string permission  = 2;
+}
+
+message CheckRbacResponse {
+	repeated Policy policies = 1;
+}
+
+message CreateRbacPolicyRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated Principal      principals = 3;
+	repeated RbacPolicyRule rules      = 4;
+}
+
+// Roles
 message Role {
 	string id   = 1;
 	string name = 2;
 
 	repeated string permissions = 3;
+}
+
+message CreateRoleRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated string permissions = 3;
+}
+
+message ListRolesRequest {
+	optional Page page = 1;
+}
+
+message ListRolesResponse {
+	repeated Role data = 1;
+	Meta          meta = 2;
 }
 
 message SetRolePermissionsRequest {
