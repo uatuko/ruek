@@ -1,0 +1,342 @@
+syntax = "proto3";
+
+package gk.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+service Gatekeeper {
+	// Access control checks
+	rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse) {
+		option (google.api.http) = {
+			post : "/v1/access:check"
+			body : "*"
+		};
+	}
+
+	rpc CheckRbac(CheckRbacRequest) returns (CheckRbacResponse) {
+		option (google.api.http) = {
+			post : "/v1/rbac:check"
+			body : "*"
+		};
+	}
+
+	// Access policies
+	rpc CreateAccessPolicy(CreateAccessPolicyRequest) returns (AccessPolicy) {
+		option (google.api.http) = {
+			post : "/v1/access-policies"
+			body : "*"
+		};
+	}
+
+	// Collections
+	rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
+		option (google.api.http) = {
+			post : "/v1/collections"
+			body : "*"
+		};
+	}
+
+	rpc RetrieveCollection(RetrieveCollectionRequest) returns (Collection) {
+		option (google.api.http) = {
+			get : "/v1/collections/{id}"
+		};
+	}
+
+	rpc UpdateCollection(UpdateCollectionRequest) returns (Collection) {
+		option (google.api.http) = {
+			patch : "/v1/collections/{id}"
+			body : "*"
+		};
+	}
+
+	// Collections - members
+	rpc AddCollectionMember(AddCollectionMemberRequest) returns (AddCollectionMemberResponse) {
+		option (google.api.http) = {
+			post : "/v1/collections/{collection_id}/members"
+			body : "*"
+		};
+	}
+
+	rpc ListCollectionMembers(ListCollectionMembersRequest) returns (ListCollectionMembersResponse) {
+		option (google.api.http) = {
+			get : "/v1/collections/{id}/members?_limit={page.limit}&_offset={page.offset}"
+		};
+	}
+
+	rpc RemoveCollectionMember(RemoveCollectionMemberRequest) returns (RemoveCollectionMemberResponse) {
+		option (google.api.http) = {
+			delete : "/v1/collections/{collection_id}/members/{identity_id}"
+		};
+	}
+
+	// Identities
+	rpc CreateIdentity(CreateIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			post : "/v1/identities"
+			body : "*"
+		};
+	}
+
+	rpc LookupIdentities(LookupIdentitiesRequest) returns (LookupIdentitiesResponse) {
+		option (google.api.http) = {
+			get : "/v1/identities"
+		};
+	}
+
+	rpc RetrieveIdentity(RetrieveIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			get : "/v1/identities/{id}"
+		};
+	}
+
+	rpc UpdateIdentity(UpdateIdentityRequest) returns (Identity) {
+		option (google.api.http) = {
+			patch : "/v1/identities/{id}"
+			body : "*"
+		};
+	}
+
+	// RBAC policies
+	rpc CreateRbacPolicy(CreateRbacPolicyRequest) returns (RbacPolicy) {
+		option (google.api.http) = {
+			post : "/v1/rbac-policies"
+			body : "*"
+		};
+	}
+
+	// Roles
+	rpc CreateRole(CreateRoleRequest) returns (Role) {
+		option (google.api.http) = {
+			post : "/v1/roles"
+			body : "*"
+		};
+	}
+
+	rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
+		option (google.api.http) = {
+			get : "/v1/roles?_limit={page.limit}&_offset={page.offset}"
+		};
+	}
+
+	rpc RetrieveRole(RetrieveRoleRequest) returns (Role) {
+		option (google.api.http) = {
+			get : "/v1/roles/{id}"
+		};
+	}
+
+	rpc SetRolePermissions(SetRolePermissionsRequest) returns (Role) {
+		option (google.api.http) = {
+			put : "/v1/roles/{id}/permissions"
+			body : "*"
+		};
+	}
+
+	rpc UpdateRole(UpdateRoleRequest) returns (Role) {
+		option (google.api.http) = {
+			patch : "/v1/roles/{id}"
+			body : "*"
+		};
+	}
+}
+
+enum PrincipalType {
+	collection = 0;
+	identity   = 1;
+}
+
+message Meta {
+	optional Page page = 1;
+}
+
+message Page {
+	optional uint32 limit  = 1;
+	optional uint64 offset = 2;
+}
+
+message Policy {
+	google.protobuf.Struct attrs = 2;
+	string                 id    = 1;
+}
+
+message Principal {
+	PrincipalType type = 1;
+	string        id   = 2;
+}
+
+// Access policies
+message AccessPolicy {
+	string id   = 1;
+	string name = 2;
+
+	repeated Principal        principals = 3;
+	repeated AccessPolicyRule rules      = 4;
+}
+
+message AccessPolicyRule {
+	google.protobuf.Struct attrs    = 2;
+	string                 resource = 1;
+}
+
+message CheckAccessRequest {
+	string identity_id = 1;
+	string resource    = 2;
+}
+
+message CheckAccessResponse {
+	repeated Policy policies = 1;
+}
+
+message CreateAccessPolicyRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated Principal        principals = 3;
+	repeated AccessPolicyRule rules      = 4;
+}
+
+// Collections
+message Collection {
+	string id   = 1;
+	string name = 2;
+}
+
+message CreateCollectionRequest {
+	optional string id   = 1;
+	string          name = 2;
+}
+
+message RetrieveCollectionRequest {
+	string id = 1;
+}
+
+message UpdateCollectionRequest {
+	string          id   = 1;
+	optional string name = 2;
+}
+
+// Collections - members
+message AddCollectionMemberRequest {
+	string collection_id = 1;
+	string identity_id   = 2;
+}
+
+message AddCollectionMemberResponse {}
+
+message ListCollectionMembersRequest {
+	string id = 1;
+
+	optional Page page = 2;
+}
+
+message ListCollectionMembersResponse {
+	repeated Identity data = 1;
+	Meta              meta = 2;
+}
+
+message RemoveCollectionMemberRequest {
+	string collection_id = 1;
+	string identity_id   = 2;
+}
+
+message RemoveCollectionMemberResponse {}
+
+// Identities
+message Identity {
+	string id  = 1;
+	string sub = 2;
+}
+
+message CreateIdentityRequest {
+	optional string id  = 1;
+	string          sub = 2;
+}
+
+message LookupIdentitiesRequest {
+	optional string sub = 1;
+}
+
+message LookupIdentitiesResponse {
+	repeated Identity data = 1;
+	Meta              meta = 2;
+}
+
+message RetrieveIdentityRequest {
+	string id = 1;
+}
+
+message UpdateIdentityRequest {
+	string id = 1;
+
+	optional string sub = 2;
+}
+
+// RBAC policies
+message RbacPolicy {
+	string id   = 1;
+	string name = 2;
+
+	repeated Principal      principals = 3;
+	repeated RbacPolicyRule rules      = 4;
+}
+
+message RbacPolicyRule {
+	google.protobuf.Struct attrs   = 2;
+	string                 role_id = 1;
+}
+
+message CheckRbacRequest {
+	string identity_id = 1;
+	string permission  = 2;
+}
+
+message CheckRbacResponse {
+	repeated Policy policies = 1;
+}
+
+message CreateRbacPolicyRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated Principal      principals = 3;
+	repeated RbacPolicyRule rules      = 4;
+}
+
+// Roles
+message Role {
+	string id   = 1;
+	string name = 2;
+
+	repeated string permissions = 3;
+}
+
+message CreateRoleRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated string permissions = 3;
+}
+
+message ListRolesRequest {
+	optional Page page = 1;
+}
+
+message ListRolesResponse {
+	repeated Role data = 1;
+	Meta          meta = 2;
+}
+
+message RetrieveRoleRequest {
+	string id = 1;
+}
+
+message SetRolePermissionsRequest {
+	string id = 1;
+
+	repeated string permissions = 2;
+}
+
+message UpdateRoleRequest {
+	string id   = 1;
+	string name = 2;
+}

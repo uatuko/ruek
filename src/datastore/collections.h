@@ -22,6 +22,8 @@ public:
 	Collection(const Data &data) noexcept;
 	Collection(Data &&data) noexcept;
 
+	Collection(const pg::row_t &t);
+
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
 
@@ -39,4 +41,6 @@ private:
 };
 
 using Collections = std::vector<Collection>;
+
+Collection RetrieveCollection(const std::string &id);
 } // namespace datastore

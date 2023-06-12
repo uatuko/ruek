@@ -1,4 +1,4 @@
-# libprotos
+# libproto
 cmake_path(SET gatekeeper_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/gatekeeper.proto)
 cmake_path(SET gatekeeper_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.h)
 cmake_path(SET gatekeeper_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.cc)
@@ -33,18 +33,18 @@ add_custom_command(
 		${protos}
 )
 
-add_library(protos
+add_library(proto
 	${sources}
 )
 
-target_include_directories(protos
+target_include_directories(proto
 	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
-target_link_libraries(protos
+target_link_libraries(proto
 	googleapis
 	grpc++
 )
 
-add_library(${PROJECT_NAME}::libprotos ALIAS protos)
+add_library(${PROJECT_NAME}::libproto ALIAS proto)
 

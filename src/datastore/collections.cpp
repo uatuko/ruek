@@ -19,6 +19,13 @@ Collection::Collection(Data &&data) noexcept : _data(std::move(data)), _rev(0) {
 	}
 }
 
+Collection::Collection(const pg::row_t &r) :
+	_data({
+		.id   = r["_id"].as<std::string>(),
+		.name = r["name"].as<std::string>(),
+	}),
+	_rev(r["_rev"].as<int>()) {}
+
 void Collection::add(const member_t &mid) const {
 	std::string_view qry = R"(
 		insert into collection_members (
@@ -100,5 +107,24 @@ void Collection::remove(const member_t &mid) const {
 	)";
 
 	pg::exec(qry, id(), mid);
+}
+
+Collection RetrieveCollection(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			name
+		from collections
+		where
+			_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+	if (res.empty()) {
+		throw err::DatastoreCollectionNotFound();
+	}
+
+	return Collection(res[0]);
 }
 } // namespace datastore

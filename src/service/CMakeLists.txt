@@ -5,7 +5,7 @@ add_library(service
 
 target_link_libraries(service
 	PUBLIC
-		${PROJECT_NAME}::libprotos
+		${PROJECT_NAME}::libproto
 	PRIVATE
 		${PROJECT_NAME}::datastore
 )

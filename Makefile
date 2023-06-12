@@ -1,10 +1,10 @@
 BUILDDIR = .build
 BINARY   = $(BUILDDIR)/bin/gatekeeper
 
-PROTOSDIR = protos
+PROTODIR  = proto
 SOURCEDIR = src
 
-SOURCES  := $(shell find $(PROTOSDIR) -type f -name '*.proto')
+SOURCES  := $(shell find $(PROTODIR) -type f -name '*.proto')
 SOURCES  += $(shell find $(SOURCEDIR) -type f -name '*.h' -o -name '*.cpp')
 
 
