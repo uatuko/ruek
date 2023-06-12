@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Gatekeeper {
+	// Access control checks
 	rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse) {
 		option (google.api.http) = {
 			post : "/v1/access:check"
@@ -20,6 +21,7 @@ service Gatekeeper {
 		};
 	}
 
+	// Access policies
 	rpc CreateAccessPolicy(CreateAccessPolicyRequest) returns (AccessPolicy) {
 		option (google.api.http) = {
 			post : "/v1/access-policies"
@@ -27,6 +29,7 @@ service Gatekeeper {
 		};
 	}
 
+	// Collections
 	rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
 		option (google.api.http) = {
 			post : "/v1/collections"
@@ -34,6 +37,7 @@ service Gatekeeper {
 		};
 	}
 
+	// Identities
 	rpc CreateIdentity(CreateIdentityRequest) returns (Identity) {
 		option (google.api.http) = {
 			post : "/v1/identities"
@@ -41,6 +45,7 @@ service Gatekeeper {
 		};
 	}
 
+	// RBAC policies
 	rpc CreateRbacPolicy(CreateRbacPolicyRequest) returns (RbacPolicy) {
 		option (google.api.http) = {
 			post : "/v1/rbac-policies"
@@ -48,6 +53,7 @@ service Gatekeeper {
 		};
 	}
 
+	// Roles
 	rpc CreateRole(CreateRoleRequest) returns (Role) {
 		option (google.api.http) = {
 			post : "/v1/roles"
