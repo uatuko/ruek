@@ -11,6 +11,7 @@ jobs:
   build:
     name: Build on ${{ matrix.os }} using ${{ matrix.compiler }}
     strategy:
+      fail-fast: false
       matrix:
         compiler:
           - g++
