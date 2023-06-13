@@ -9,6 +9,7 @@ set(BUILD_SHARED_LIBS OFF)
 
 option(GATEKEEPER_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(GATEKEEPER_ENABLE_TESTING "Enable testing" OFF)
+option(GATEKEEPER_FAVOUR_SYSTEM_GRPC "Favour system installed gRPC over building from source" ON)
 
 include(cmake/dependencies.cmake)
 include(cmake/googleapis.cmake)

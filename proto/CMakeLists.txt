@@ -22,14 +22,14 @@ set(sources
 add_custom_command(
 	OUTPUT ${headers} ${sources}
 	DEPENDS ${protos}
-	COMMAND $<TARGET_FILE:protoc>
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE}
 	ARGS
 		--proto_path=${CMAKE_CURRENT_SOURCE_DIR}
 		--proto_path=${googleapis_SOURCE_DIR}
-		--proto_path=${protobuf_include_dir}
+		--proto_path=${Protobuf_INCLUDE_DIR}
 		--cpp_out=${CMAKE_CURRENT_BINARY_DIR}
 		--grpc_out=${CMAKE_CURRENT_BINARY_DIR}
-		--plugin=protoc-gen-grpc=$<TARGET_FILE:grpc_cpp_plugin>
+		--plugin=protoc-gen-grpc=${gRPC_CPP_PLUGIN_EXECUTABLE}
 		${protos}
 )
 
@@ -43,7 +43,7 @@ target_include_directories(proto
 
 target_link_libraries(proto
 	googleapis
-	grpc++
+	gRPC::grpc++
 )
 
 add_library(${PROJECT_NAME}::libproto ALIAS proto)
