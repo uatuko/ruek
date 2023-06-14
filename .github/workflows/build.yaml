@@ -19,10 +19,6 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-        exclude:
-          # ubuntu-22.04 v20230507.1 seems to have issues with static linking
-          - os: ubuntu-latest
-            compiler: clang++
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
