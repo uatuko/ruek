@@ -25,10 +25,10 @@ set(googleapis_sources
 add_custom_command(
 	OUTPUT ${googleapis_headers} ${googleapis_sources}
 	DEPENDS ${googleapis_protos}
-	COMMAND $<TARGET_FILE:protoc>
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE}
 	ARGS
 		--proto_path=${googleapis_SOURCE_DIR}
-		--proto_path=${protobuf_include_dir}
+		--proto_path=${Protobuf_INCLUDE_DIR}
 		--cpp_out=${CMAKE_CURRENT_BINARY_DIR}
 		${googleapis_protos}
 )
@@ -39,6 +39,6 @@ add_library(googleapis
 
 target_include_directories(googleapis
 	PUBLIC ${CMAKE_CURRENT_BINARY_DIR}
-	PRIVATE ${protobuf_include_dir}
+	PRIVATE ${Protobuf_INCLUDE_DIR}
 )
 

@@ -49,7 +49,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	LINK_SEARCH_END_STATIC ON
 )
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	target_link_libraries(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
 endif()
 

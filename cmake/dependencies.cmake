@@ -1,15 +1,43 @@
 include(FetchContent)
 
 # grpc & protobuf
-message(STATUS "Fetching gRPC and dependencies (this can take a while)")
-FetchContent_Declare(grpc
-	GIT_REPOSITORY https://github.com/grpc/grpc
-	GIT_TAG        v1.47.5
-)
-FetchContent_MakeAvailable(grpc)
-message(STATUS "Fetching gRPC and dependencies - done")
+if (GATEKEEPER_FAVOUR_SYSTEM_GRPC)
+	find_package(gRPC 1.48.0)
+endif()
 
-get_target_property(protobuf_include_dir protobuf::libprotoc INTERFACE_INCLUDE_DIRECTORIES)
+if (gRPC_FOUND)
+	message(STATUS "Using gRPC v${gRPC_VERSION}")
+
+	find_package(Protobuf REQUIRED)
+	find_program(gRPC_CPP_PLUGIN_EXECUTABLE
+		grpc_cpp_plugin
+		DOC "gRPC C++ plugin for protoc"
+	)
+else()
+	message(STATUS "Fetching gRPC and dependencies (this can take a while)")
+	FetchContent_Declare(grpc
+		GIT_REPOSITORY https://github.com/grpc/grpc
+		GIT_TAG        v1.48.4
+	)
+
+	set(gRPC_BUILD_GRPC_CSHARP_PLUGIN OFF)
+	set(gRPC_BUILD_GRPC_NODE_PLUGIN OFF)
+	set(gRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN OFF)
+	set(gRPC_BUILD_GRPC_PHP_PLUGIN OFF)
+	set(gRPC_BUILD_GRPC_PYTHON_PLUGIN OFF)
+	set(gRPC_BUILD_GRPC_RUBY_PLUGIN OFF)
+
+	FetchContent_MakeAvailable(grpc)
+
+	# Ensure `FetchContent` outputs are aligned with `find_package` outputs
+	set(Protobuf_PROTOC_EXECUTABLE $<TARGET_FILE:protobuf::protoc>)
+	get_target_property(Protobuf_INCLUDE_DIR protobuf::libprotoc INTERFACE_INCLUDE_DIRECTORIES)
+
+	add_library(gRPC::grpc++ ALIAS grpc++)
+	set(gRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
+
+	message(STATUS "Fetching gRPC and dependencies - done")
+endif()
 
 # googleapis
 FetchContent_Declare(googleapis
