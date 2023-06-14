@@ -20,11 +20,11 @@ if (GATEKEEPER_ENABLE_TESTING)
 
 	if (GATEKEEPER_ENABLE_COVERAGE)
 		target_compile_options(err_tests
-			PRIVATE --coverage
+			PRIVATE -fprofile-instr-generate -fcoverage-mapping
 		)
 
 		target_link_options(err_tests
-			PRIVATE -fprofile-arcs
+			PRIVATE -fprofile-instr-generate
 		)
 	endif()
 
