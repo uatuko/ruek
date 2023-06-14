@@ -1,6 +1,7 @@
-BUILDDIR = .build
-BINDIR   = $(BUILDDIR)/bin
-BINARY   = $(BINDIR)/gatekeeper
+BUILDDIR  = .build
+BINDIR    = $(BUILDDIR)/bin
+BINARY    = $(BINDIR)/gatekeeper
+BUILDFILE = $(BUILDDIR)/build.ninja
 
 PROTODIR  = proto
 SOURCEDIR = src
@@ -24,15 +25,15 @@ ifeq (, $(llvm-profdata))
 endif
 
 
-.PHONY: clean
+.PHONY: $(BINARY) all clean coverage coverage\:lcov lint lint\:ci lint\:fix run test
 .SILENT: coverage lint
 
 all: $(BINARY)
 
-$(BINARY): $(BUILDDIR)
+$(BINARY): $(BUILDFILE)
 	cmake --build $(BUILDDIR)
 
-$(BUILDDIR):
+$(BUILDFILE):
 	cmake -B $(BUILDDIR) -G Ninja -DGATEKEEPER_ENABLE_COVERAGE=ON -DGATEKEEPER_ENABLE_TESTING=ON
 
 clean:
