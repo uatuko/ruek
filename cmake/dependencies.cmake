@@ -2,13 +2,13 @@ include(FetchContent)
 
 # grpc & protobuf
 if (GATEKEEPER_FAVOUR_SYSTEM_GRPC)
-	find_package(Protobuf)
 	find_package(gRPC 1.48.0)
 endif()
 
 if (gRPC_FOUND)
 	message(STATUS "Using gRPC v${gRPC_VERSION}")
 
+	find_package(Protobuf REQUIRED)
 	find_program(gRPC_CPP_PLUGIN_EXECUTABLE
 		grpc_cpp_plugin
 		DOC "gRPC C++ plugin for protoc"
