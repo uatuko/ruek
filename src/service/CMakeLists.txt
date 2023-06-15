@@ -12,11 +12,11 @@ target_link_libraries(service
 
 if (GATEKEEPER_ENABLE_COVERAGE)
 	target_compile_options(service
-		PRIVATE --coverage
+		PRIVATE -fprofile-instr-generate -fcoverage-mapping
 	)
 
 	target_link_options(service
-		INTERFACE -fprofile-arcs
+		INTERFACE -fprofile-instr-generate
 	)
 endif()
 
@@ -35,11 +35,11 @@ if (GATEKEEPER_ENABLE_TESTING)
 
 	if (GATEKEEPER_ENABLE_COVERAGE)
 		target_compile_options(service_tests
-			PRIVATE --coverage
+			PRIVATE -fprofile-instr-generate -fcoverage-mapping
 		)
 
 		target_link_options(service_tests
-			PRIVATE -fprofile-arcs
+			PRIVATE -fprofile-instr-generate
 		)
 	endif()
 

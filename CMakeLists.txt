@@ -11,6 +11,15 @@ option(GATEKEEPER_ENABLE_COVERAGE "Enable code coverage" OFF)
 option(GATEKEEPER_ENABLE_TESTING "Enable testing" OFF)
 option(GATEKEEPER_FAVOUR_SYSTEM_GRPC "Favour system installed gRPC over building from source" ON)
 
+if (GATEKEEPER_ENABLE_COVERAGE)
+	if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+		message(FATAL_ERROR
+			"Code coverage is only available with clang. "
+			"Can't continue with GATEKEEPER_ENABLE_COVERAGE=ON."
+		)
+	endif()
+endif()
+
 include(cmake/dependencies.cmake)
 include(cmake/googleapis.cmake)
 
