@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 
+#include <viper/viper.h>
+
 #include "datastore.h"
 
 namespace datastore {
@@ -14,8 +16,19 @@ inline config conf() {
 		dbname = "test-" + dbname;
 	}
 
+	viper::init("app", TEST_CONF_PATH);
+	auto conf = *viper::conf();
+
 	return {
-		.pg = {.opts = "dbname=" + dbname},
+		.pg =
+			{
+				.opts = "dbname=" + dbname,
+			},
+		.redis =
+			{
+				.host = conf["redis.host"].get<std::string>(),
+				.port = static_cast<int>(conf["redis.port"].get<long>()),
+			},
 	};
 }
 

@@ -1,5 +1,9 @@
 app:
   debug: true
 
+redis:
+  host: localhost
+  port: 6379
+
 tcp:
   address: localhost:7000

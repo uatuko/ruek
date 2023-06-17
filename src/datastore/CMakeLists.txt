@@ -5,7 +5,6 @@ add_library(datastore
 	identities.cpp identities.h
 	pg.cpp pg.h
 	redis.cpp redis.h
-	testing.h
 )
 
 target_link_libraries(datastore
@@ -29,6 +28,16 @@ endif()
 
 # tests
 if (GATEKEEPER_ENABLE_TESTING)
+	target_sources(datastore
+		PRIVATE
+			testing.h
+	)
+
+	target_link_libraries(datastore
+		PUBLIC
+			libviper::viper
+	)
+
 	add_executable(datastore_tests
 		collections_test.cpp
 		identities_test.cpp
