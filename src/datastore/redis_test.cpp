@@ -22,6 +22,12 @@ TEST(redis, cmd) {
 
 		EXPECT_STREQ("PONG", reply->str);
 	}
+
+	// Error - command error
+	{
+		auto conn = datastore::redis::conn();
+		EXPECT_THROW(conn.cmd("set"), err::DatastoreRedisCommandError);
+	}
 }
 
 TEST(redis, concurrency) {

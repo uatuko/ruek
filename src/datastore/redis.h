@@ -5,6 +5,8 @@
 
 #include <hiredis.h>
 
+#include "err/errors.h"
+
 #include "config.h"
 
 namespace datastore {
@@ -19,9 +21,15 @@ public:
 	connection(const context_t &ptr, lock_t &&lock) noexcept : _ctx(ptr), _lock(std::move(lock)) {}
 
 	template <typename... Args> inline reply_t cmd(const std::string_view str, Args &&...args) {
-		return reply_t(
+		reply_t reply(
 			static_cast<reply_t::element_type *>(redisCommand(ctx(), str.data(), args...)),
 			freeReplyObject);
+
+		if (!reply || reply->type == REDIS_REPLY_ERROR) {
+			throw err::DatastoreRedisCommandError();
+		}
+
+		return reply;
 	}
 
 private:

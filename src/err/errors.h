@@ -3,6 +3,7 @@
 #include "basic_error.h"
 
 namespace err {
+using DatastoreRedisCommandError          = basic_error<"gk:1.0.4.503", "Unavailable">;
 using DatastoreRedisConnectionFailure     = basic_error<"gk:1.0.1.503", "Unavailable">;
 using DatastoreRedisConnectionUnavailable = basic_error<"gk:1.0.3.503", "Unavailable">;
 using DatastoreRedisTimeout               = basic_error<"gk:1.0.2.503", "Operation timed out">;

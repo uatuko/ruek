@@ -1,7 +1,5 @@
 #include "redis.h"
 
-#include "err/errors.h"
-
 static datastore::config::redis_t  _conf;
 static datastore::redis::context_t _context = nullptr;
 static std::timed_mutex            _mutex;
