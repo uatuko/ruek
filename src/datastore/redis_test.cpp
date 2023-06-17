@@ -25,6 +25,10 @@ TEST(redis, cmd) {
 }
 
 TEST(redis, concurrency) {
+	if (std::thread::hardware_concurrency() < 2) {
+		GTEST_SKIP() << "Not enough hardware support to run concurrency tests";
+	}
+
 	auto conf          = datastore::testing::conf();
 	conf.redis.timeout = 50ms;
 	try {
