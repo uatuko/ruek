@@ -1,5 +1,6 @@
 add_library(datastore
 	collections.cpp collections.h
+	config.h
 	datastore.h
 	identities.cpp identities.h
 	pg.cpp pg.h

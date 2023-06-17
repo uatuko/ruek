@@ -6,7 +6,7 @@
 
 namespace datastore {
 namespace testing {
-static void setup() {
+inline config conf() {
 	const char *v = std::getenv("PGDATABASE");
 
 	auto dbname = std::string(v == nullptr ? "" : v);
@@ -14,9 +14,15 @@ static void setup() {
 		dbname = "test-" + dbname;
 	}
 
-	init("dbname=" + dbname);
+	return {
+		.pg = {.opts = "dbname=" + dbname},
+	};
 }
 
-static void teardown() {}
+inline void setup() {
+	init(conf());
+}
+
+inline void teardown() {}
 } // namespace testing
 } // namespace datastore
