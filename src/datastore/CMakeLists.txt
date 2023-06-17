@@ -4,12 +4,14 @@ add_library(datastore
 	datastore.h
 	identities.cpp identities.h
 	pg.cpp pg.h
+	redis.cpp redis.h
 	testing.h
 )
 
 target_link_libraries(datastore
 	PUBLIC
 		${PROJECT_NAME}::err
+		hiredis::hiredis_static
 		pqxx
 	PRIVATE
 		libxid::xid
@@ -30,6 +32,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(datastore_tests
 		collections_test.cpp
 		identities_test.cpp
+		redis_test.cpp
 	)
 
 	target_link_libraries(datastore_tests

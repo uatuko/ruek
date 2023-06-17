@@ -53,6 +53,15 @@ FetchContent_Declare(googletest
 )
 FetchContent_MakeAvailable(googletest)
 
+# hiredis
+FetchContent_Declare(hiredis
+	URL      https://github.com/redis/hiredis/archive/refs/tags/v1.1.0.tar.gz
+	URL_HASH SHA256=fe6d21741ec7f3fc9df409d921f47dfc73a4d8ff64f4ac6f1d95f951bf7f53d6
+)
+
+set(DISABLE_TESTS ON)
+FetchContent_MakeAvailable(hiredis)
+
 # libpqxx
 FetchContent_Declare(libpqxx
 	URL      https://github.com/jtv/libpqxx/archive/refs/tags/7.7.5.tar.gz
