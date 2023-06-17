@@ -20,6 +20,10 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
     steps:
       - name: Install dependencies
         run: |
@@ -46,6 +50,8 @@ jobs:
           PGHOST: postgres
           PGPASSWORD: gatekeeper
           PGUSER: gatekeeper
+          REDIS_HOST: redis
+          REDIS_PORT: ${{ job.services.redis.ports['6379'] }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
