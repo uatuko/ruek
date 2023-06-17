@@ -20,12 +20,12 @@ else()
 		GIT_TAG        v1.48.4
 	)
 
-	set(gRPC_BUILD_GRPC_CSHARP_PLUGIN OFF)
-	set(gRPC_BUILD_GRPC_NODE_PLUGIN OFF)
-	set(gRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN OFF)
-	set(gRPC_BUILD_GRPC_PHP_PLUGIN OFF)
-	set(gRPC_BUILD_GRPC_PYTHON_PLUGIN OFF)
-	set(gRPC_BUILD_GRPC_RUBY_PLUGIN OFF)
+	set(gRPC_BUILD_GRPC_CSHARP_PLUGIN      OFF CACHE BOOL "Build gRPC C# plugin")
+	set(gRPC_BUILD_GRPC_NODE_PLUGIN        OFF CACHE BOOL "Build gRPC Node plugin")
+	set(gRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN OFF CACHE BOOL "Build gRPC Objective-C plugin")
+	set(gRPC_BUILD_GRPC_PHP_PLUGIN         OFF CACHE BOOL "Build gRPC PHP plugin")
+	set(gRPC_BUILD_GRPC_PYTHON_PLUGIN      OFF CACHE BOOL "Build gRPC Python plugin")
+	set(gRPC_BUILD_GRPC_RUBY_PLUGIN        OFF CACHE BOOL "Build gRPC Ruby plugin")
 
 	FetchContent_MakeAvailable(grpc)
 
@@ -59,7 +59,7 @@ FetchContent_Declare(hiredis
 	URL_HASH SHA256=fe6d21741ec7f3fc9df409d921f47dfc73a4d8ff64f4ac6f1d95f951bf7f53d6
 )
 
-set(DISABLE_TESTS ON)
+set(DISABLE_TESTS ON CACHE BOOL "Disable tests")
 FetchContent_MakeAvailable(hiredis)
 
 # libpqxx
@@ -68,8 +68,7 @@ FetchContent_Declare(libpqxx
 	URL_HASH SHA256=c7dc3e8fa2eee656f2b6a8179d72f15db10e97a80dc4f173f806e615ea990973
 )
 
-set(BUILD_SHARED_LIBS OFF)
-set(SKIP_BUILD_TEST ON)
+set(SKIP_BUILD_TEST ON) # Not defined as `option()`, no need to set as a cache entry (Ref: CMP0077)
 FetchContent_MakeAvailable(libpqxx)
 
 # libviper
