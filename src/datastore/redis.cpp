@@ -11,7 +11,7 @@ context_t::element_type *connection::ctx() const {
 }
 
 connection conn() {
-	if (_context == nullptr) {
+	if (!_context) {
 		throw err::DatastoreRedisConnectionUnavailable();
 	}
 
