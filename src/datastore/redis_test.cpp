@@ -47,7 +47,7 @@ TEST(redis, concurrency) {
 	{
 		std::thread t1([conf]() {
 			auto conn = datastore::redis::conn();
-			std::this_thread::sleep_for(conf.redis.timeout * 3);
+			std::this_thread::sleep_for(conf.redis.timeout * 5);
 		});
 
 		std::thread t2([]() {
