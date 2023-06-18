@@ -26,8 +26,8 @@ include(cmake/googleapis.cmake)
 if (GATEKEEPER_ENABLE_TESTING)
 	enable_testing()
 
-	cmake_path(SET test_conf_path ${CMAKE_CURRENT_SOURCE_DIR}/conf)
-	add_compile_definitions(TEST_CONF_PATH="${test_conf_path}")
+	cmake_path(SET gatekeeper_test_conf_path ${CMAKE_CURRENT_SOURCE_DIR}/conf)
+	add_compile_definitions(GATEKEEPER_TEST_CONF_PATH="${gatekeeper_test_conf_path}")
 endif()
 
 add_subdirectory(proto)

@@ -16,7 +16,7 @@ inline config conf() {
 		dbname = "test-" + dbname;
 	}
 
-	viper::init("app", TEST_CONF_PATH);
+	viper::init("app", GATEKEEPER_TEST_CONF_PATH);
 	auto conf = *viper::conf();
 
 	return {
