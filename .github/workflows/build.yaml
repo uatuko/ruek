@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     name: Build on ${{ matrix.os }} using ${{ matrix.compiler }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}_${{ matrix.os }}-${{ matrix.compiler }}
     strategy:
       fail-fast: false
       matrix:
@@ -25,11 +27,55 @@ jobs:
             compiler: clang++
     runs-on: ${{ matrix.os }}
     steps:
+      # Linux dependencies
+      - name: Install dependencies (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install redis-server
+      - name: Start services (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo systemctl start postgresql.service
+          sudo systemctl start redis-server.service
+
+      # macOS dependencies
+      - name: Install dependencies (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          brew install redis
+      - name: Start services (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          brew services start postgresql
+          brew services start redis
+
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
           path: .build/_deps
           key: ${{ runner.arch }}_${{ matrix.os }}-${{ matrix.compiler }}-${{ hashFiles('cmake/dependencies.cmake') }}
+
+      # Linux setup
+      - name: Setup Postgres (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo -u postgres psql -c "create user gatekeeper with password 'gatekeeper';"
+          sudo -u postgres psql -c 'create database "test-gatekeeper" owner gatekeeper;'
+          psql --dbname=test-gatekeeper --host=localhost --username=gatekeeper < datastore/schema.sql
+        env:
+          PGPASSWORD: gatekeeper
+
+      # macOS setup
+      - name: Setup Postgres (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          psql --dbname=postgres -c "create user gatekeeper with password 'gatekeeper';"
+          psql --dbname=postgres -c 'create database "test-gatekeeper" owner gatekeeper;'
+          psql --dbname=test-gatekeeper --host=localhost --username=gatekeeper < datastore/schema.sql
+        env:
+          PGPASSWORD: gatekeeper
+
       - name: Configure CMake
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
@@ -43,4 +89,9 @@ jobs:
       - name: Test
         working-directory: ${{ github.workspace }}/.build
         run: |
-          ctest -C Release
+          ctest -C Release --output-on-failure
+        env:
+          PGDATABASE: test-gatekeeper
+          PGHOST: localhost
+          PGPASSWORD: gatekeeper
+          PGUSER: gatekeeper
