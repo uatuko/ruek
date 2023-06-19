@@ -41,7 +41,7 @@ TEST_F(CollectionsTest, members) {
 		std::string_view qry = R"(
 			select
 				count(*) as n_members
-			from collection_members
+			from collections_identities
 			where
 				collection_id = $1::text and
 				identity_id = $2::text;
