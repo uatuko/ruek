@@ -15,14 +15,22 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
+	auto conf = *viper::conf();
+
+	datastore::config c = {
+		.redis =
+			{
+				.host = conf["redis.host"].get<std::string>(),
+				.port = static_cast<int>(conf["redis.port"].get<long>()),
+			},
+	};
+
 	try {
-		datastore::init();
+		datastore::init(c);
 	} catch (const std::exception &e) {
 		std::cout << "[FATAL] " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
-
-	auto conf = *viper::conf();
 
 	service::Grpc       service;
 	grpc::ServerBuilder builder;

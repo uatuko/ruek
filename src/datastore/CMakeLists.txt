@@ -1,14 +1,16 @@
 add_library(datastore
 	collections.cpp collections.h
+	config.h
 	datastore.h
 	identities.cpp identities.h
 	pg.cpp pg.h
-	testing.h
+	redis.cpp redis.h
 )
 
 target_link_libraries(datastore
 	PUBLIC
 		${PROJECT_NAME}::err
+		hiredis::hiredis_static
 		pqxx
 	PRIVATE
 		libxid::xid
@@ -26,9 +28,20 @@ endif()
 
 # tests
 if (GATEKEEPER_ENABLE_TESTING)
+	target_sources(datastore
+		PRIVATE
+			testing.h
+	)
+
+	target_link_libraries(datastore
+		PUBLIC
+			libviper::viper
+	)
+
 	add_executable(datastore_tests
 		collections_test.cpp
 		identities_test.cpp
+		redis_test.cpp
 	)
 
 	target_link_libraries(datastore_tests

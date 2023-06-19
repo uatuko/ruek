@@ -2,6 +2,8 @@
 
 #include <pqxx/pqxx>
 
+#include "config.h"
+
 namespace datastore {
 namespace pg {
 using conn_t   = pqxx::connection;
@@ -21,7 +23,6 @@ template <typename... Args> inline result_t exec(std::string_view qry, Args &&..
 	return tx.exec_params(pqxx::zview(qry), args...);
 }
 
-void init();
-void init(const std::string &opts);
-}; // namespace pg
+void init(const config::pg_t &c);
+} // namespace pg
 } // namespace datastore

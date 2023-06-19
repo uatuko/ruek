@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.21)
 project(gatekeeper VERSION 0.0.1 LANGUAGES CXX)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -25,6 +25,9 @@ include(cmake/googleapis.cmake)
 
 if (GATEKEEPER_ENABLE_TESTING)
 	enable_testing()
+
+	cmake_path(SET gatekeeper_test_conf_path ${CMAKE_CURRENT_SOURCE_DIR}/conf)
+	add_compile_definitions(GATEKEEPER_TEST_CONF_PATH="${gatekeeper_test_conf_path}")
 endif()
 
 add_subdirectory(proto)

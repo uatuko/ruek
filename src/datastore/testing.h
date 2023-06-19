@@ -2,11 +2,13 @@
 
 #include <cstdlib>
 
+#include <viper/viper.h>
+
 #include "datastore.h"
 
 namespace datastore {
 namespace testing {
-static void setup() {
+inline config conf() {
 	const char *v = std::getenv("PGDATABASE");
 
 	auto dbname = std::string(v == nullptr ? "" : v);
@@ -14,9 +16,26 @@ static void setup() {
 		dbname = "test-" + dbname;
 	}
 
-	init("dbname=" + dbname);
+	viper::init("app", GATEKEEPER_TEST_CONF_PATH);
+	auto conf = *viper::conf();
+
+	return {
+		.pg =
+			{
+				.opts = "dbname=" + dbname,
+			},
+		.redis =
+			{
+				.host = conf["redis.host"].get<std::string>(),
+				.port = static_cast<int>(conf["redis.port"].get<long>()),
+			},
+	};
 }
 
-static void teardown() {}
+inline void setup() {
+	init(conf());
+}
+
+inline void teardown() {}
 } // namespace testing
 } // namespace datastore
