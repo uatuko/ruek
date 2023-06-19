@@ -60,11 +60,11 @@ create table if not exists "collections_identities" (
 	collection_id text not null,
 	identity_id   text not null,
 
-	constraint "collection_members.pkey" primary key (collection_id, identity_id),
-	constraint "collection_members.fkey-collection_id" foreign key (collection_id)
+	constraint "collections_identities.pkey" primary key (collection_id, identity_id),
+	constraint "collections_identities.fkey-collection_id" foreign key (collection_id)
 		references collections(_id)
 		on delete cascade,
-	constraint "collection_members.fkey-identity_id" foreign key (identity_id)
+	constraint "collections_identities.fkey-identity_id" foreign key (identity_id)
 		references identities(_id)
 		on delete cascade
 );
