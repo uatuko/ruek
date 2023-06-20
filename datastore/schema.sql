@@ -48,7 +48,7 @@ create table if not exists "collections_access-policies" (
 	policy_id     text not null,
 
 	constraint "collections_access-policies.pkey" primary key (collection_id, policy_id),
-	constraint "collections_access-policies.fkey-identity_id" foreign key (collection_id)
+	constraint "collections_access-policies.fkey-collection_id" foreign key (collection_id)
 		references collections(_id)
 		on delete cascade,
 	constraint "collections_access-policies.fkey-policy_id" foreign key (policy_id)
@@ -74,7 +74,7 @@ create table if not exists "collections_rbac-policies" (
 	policy_id     text not null,
 
 	constraint "collections_rbac-policies.pkey" primary key (collection_id, policy_id),
-	constraint "collections_rbac-policies.fkey-identity_id" foreign key (collection_id)
+	constraint "collections_rbac-policies.fkey-collection_id" foreign key (collection_id)
 		references collections(_id)
 		on delete cascade,
 	constraint "collections_rbac-policies.fkey-policy_id" foreign key (policy_id)
