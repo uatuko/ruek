@@ -5,6 +5,7 @@
 #include "mappers.h"
 
 namespace service {
+// Collections
 grpc::ServerUnaryReactor *Grpc::CreateCollection(
 	grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
 	gk::v1::Collection *response) {
@@ -40,6 +41,27 @@ grpc::ServerUnaryReactor *Grpc::CreateCollection(
 	return reactor;
 }
 
+grpc::ServerUnaryReactor *Grpc::RetrieveCollection(
+	grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request, 
+	gk::v1::Collection *response) {
+	auto *reactor = context->DefaultReactor();
+
+	try {
+		auto collection = datastore::RetrieveCollection(request->id());
+		map(collection, response);
+	} catch (const err::DatastoreCollectionNotFound &) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Document not found"));
+		return reactor;
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+		return reactor;
+	}
+	
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+// Identities
 grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
 	gk::v1::Identity *response) {

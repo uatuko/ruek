@@ -84,6 +84,48 @@ TEST_F(GrpcTest, CreateCollection) {
 	}
 }
 
+TEST_F(GrpcTest, RetrieveCollection) {
+	service::Grpc service;
+
+	// Success: retrieve collection by id
+	{
+		const datastore::Collection collection({
+			.id = "id:GrpcTest.RetrieveCollection", 
+			.name="name:GrpcTest.RetrieveCollection"
+		});
+		EXPECT_NO_THROW(collection.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::RetrieveCollectionRequest     request;
+		request.set_id(collection.id());
+
+		auto reactor = service.RetrieveCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(collection.id(), response.id());
+		EXPECT_EQ(collection.name(), response.name());
+	}
+
+	// Error: collection not found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::RetrieveCollectionRequest     request;
+		request.set_id("id:GrpcTest.RetrieveCollection-not-found");
+
+		auto reactor = service.RetrieveCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
+		EXPECT_EQ("Document not found", peer.test_status().error_message());
+	}
+}
+
 TEST_F(GrpcTest, CreateIdentity) {
 	service::Grpc service;
 
