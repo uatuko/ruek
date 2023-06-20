@@ -28,7 +28,7 @@ Collection::Collection(const pg::row_t &r) :
 
 void Collection::add(const member_t &mid) const {
 	std::string_view qry = R"(
-		insert into collection_members (
+		insert into collections_identities (
 			collection_id,
 			identity_id
 		) values (
@@ -83,7 +83,7 @@ const Collection::members_t Collection::members() const {
 		select
 			identity_id
 		from
-			collection_members
+			collections_identities
 		where
 			collection_id = $1::text;
 	)";
@@ -100,7 +100,7 @@ const Collection::members_t Collection::members() const {
 
 void Collection::remove(const member_t &mid) const {
 	std::string_view qry = R"(
-		delete from collection_members
+		delete from collections_identities
 		where
 			collection_id = $1::text and
 			identity_id = $2::text;
