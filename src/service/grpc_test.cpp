@@ -89,17 +89,15 @@ TEST_F(GrpcTest, RetrieveCollection) {
 
 	// Success: retrieve collection by id
 	{
-		const datastore::Collection collection({
-			.id = "id:GrpcTest.RetrieveCollection", 
-			.name="name:GrpcTest.RetrieveCollection"
-		});
+		const datastore::Collection collection(
+			{.id = "id:GrpcTest.RetrieveCollection", .name = "name:GrpcTest.RetrieveCollection"});
 		EXPECT_NO_THROW(collection.store());
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::RetrieveCollectionRequest     request;
+		gk::v1::RetrieveCollectionRequest request;
 		request.set_id(collection.id());
 
 		auto reactor = service.RetrieveCollection(&ctx, &request, &response);
@@ -116,7 +114,7 @@ TEST_F(GrpcTest, RetrieveCollection) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::RetrieveCollectionRequest     request;
+		gk::v1::RetrieveCollectionRequest request;
 		request.set_id("id:GrpcTest.RetrieveCollection-not-found");
 
 		auto reactor = service.RetrieveCollection(&ctx, &request, &response);

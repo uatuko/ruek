@@ -42,7 +42,7 @@ grpc::ServerUnaryReactor *Grpc::CreateCollection(
 }
 
 grpc::ServerUnaryReactor *Grpc::RetrieveCollection(
-	grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request, 
+	grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request,
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -56,7 +56,7 @@ grpc::ServerUnaryReactor *Grpc::RetrieveCollection(
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
 		return reactor;
 	}
-	
+
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }

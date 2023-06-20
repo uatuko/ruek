@@ -10,7 +10,7 @@ public:
 		gk::v1::Collection *response) override;
 
 	grpc::ServerUnaryReactor *RetrieveCollection(
-		grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request, 
+		grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request,
 		gk::v1::Collection *response) override;
 
 	grpc::ServerUnaryReactor *CreateIdentity(
