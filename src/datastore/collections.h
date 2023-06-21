@@ -28,6 +28,8 @@ public:
 	const int         &rev() const noexcept { return _rev; }
 
 	const std::string &name() const noexcept { return _data.name; }
+	void               name(const std::string &name) noexcept { _data.name = name; }
+	void               name(std::string &&name) noexcept { _data.name = std::move(name); }
 
 	const members_t members() const;
 	void            add(const member_t &id) const;
