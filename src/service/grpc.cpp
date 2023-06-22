@@ -72,14 +72,9 @@ grpc::ServerUnaryReactor *Grpc::UpdateCollection(
 		return reactor;
 	}
 
+	std::optional<datastore::Collection> collection;
 	try {
-		auto collection = datastore::RetrieveCollection(request->id());
-		if (request->has_name()) {
-			collection.name(request->name());
-		}
-
-		collection.store();
-		map(collection, response);
+		*collection = datastore::RetrieveCollection(request->id());
 	} catch (const err::DatastoreCollectionNotFound &) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Document not found"));
 		return reactor;
@@ -88,6 +83,21 @@ grpc::ServerUnaryReactor *Grpc::UpdateCollection(
 		return reactor;
 	}
 
+	if (request->has_name()) {
+		collection->name(request->name());
+	}
+
+	try {
+		collection->store();
+	} catch (const err::DatastoreRevisionMismatch &) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::INTERNAL, "Revision mismatch"));
+		return reactor;
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
+		return reactor;
+	}
+
+	map(*collection, response);
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
