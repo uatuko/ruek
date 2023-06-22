@@ -74,7 +74,7 @@ grpc::ServerUnaryReactor *Grpc::UpdateCollection(
 
 	std::optional<datastore::Collection> collection = std::nullopt;
 	try {
-		*collection = datastore::RetrieveCollection(request->id());
+		collection = datastore::RetrieveCollection(request->id());
 	} catch (const err::DatastoreCollectionNotFound &) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Document not found"));
 		return reactor;
