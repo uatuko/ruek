@@ -72,7 +72,7 @@ grpc::ServerUnaryReactor *Grpc::UpdateCollection(
 		return reactor;
 	}
 
-	std::optional<datastore::Collection> collection;
+	std::optional<datastore::Collection> collection = std::nullopt;
 	try {
 		*collection = datastore::RetrieveCollection(request->id());
 	} catch (const err::DatastoreCollectionNotFound &) {
