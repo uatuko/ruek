@@ -155,31 +155,19 @@ TEST_F(GrpcTest, UpdateCollection) {
 		EXPECT_EQ(1, updatedCollection.rev());
 	}
 
-	// Success: no fields to update
+	// Error: no fields to update
 	{
-		const datastore::Collection collection(
-			{.id   = "id:GrpcTest.UpdateCollection-no-updates",
-			 .name = "name:GrpcTest.UpdateCollection"});
-		EXPECT_NO_THROW(collection.store());
-
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
 		gk::v1::UpdateCollectionRequest request;
-		request.set_id(collection.id());
+		request.set_id("id:GrpcTest.UpdateCollection-no-updates");
 
 		auto reactor = service.UpdateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-
-		EXPECT_EQ(request.id(), response.id());
-		EXPECT_EQ(collection.name(), response.name());
-
-		auto updatedCollection = datastore::RetrieveCollection(collection.id());
-		EXPECT_EQ(collection.name(), updatedCollection.name());
-		EXPECT_EQ(0, updatedCollection.rev());
+		EXPECT_EQ(grpc::StatusCode::INTERNAL, peer.test_status().error_code());
+		EXPECT_EQ("No fields to update", peer.test_status().error_message());
 	}
 
 	// Error: collection not found
@@ -190,6 +178,7 @@ TEST_F(GrpcTest, UpdateCollection) {
 
 		gk::v1::UpdateCollectionRequest request;
 		request.set_id("id:GrpcTest.UpdateCollection-not-found");
+		request.set_name("name:GrpcTest.UpdateCollection-not-found");
 
 		auto reactor = service.UpdateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());

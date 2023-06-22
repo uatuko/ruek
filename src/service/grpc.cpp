@@ -66,18 +66,19 @@ grpc::ServerUnaryReactor *Grpc::UpdateCollection(
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
 
+	if (!request->has_name()) {
+		// No fields to update -> throw an error
+		reactor->Finish(grpc::Status(grpc::StatusCode::INTERNAL, "No fields to update"));
+		return reactor;
+	}
+
 	try {
 		auto collection = datastore::RetrieveCollection(request->id());
-		bool hasUpdates = false;
 		if (request->has_name()) {
 			collection.name(request->name());
-			hasUpdates = true;
 		}
 
-		if (hasUpdates) {
-			collection.store();
-		}
-
+		collection.store();
 		map(collection, response);
 	} catch (const err::DatastoreCollectionNotFound &) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Document not found"));
