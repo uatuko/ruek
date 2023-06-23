@@ -1,5 +1,12 @@
 include(FetchContent)
 
+# glaze
+FetchContent_Declare(glaze
+	URL      https://github.com/stephenberry/glaze/archive/refs/tags/v1.2.6.tar.gz
+	URL_HASH SHA256=ef602f1efc7f84669de517181cb091c136e2b9372c176947d0940ebd6c2f2d98
+)
+FetchContent_MakeAvailable(glaze)
+
 # grpc & protobuf
 if (GATEKEEPER_FAVOUR_SYSTEM_GRPC)
 	find_package(gRPC 1.48.0)
