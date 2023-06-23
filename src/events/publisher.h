@@ -14,6 +14,7 @@ public:
 
 	Publisher()                  = default;
 	Publisher(const Publisher &) = delete;
+
 	void operator=(const Publisher &) = delete;
 
 	template <typename T> void publish(const event_type<T> &ev) {
