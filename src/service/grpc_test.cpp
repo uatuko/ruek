@@ -26,6 +26,7 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
+// Collections
 TEST_F(GrpcTest, CreateCollection) {
 	service::Grpc service;
 
@@ -84,6 +85,109 @@ TEST_F(GrpcTest, CreateCollection) {
 	}
 }
 
+TEST_F(GrpcTest, RetrieveCollection) {
+	service::Grpc service;
+
+	// Success: retrieve collection by id
+	{
+		const datastore::Collection collection(
+			{.id = "id:GrpcTest.RetrieveCollection", .name = "name:GrpcTest.RetrieveCollection"});
+		EXPECT_NO_THROW(collection.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::RetrieveCollectionRequest request;
+		request.set_id(collection.id());
+
+		auto reactor = service.RetrieveCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(collection.id(), response.id());
+		EXPECT_EQ(collection.name(), response.name());
+	}
+
+	// Error: collection not found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::RetrieveCollectionRequest request;
+		request.set_id("id:GrpcTest.RetrieveCollection-not-found");
+
+		auto reactor = service.RetrieveCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
+		EXPECT_EQ("Document not found", peer.test_status().error_message());
+	}
+}
+
+TEST_F(GrpcTest, UpdateCollection) {
+	service::Grpc service;
+
+	// Success: update collection name
+	{
+		const datastore::Collection collection(
+			{.id = "id:GrpcTest.UpdateCollection-name", .name = "name:GrpcTest.UpdateCollection"});
+		EXPECT_NO_THROW(collection.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::UpdateCollectionRequest request;
+		request.set_id(collection.id());
+		request.set_name("name:GrpcTest.UpdateCollection-new");
+
+		auto reactor = service.UpdateCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_EQ(request.id(), response.id());
+		EXPECT_EQ(request.name(), response.name());
+
+		auto updatedCollection = datastore::RetrieveCollection(collection.id());
+		EXPECT_EQ(request.name(), updatedCollection.name());
+		EXPECT_EQ(1, updatedCollection.rev());
+	}
+
+	// Error: no fields to update
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::UpdateCollectionRequest request;
+		request.set_id("id:GrpcTest.UpdateCollection-no-updates");
+
+		auto reactor = service.UpdateCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::INTERNAL, peer.test_status().error_code());
+		EXPECT_EQ("No fields to update", peer.test_status().error_message());
+	}
+
+	// Error: collection not found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Collection                    response;
+
+		gk::v1::UpdateCollectionRequest request;
+		request.set_id("id:GrpcTest.UpdateCollection-not-found");
+		request.set_name("name:GrpcTest.UpdateCollection-not-found");
+
+		auto reactor = service.UpdateCollection(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
+		EXPECT_EQ("Document not found", peer.test_status().error_message());
+	}
+}
+
+// Identities
 TEST_F(GrpcTest, CreateIdentity) {
 	service::Grpc service;
 

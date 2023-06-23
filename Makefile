@@ -41,7 +41,7 @@ clean:
 
 coverage: $(BINARY)
 	find $(BUILDDIR)/$(SOURCEDIR) -type f -name "*.profraw" -exec rm {} +
-	LLVM_PROFILE_FILE="%p.profraw" ctest --test-dir $(BUILDDIR)
+	LLVM_PROFILE_FILE="%p.profraw" ctest --test-dir $(BUILDDIR) --output-on-failure
 
 	echo '' # Empty line to separate outputs
 	-rm $(PROFDATA_OUTPUT)
