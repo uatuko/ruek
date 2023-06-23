@@ -22,5 +22,9 @@ public:
 	grpc::ServerUnaryReactor *CreateIdentity(
 		grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
 		gk::v1::Identity *response) override;
+
+	grpc::ServerUnaryReactor *RetrieveIdentity(
+		grpc::CallbackServerContext *context, const gk::v1::RetrieveIdentityRequest *request,
+		gk::v1::Identity *response) override;
 };
 } // namespace service

@@ -140,4 +140,24 @@ grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
+
+grpc::ServerUnaryReactor *Grpc::RetrieveIdentity(
+	grpc::CallbackServerContext *context, const gk::v1::RetrieveIdentityRequest *request,
+	gk::v1::Identity *response) {
+	auto *reactor = context->DefaultReactor();
+
+	try {
+		auto identity = datastore::RetrieveIdentity(request->id());
+		map(identity, response);
+	} catch (const err::DatastoreIdentityNotFound &) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Document not found"));
+		return reactor;
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+		return reactor;
+	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
 } // namespace service
