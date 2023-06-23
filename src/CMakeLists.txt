@@ -1,5 +1,6 @@
 add_subdirectory(datastore)
 add_subdirectory(err)
+add_subdirectory(events)
 add_subdirectory(service)
 
 # datastore
@@ -25,6 +26,18 @@ target_include_directories(liberr
 )
 
 add_library(${PROJECT_NAME}::err ALIAS liberr)
+
+# events
+add_library(libevents INTERFACE)
+target_link_libraries(libevents
+	INTERFACE events
+)
+
+target_include_directories(libevents
+	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+add_library(${PROJECT_NAME}::events ALIAS libevents)
 
 # service
 add_library(libservice INTERFACE)
