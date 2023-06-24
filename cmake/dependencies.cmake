@@ -7,6 +7,30 @@ FetchContent_Declare(glaze
 )
 FetchContent_MakeAvailable(glaze)
 
+# googleapis
+FetchContent_Declare(googleapis
+	URL      https://github.com/googleapis/googleapis/archive/5d2c0c55cf16534d97eb3405840126113ba1ebbd.tar.gz
+	URL_HASH SHA256=8111518a0acd858cc279a82641d623a0e7c1bc4ae69721688260b95ed27b6fff
+)
+FetchContent_MakeAvailable(googleapis)
+
+# googletest
+FetchContent_Declare(googletest
+	URL      https://github.com/google/googletest/archive/refs/tags/v1.13.0.tar.gz
+	URL_HASH SHA256=ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363
+)
+FetchContent_MakeAvailable(googletest)
+
+# google-cloud-cpp
+FetchContent_Declare(google-cloud-cpp
+	URL      https://github.com/googleapis/google-cloud-cpp/archive/refs/tags/v2.12.0.tar.gz
+	URL_HASH SHA256=8cda870803925c62de8716a765e03eb9d34249977e5cdb7d0d20367e997a55e2
+)
+
+set(BUILD_TESTING OFF) # Not defined as `option()`, no need to set as a cache entry (Ref: CMP0077)
+set(GOOGLE_CLOUD_CPP_ENABLE pubsub CACHE STRING "Enable gcloud c++ libs")
+FetchContent_MakeAvailable(google-cloud-cpp)
+
 # grpc & protobuf
 if (GATEKEEPER_FAVOUR_SYSTEM_GRPC)
 	find_package(gRPC 1.48.0)
@@ -45,20 +69,6 @@ else()
 
 	message(STATUS "Fetching gRPC and dependencies - done")
 endif()
-
-# googleapis
-FetchContent_Declare(googleapis
-	URL      https://github.com/googleapis/googleapis/archive/5d2c0c55cf16534d97eb3405840126113ba1ebbd.tar.gz
-	URL_HASH SHA256=8111518a0acd858cc279a82641d623a0e7c1bc4ae69721688260b95ed27b6fff
-)
-FetchContent_MakeAvailable(googleapis)
-
-# googletest
-FetchContent_Declare(googletest
-	URL      https://github.com/google/googletest/archive/refs/tags/v1.13.0.tar.gz
-	URL_HASH SHA256=ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363
-)
-FetchContent_MakeAvailable(googletest)
 
 # hiredis
 FetchContent_Declare(hiredis
