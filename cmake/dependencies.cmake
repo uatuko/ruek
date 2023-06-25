@@ -21,16 +21,6 @@ FetchContent_Declare(googletest
 )
 FetchContent_MakeAvailable(googletest)
 
-# google-cloud-cpp
-FetchContent_Declare(google-cloud-cpp
-	URL      https://github.com/googleapis/google-cloud-cpp/archive/refs/tags/v2.12.0.tar.gz
-	URL_HASH SHA256=8cda870803925c62de8716a765e03eb9d34249977e5cdb7d0d20367e997a55e2
-)
-
-set(BUILD_TESTING OFF) # Not defined as `option()`, no need to set as a cache entry (Ref: CMP0077)
-set(GOOGLE_CLOUD_CPP_ENABLE pubsub CACHE STRING "Enable gcloud c++ libs")
-FetchContent_MakeAvailable(google-cloud-cpp)
-
 # grpc & protobuf
 if (GATEKEEPER_FAVOUR_SYSTEM_GRPC)
 	find_package(gRPC 1.48.0)
@@ -46,9 +36,10 @@ if (gRPC_FOUND)
 	)
 else()
 	message(STATUS "Fetching gRPC and dependencies (this can take a while)")
-	FetchContent_Declare(grpc
+	FetchContent_Declare(gRPC
 		GIT_REPOSITORY https://github.com/grpc/grpc
 		GIT_TAG        v1.48.4
+		OVERRIDE_FIND_PACKAGE # gRPC is required for google-cloud-cpp
 	)
 
 	set(gRPC_BUILD_GRPC_CSHARP_PLUGIN      OFF CACHE BOOL "Build gRPC C# plugin")
@@ -57,18 +48,36 @@ else()
 	set(gRPC_BUILD_GRPC_PHP_PLUGIN         OFF CACHE BOOL "Build gRPC PHP plugin")
 	set(gRPC_BUILD_GRPC_PYTHON_PLUGIN      OFF CACHE BOOL "Build gRPC Python plugin")
 	set(gRPC_BUILD_GRPC_RUBY_PLUGIN        OFF CACHE BOOL "Build gRPC Ruby plugin")
+	set(gRPC_INSTALL                       ON  CACHE BOOL "Enable gRPC install targets") # required for google-cloud-cpp
 
-	FetchContent_MakeAvailable(grpc)
+	FetchContent_MakeAvailable(gRPC)
 
-	# Ensure `FetchContent` outputs are aligned with `find_package` outputs
-	set(Protobuf_PROTOC_EXECUTABLE $<TARGET_FILE:protobuf::protoc>)
-	get_target_property(Protobuf_INCLUDE_DIR protobuf::libprotoc INTERFACE_INCLUDE_DIRECTORIES)
-
+	add_executable(gRPC::grpc_cpp_plugin ALIAS grpc_cpp_plugin)
 	add_library(gRPC::grpc++ ALIAS grpc++)
-	set(gRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
+	add_library(gRPC::grpc ALIAS grpc)
+	set(gRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
+
+	if (TARGET protobuf::libprotoc)
+		# Ensure `FetchContent` outputs are aligned with `find_package` outputs
+		set(Protobuf_PROTOC_EXECUTABLE $<TARGET_FILE:protobuf::protoc>)
+		get_target_property(Protobuf_INCLUDE_DIR protobuf::libprotoc INTERFACE_INCLUDE_DIRECTORIES)
+	else()
+		# Most likely `gRPC_PROTOBUF_PROVIDER=package` is set, ensure protobuf vars are populated
+		find_package(Protobuf REQUIRED)
+	endif()
 
 	message(STATUS "Fetching gRPC and dependencies - done")
 endif()
+
+# google-cloud-cpp
+FetchContent_Declare(google-cloud-cpp
+	URL      https://github.com/googleapis/google-cloud-cpp/archive/refs/tags/v2.12.0.tar.gz
+	URL_HASH SHA256=8cda870803925c62de8716a765e03eb9d34249977e5cdb7d0d20367e997a55e2
+)
+
+set(BUILD_TESTING OFF) # Not defined as `option()`, no need to set as a cache entry (Ref: CMP0077)
+set(GOOGLE_CLOUD_CPP_ENABLE pubsub CACHE STRING "Enable gcloud c++ libs")
+FetchContent_MakeAvailable(google-cloud-cpp)
 
 # hiredis
 FetchContent_Declare(hiredis
