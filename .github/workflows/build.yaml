@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
-          path: .build/_deps
+          path: .build
           key: ${{ runner.arch }}_${{ matrix.container }}-${{ matrix.compiler }}-${{ hashFiles('cmake/dependencies.cmake') }}
 
       - name: Setup Postgres
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
-          path: .build/_deps
+          path: .build
           key: ${{ runner.arch }}_${{ runner.os }}-${{ matrix.compiler }}-${{ hashFiles('cmake/dependencies.cmake') }}
 
       - name: Setup Postgres
