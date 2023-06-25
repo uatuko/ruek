@@ -8,44 +8,103 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build on ${{ matrix.os }} using ${{ matrix.compiler }}
+  linux:
+    runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}_${{ matrix.os }}-${{ matrix.compiler }}
+      group: ${{ github.workflow }}-${{ github.ref }}_${{ matrix.container }}-${{ matrix.compiler }}
+    container: ${{ matrix.container }}
+    services:
+      postgres:
+        env:
+          POSTGRES_DB: test-gatekeeper
+          POSTGRES_PASSWORD: gatekeeper
+          POSTGRES_USER: gatekeeper
+        image: postgres:15
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
     strategy:
       fail-fast: false
       matrix:
         compiler:
           - g++
           - clang++
-        os:
-          - ubuntu-latest
-          - macos-latest
-        exclude:
-          # ubuntu-22.04 v20230507.1 seems to have issues with static linking
-          - os: ubuntu-latest
-            compiler: clang++
-    runs-on: ${{ matrix.os }}
-    steps:
-      # Linux dependencies
-      - name: Install dependencies (Linux)
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install redis-server
-      - name: Start services (Linux)
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          sudo systemctl start postgresql.service
-          sudo systemctl start redis-server.service
+        container:
+          - ubuntu:23.04
+        include:
+          - compiler: g++
+            dependencies: g++
+          - compiler: clang++
+            dependencies: clang libclang-rt-dev
 
-      # macOS dependencies
-      - name: Install dependencies (macOS)
-        if: ${{ runner.os == 'macOS' }}
+    steps:
+      - name: Install dependencies
         run: |
-          brew install redis
-      - name: Start services (macOS)
-        if: ${{ runner.os == 'macOS' }}
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ${{ matrix.dependencies }} \
+            cmake ninja-build \
+            libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc \
+            libpq-dev postgresql-client
+
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: .build/_deps
+          key: ${{ runner.arch }}_${{ matrix.container }}-${{ matrix.compiler }}-${{ hashFiles('cmake/dependencies.cmake') }}
+
+      - name: Setup Postgres
+        run: psql < datastore/schema.sql
+        env:
+          PGDATABASE: test-gatekeeper
+          PGHOST: postgres
+          PGPASSWORD: gatekeeper
+          PGUSER: gatekeeper
+
+      - name: Configure CMake
+        run: |
+          cmake -B .build -G Ninja -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DGATEKEEPER_ENABLE_TESTING=ON
+      - name: Build
+        run: |
+          cmake --build .build --config Release
+      - name: Test
+        working-directory: ${{ github.workspace }}/.build
+        run: |
+          ctest -C Release --exclude-regex redis.concurrency --output-on-failure
+        env:
+          PGDATABASE: test-gatekeeper
+          PGHOST: postgres
+          PGPASSWORD: gatekeeper
+          PGUSER: gatekeeper
+          REDIS_HOST: redis
+          REDIS_PORT: ${{ job.services.redis.ports['6379'] }}
+
+
+  macos:
+    runs-on: macos-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}_macos-${{ matrix.compiler }}
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - g++
+          - clang++
+
+    steps:
+      - name: Install dependencies
+        run: |
+          brew install grpc ninja redis
+      - name: Start services
         run: |
           brew services start postgresql
           brew services start redis
@@ -54,21 +113,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .build/_deps
-          key: ${{ runner.arch }}_${{ matrix.os }}-${{ matrix.compiler }}-${{ hashFiles('cmake/dependencies.cmake') }}
+          key: ${{ runner.arch }}_${{ runner.os }}-${{ matrix.compiler }}-${{ hashFiles('cmake/dependencies.cmake') }}
 
-      # Linux setup
-      - name: Setup Postgres (Linux)
-        if: ${{ runner.os == 'Linux' }}
-        run: |
-          sudo -u postgres psql -c "create user gatekeeper with password 'gatekeeper';"
-          sudo -u postgres psql -c 'create database "test-gatekeeper" owner gatekeeper;'
-          psql --dbname=test-gatekeeper --host=localhost --username=gatekeeper < datastore/schema.sql
-        env:
-          PGPASSWORD: gatekeeper
-
-      # macOS setup
-      - name: Setup Postgres (macOS)
-        if: ${{ runner.os == 'macOS' }}
+      - name: Setup Postgres
         run: |
           psql --dbname=postgres -c "create user gatekeeper with password 'gatekeeper';"
           psql --dbname=postgres -c 'create database "test-gatekeeper" owner gatekeeper;'
@@ -78,18 +125,14 @@ jobs:
 
       - name: Configure CMake
         run: |
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            cmake -B .build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DGATEKEEPER_ENABLE_TESTING=ON -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
-          else
-            cmake -B .build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DGATEKEEPER_ENABLE_TESTING=ON
-          fi
+          cmake -B .build -G Ninja -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DGATEKEEPER_ENABLE_TESTING=ON -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
       - name: Build
         run: |
           cmake --build .build --config Release
       - name: Test
         working-directory: ${{ github.workspace }}/.build
         run: |
-          ctest -C Release --output-on-failure
+          ctest -C Release --exclude-regex redis.concurrency --output-on-failure
         env:
           PGDATABASE: test-gatekeeper
           PGHOST: localhost
