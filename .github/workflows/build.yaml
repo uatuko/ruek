@@ -103,7 +103,10 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          brew install grpc ninja redis
+          brew install \
+            abseil c-ares protobuf re2 \
+            ninja \
+            redis
       - name: Start services
         run: |
           brew services start postgresql
@@ -129,7 +132,12 @@ jobs:
             -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DGATEKEEPER_ENABLE_TESTING=ON \
-            -DGATEKEEPER_FAVOUR_SYSTEM_GRPC=OFF \
+            -DgRPC_ABSL_PROVIDER=package \
+            -DgRPC_CARES_PROVIDER=package \
+            -DgRPC_PROTOBUF_PROVIDER=package \
+            -DgRPC_RE2_PROVIDER=package \
+            -DgRPC_SSL_PROVIDER=package \
+            -DgRPC_ZLIB_PROVIDER=package \
             -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
       - name: Build
         run: |
