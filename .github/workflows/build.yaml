@@ -125,7 +125,12 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -B .build -G Ninja -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DGATEKEEPER_ENABLE_TESTING=ON -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
+          cmake -B .build -G Ninja \
+            -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGATEKEEPER_ENABLE_TESTING=ON \
+            -DGATEKEEPER_FAVOUR_SYSTEM_GRPC=OFF \
+            -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
       - name: Build
         run: |
           cmake --build .build --config Release
