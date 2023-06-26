@@ -316,7 +316,7 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 TEST_F(GrpcTest, UpdateIndentity) {
 	service::Grpc service;
 
-	// Success: update identity name
+	// Success: update identity sub
 	{
 		const datastore::Identity identity(
 			{.id = "id:GrpcTest.UpdateIdentity-sub", .sub = "sub:GrpcTest.UpdateIdentity"});
