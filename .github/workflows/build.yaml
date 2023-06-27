@@ -104,9 +104,10 @@ jobs:
       - name: Install dependencies
         run: |
           brew install \
-            abseil c-ares protobuf re2 \
+            abseil c-ares protobuf@3 re2 \
             ninja \
             redis
+          brew link protobuf@3
       - name: Start services
         run: |
           brew services start postgresql
