@@ -215,8 +215,8 @@ TEST_F(GrpcTest, CreateIdentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::CreateIdentityRequest request;
-		request.set_id("id:GrpcTest.CreateCollection-with_id");
-		request.set_sub("sub:GrpcTest.CreateCollection-with_id");
+		request.set_id("id:GrpcTest.CreateIdentity-with_id");
+		request.set_sub("sub:GrpcTest.CreateIdentity-with_id");
 
 		auto reactor = service.CreateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -244,7 +244,7 @@ TEST_F(GrpcTest, CreateIdentity) {
 
 		gk::v1::CreateIdentityRequest request;
 		request.set_id(identity.id());
-		request.set_sub("sub:GrpcTest.CreateCollection-duplicate_id");
+		request.set_sub("sub:GrpcTest.CreateIdentity-duplicate_id");
 
 		auto reactor = service.CreateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -270,5 +270,107 @@ TEST_F(GrpcTest, CreateIdentity) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
 		EXPECT_EQ("Duplicate identity", peer.test_status().error_message());
+	}
+}
+
+TEST_F(GrpcTest, RetrieveIdentity) {
+	service::Grpc service;
+
+	// Success: retrieve identity by id
+	{
+		const datastore::Identity identity(
+			{.id = "id:GrpcTest.RetrieveIdentity", .sub = "sub:GrpcTest.RetrieveIdentity"});
+		EXPECT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::RetrieveIdentityRequest request;
+		request.set_id(identity.id());
+
+		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(identity.id(), response.id());
+		EXPECT_EQ(identity.sub(), response.sub());
+	}
+
+	// Error: identity not found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::RetrieveIdentityRequest request;
+		request.set_id("id:GrpcTest.RetrieveIdentity-not-found");
+
+		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
+		EXPECT_EQ("Document not found", peer.test_status().error_message());
+	}
+}
+
+TEST_F(GrpcTest, UpdateIndentity) {
+	service::Grpc service;
+
+	// Success: update identity sub
+	{
+		const datastore::Identity identity(
+			{.id = "id:GrpcTest.UpdateIdentity-sub", .sub = "sub:GrpcTest.UpdateIdentity"});
+		EXPECT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::UpdateIdentityRequest request;
+		request.set_id(identity.id());
+		request.set_sub("sub:GrpcTest.UpdateIdentity-new");
+
+		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_EQ(request.id(), response.id());
+		EXPECT_EQ(request.sub(), response.sub());
+
+		auto updatedIdentity = datastore::RetrieveIdentity(identity.id());
+		EXPECT_EQ(request.sub(), updatedIdentity.sub());
+		EXPECT_EQ(1, updatedIdentity.rev());
+	}
+
+	// Error: no fields to update
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::UpdateIdentityRequest request;
+		request.set_id("id:GrpcTest.UpdateIdentity-no-updates");
+
+		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::INTERNAL, peer.test_status().error_code());
+		EXPECT_EQ("No fields to update", peer.test_status().error_message());
+	}
+
+	// Error: identity not found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::UpdateIdentityRequest request;
+		request.set_id("id:GrpcTest.UpdateIdentity-not-found");
+		request.set_sub("name:GrpcTest.UpdateIdentity-not-found");
+
+		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
+		EXPECT_EQ("Document not found", peer.test_status().error_message());
 	}
 }

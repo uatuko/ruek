@@ -24,6 +24,8 @@ public:
 	const int         &rev() const noexcept { return _rev; }
 
 	const std::string &sub() const noexcept { return _data.sub; }
+	void               sub(const std::string &sub) noexcept { _data.sub = sub; }
+	void               sub(std::string &&sub) noexcept { _data.sub = std::move(sub); }
 
 	void discard() const;
 	void store() const;
