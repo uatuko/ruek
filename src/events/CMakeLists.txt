@@ -39,5 +39,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 	endif()
 
 	include(GoogleTest)
-	gtest_discover_tests(events_tests)
+	gtest_discover_tests(events_tests
+		DISCOVERY_TIMEOUT 10
+	)
 endif()
