@@ -1,4 +1,3 @@
-#include <glaze/glaze.hpp>
 #include <gtest/gtest.h>
 
 #include "err/errors.h"
@@ -28,8 +27,8 @@ TEST_F(IdentitiesTest, discard) {
 		.sub = "sub:IdentitiesTest.discard",
 	});
 
-	EXPECT_NO_THROW(identity.store());
-	EXPECT_NO_THROW(identity.discard());
+	ASSERT_NO_THROW(identity.store());
+	ASSERT_NO_THROW(identity.discard());
 
 	std::string_view qry = R"(
 		select
@@ -38,7 +37,9 @@ TEST_F(IdentitiesTest, discard) {
 		where _id = $1::text;
 	)";
 
-	auto res   = datastore::pg::exec(qry, identity.id());
+	auto res = datastore::pg::exec(qry, identity.id());
+	ASSERT_EQ(1, res.size());
+
 	auto count = res.at(0, 0).as<int>();
 	EXPECT_EQ(0, count);
 }
@@ -114,10 +115,10 @@ TEST_F(IdentitiesTest, rev) {
 			.sub = "sub:IdentitiesTest.rev",
 		});
 
-		EXPECT_NO_THROW(identity.store());
+		ASSERT_NO_THROW(identity.store());
 		EXPECT_EQ(0, identity.rev());
 
-		EXPECT_NO_THROW(identity.store());
+		ASSERT_NO_THROW(identity.store());
 		EXPECT_EQ(1, identity.rev());
 	}
 
@@ -139,7 +140,7 @@ TEST_F(IdentitiesTest, rev) {
 			)
 		)";
 
-		EXPECT_NO_THROW(
+		ASSERT_NO_THROW(
 			datastore::pg::exec(qry, identity.id(), identity.rev() + 1, identity.sub()));
 
 		EXPECT_THROW(identity.store(), err::DatastoreRevisionMismatch);
@@ -153,7 +154,7 @@ TEST_F(IdentitiesTest, store) {
 
 	// Success: persist data
 	{
-		EXPECT_NO_THROW(identity.store());
+		ASSERT_NO_THROW(identity.store());
 
 		std::string_view qry = R"(
 			select
@@ -194,7 +195,9 @@ TEST_F(IdentitiesTest, store) {
 
 		std::string_view qry = R"(
 			select
-				attrs
+				attrs->'flag' as flag,
+				attrs->>'name' as name,
+				attrs->'tags' as tags
 			from identities
 			where _id = $1::text;
 		)";
@@ -202,16 +205,10 @@ TEST_F(IdentitiesTest, store) {
 		auto res = datastore::pg::exec(qry, identity.id());
 		ASSERT_EQ(1, res.size());
 
-		auto [attrs] = res[0].as<datastore::Identity::Data::attrs_t>();
-		EXPECT_TRUE(attrs);
-
-		glz::json_t json;
-		auto        err = glz::read_json(json, *attrs);
-		ASSERT_FALSE(err);
-
-		EXPECT_EQ(true, json["flag"].get<bool>());
-		EXPECT_EQ("First Last", json["name"].get<std::string>());
-		EXPECT_EQ("test", json["tags"][0].get<std::string>());
+		auto [flag, name, tags] = res[0].as<bool, std::string, std::string>();
+		EXPECT_EQ(true, flag);
+		EXPECT_EQ("First Last", name);
+		EXPECT_EQ(R"(["test"])", tags);
 	}
 
 	// Error: duplicate `sub`

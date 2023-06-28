@@ -374,8 +374,8 @@ TEST_F(GrpcTest, UpdateIndentity) {
 	// Success: update identity sub
 	{
 		const datastore::Identity identity(
-			{.id = "id:GrpcTest.UpdateIdentity-sub", .sub = "sub:GrpcTest.UpdateIdentity"});
-		EXPECT_NO_THROW(identity.store());
+			{.id = "id:GrpcTest.UpdateIdentity-sub", .sub = "sub:GrpcTest.UpdateIdentity-sub"});
+		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);

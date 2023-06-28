@@ -47,7 +47,6 @@ if (GATEKEEPER_ENABLE_TESTING)
 	target_link_libraries(datastore_tests
 		PRIVATE
 			datastore
-			glaze::glaze
 			gtest_main
 	)
 
