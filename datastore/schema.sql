@@ -16,12 +16,14 @@ create table if not exists collections (
 );
 
 create table if not exists identities (
-	_id  text    not null,
-	_rev integer not null,
-	sub  text    not null,
+	_id   text    not null,
+	_rev  integer not null,
+	sub   text    not null,
+	attrs jsonb,
 
 	constraint "identities.pkey" primary key (_id),
 	constraint "identities.key-sub" unique (sub),
+	constraint "identities.check-attrs" check(jsonb_typeof(attrs) = 'object'),
 	constraint "identities.check-sub" check (sub <> '')
 );
 

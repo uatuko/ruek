@@ -1,3 +1,4 @@
+#include <glaze/glaze.hpp>
 #include <gtest/gtest.h>
 
 #include "err/errors.h"
@@ -67,6 +68,39 @@ TEST_F(IdentitiesTest, retrieve) {
 		auto identity = datastore::RetrieveIdentity("_id:IdentitiesTest.retrieve");
 		EXPECT_EQ(2308, identity.rev());
 		EXPECT_EQ("sub:IdentitiesTest.retrieve", identity.sub());
+		EXPECT_FALSE(identity.attrs());
+	}
+
+	// Success: retrieve optional attrs
+	{
+		std::string_view qry = R"(
+			insert into identities (
+				_id,
+				_rev,
+				sub,
+				attrs
+			) values (
+				$1::text,
+				$2::integer,
+				$3::text,
+				$4::jsonb
+			);
+		)";
+
+		try {
+			datastore::pg::exec(
+				qry,
+				"_id:IdentitiesTest.retrieve-optional",
+				1418,
+				"sub:IdentitiesTest.retrieve-optional",
+				R"({"foo": "bar"})");
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		auto identity = datastore::RetrieveIdentity("_id:IdentitiesTest.retrieve-optional");
+		EXPECT_EQ(1418, identity.rev());
+		EXPECT_EQ(R"({"foo": "bar"})", identity.attrs());
 	}
 
 	// Error: not found
@@ -125,7 +159,8 @@ TEST_F(IdentitiesTest, store) {
 			select
 				_id,
 				_rev,
-				sub
+				sub,
+				attrs
 			from identities
 			where _id = $1::text;
 		)";
@@ -133,10 +168,50 @@ TEST_F(IdentitiesTest, store) {
 		auto res = datastore::pg::exec(qry, identity.id());
 		EXPECT_EQ(1, res.size());
 
-		auto [_id, _rev, sub] = res[0].as<std::string, int, std::string>();
+		auto [_id, _rev, sub, attrs] =
+			res[0].as<std::string, int, std::string, datastore::Identity::Data::attrs_t>();
 		EXPECT_EQ(identity.id(), _id);
 		EXPECT_EQ(identity.rev(), _rev);
 		EXPECT_EQ(identity.sub(), sub);
+		EXPECT_FALSE(attrs);
+	}
+
+	// Success: persist data with optional attrs
+	{
+		const datastore::Identity identity({
+			.attrs = R"(
+				{
+					"flag": true,
+					"name": "First Last",
+					"tags": [
+						"test"
+					]
+				}
+			)",
+			.sub   = "sub:IdentitiesTest.store-optional",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		std::string_view qry = R"(
+			select
+				attrs
+			from identities
+			where _id = $1::text;
+		)";
+
+		auto res = datastore::pg::exec(qry, identity.id());
+		ASSERT_EQ(1, res.size());
+
+		auto [attrs] = res[0].as<datastore::Identity::Data::attrs_t>();
+		EXPECT_TRUE(attrs);
+
+		glz::json_t json;
+		auto        err = glz::read_json(json, *attrs);
+		ASSERT_FALSE(err);
+
+		EXPECT_EQ(true, json["flag"].get<bool>());
+		EXPECT_EQ("First Last", json["name"].get<std::string>());
+		EXPECT_EQ("test", json["tags"][0].get<std::string>());
 	}
 
 	// Error: duplicate `sub`
@@ -146,5 +221,15 @@ TEST_F(IdentitiesTest, store) {
 		});
 
 		EXPECT_THROW(duplicate.store(), err::DatastoreDuplicateIdentity);
+	}
+
+	// Error: invalid `attrs`
+	{
+		const datastore::Identity identity({
+			.attrs = R"("string")",
+			.sub   = "sub:IdentitiesTest.store-invalid-attrs",
+		});
+
+		EXPECT_THROW(identity.store(), err::DatastoreInvalidIdentityData);
 	}
 }
