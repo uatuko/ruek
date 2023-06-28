@@ -206,6 +206,7 @@ TEST_F(GrpcTest, CreateIdentity) {
 		EXPECT_EQ(peer.reactor(), reactor);
 		EXPECT_EQ(request.sub(), response.sub());
 		EXPECT_FALSE(response.id().empty());
+		EXPECT_FALSE(response.has_attrs());
 	}
 
 	// Success: create identity with `id`
@@ -224,6 +225,31 @@ TEST_F(GrpcTest, CreateIdentity) {
 		EXPECT_EQ(peer.reactor(), reactor);
 		EXPECT_EQ(request.id(), response.id());
 		EXPECT_EQ(request.sub(), response.sub());
+		EXPECT_FALSE(response.has_attrs());
+	}
+
+	// Success: create identity with `attrs`
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::CreateIdentityRequest request;
+		request.set_sub("sub:GrpcTest.CreateIdentity-with_attrs");
+
+		const std::string attrs(R"({"foo":"bar"})");
+		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
+
+		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(request.sub(), response.sub());
+		EXPECT_TRUE(response.has_attrs());
+
+		std::string responseAttrs;
+		google::protobuf::util::MessageToJsonString(response.attrs(), &responseAttrs);
+		EXPECT_EQ(attrs, responseAttrs);
 	}
 
 	// Error: duplicate `id`
@@ -295,6 +321,35 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 		EXPECT_EQ(peer.reactor(), reactor);
 		EXPECT_EQ(identity.id(), response.id());
 		EXPECT_EQ(identity.sub(), response.sub());
+		EXPECT_FALSE(response.has_attrs());
+	}
+
+	// Success: retrieve identity by id with attrs
+	{
+		const datastore::Identity identity({
+			.attrs = R"({"flag":true})",
+			.sub   = "sub:GrpcTest.RetrieveIdentity-with_attrs",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::RetrieveIdentityRequest request;
+		request.set_id(identity.id());
+
+		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(identity.id(), response.id());
+		EXPECT_EQ(identity.sub(), response.sub());
+		EXPECT_TRUE(response.has_attrs());
+
+		std::string attrs;
+		google::protobuf::util::MessageToJsonString(response.attrs(), &attrs);
+		EXPECT_EQ(*identity.attrs(), attrs);
 	}
 
 	// Error: identity not found
@@ -337,10 +392,72 @@ TEST_F(GrpcTest, UpdateIndentity) {
 
 		EXPECT_EQ(request.id(), response.id());
 		EXPECT_EQ(request.sub(), response.sub());
+		EXPECT_FALSE(response.has_attrs());
 
 		auto updatedIdentity = datastore::RetrieveIdentity(identity.id());
 		EXPECT_EQ(request.sub(), updatedIdentity.sub());
 		EXPECT_EQ(1, updatedIdentity.rev());
+		EXPECT_FALSE(updatedIdentity.attrs());
+	}
+
+	// Success: update identity attrs
+	{
+		const datastore::Identity identity({.sub = "sub:GrpcTest.UpdateIdentity-attrs"});
+		ASSERT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::UpdateIdentityRequest request;
+		request.set_id(identity.id());
+		{
+			auto &attrs  = *request.mutable_attrs();
+			auto &fields = *attrs.mutable_fields();
+
+			{
+				google::protobuf::Value v;
+				v.set_bool_value(true);
+
+				fields["flag"] = v;
+			}
+
+			{
+				google::protobuf::Value v;
+				v.set_string_value("Jane Doe");
+
+				fields["name"] = v;
+			}
+		}
+
+		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		ASSERT_TRUE(response.has_attrs());
+		auto &req = *request.mutable_attrs()->mutable_fields();
+		auto &res = *response.mutable_attrs()->mutable_fields();
+
+		EXPECT_EQ(req["flag"].bool_value(), res["flag"].bool_value());
+		EXPECT_EQ(req["name"].string_value(), res["name"].string_value());
+
+		{
+			std::string_view qry = R"(
+					select
+						attrs->'flag' as flag,
+						attrs->>'name' as name
+					from identities
+					where _id = $1::text;
+				)";
+
+			auto res = datastore::pg::exec(qry, identity.id());
+			ASSERT_EQ(1, res.size());
+
+			auto [flag, name] = res[0].as<bool, std::string>();
+			EXPECT_EQ(req["flag"].bool_value(), flag);
+			EXPECT_EQ(req["name"].string_value(), name);
+		}
 	}
 
 	// Error: no fields to update
