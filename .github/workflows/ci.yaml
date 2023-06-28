@@ -5,6 +5,8 @@ jobs:
   coverage:
     name: Code coverage
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow_ref }}-${{ github.job }}
     container: ubuntu:23.04
     services:
       postgres:
@@ -34,6 +36,10 @@ jobs:
             libpq-dev postgresql-client \
             lcov llvm
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: .build
+          key: ${{ runner.arch }}_${{ github.job }}-${{ hashFiles('cmake/dependencies.cmake') }}
       - name: Setup Postgres
         run: psql < datastore/schema.sql
         env:

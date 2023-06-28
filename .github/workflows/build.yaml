@@ -11,7 +11,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}_${{ matrix.container }}-${{ matrix.compiler }}
+      group: ${{ github.workflow_ref }}-${{ github.job }}_${{ matrix.container }}-${{ matrix.compiler }}
     container: ${{ matrix.container }}
     services:
       postgres:
@@ -92,7 +92,7 @@ jobs:
   macos:
     runs-on: macos-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}_macos-${{ matrix.compiler }}
+      group: ${{ github.workflow_ref }}-${{ github.job }}_${{ matrix.compiler }}
     strategy:
       fail-fast: false
       matrix:
