@@ -9,6 +9,9 @@ namespace datastore {
 class Identity {
 public:
 	struct Data {
+		using attrs_t = std::optional<std::string>;
+
+		attrs_t     attrs;
 		std::string id;
 		std::string sub;
 
@@ -19,6 +22,12 @@ public:
 	Identity(Data &&data) noexcept;
 
 	Identity(const pg::row_t &t);
+
+	const Data::attrs_t &attrs() const noexcept { return _data.attrs; }
+	void                 attrs(const Data::attrs_t &attrs) noexcept { _data.attrs = attrs; }
+	void                 attrs(const std::string &attrs) noexcept { _data.attrs = attrs; }
+	void                 attrs(Data::attrs_t &&attrs) noexcept { _data.attrs = std::move(attrs); }
+	void                 attrs(std::string &&attrs) noexcept { _data.attrs = std::move(attrs); }
 
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }

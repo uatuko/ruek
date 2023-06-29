@@ -166,7 +166,7 @@ grpc::ServerUnaryReactor *Grpc::UpdateIdentity(
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
-	if (!request->has_sub()) {
+	if (!request->has_attrs() && !request->has_sub()) {
 		// No fields to update -> throw an error
 		reactor->Finish(grpc::Status(grpc::StatusCode::INTERNAL, "No fields to update"));
 		return reactor;
@@ -181,6 +181,13 @@ grpc::ServerUnaryReactor *Grpc::UpdateIdentity(
 	} catch (...) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
 		return reactor;
+	}
+
+	if (request->has_attrs()) {
+		std::string attrs;
+		google::protobuf::util::MessageToJsonString(request->attrs(), &attrs);
+
+		identity->attrs(std::move(attrs));
 	}
 
 	if (request->has_sub()) {

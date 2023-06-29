@@ -21,8 +21,9 @@ Identity::Identity(Data &&data) noexcept : _data(std::move(data)), _rev(0) {
 
 Identity::Identity(const pg::row_t &r) :
 	_data({
-		.id  = r["_id"].as<std::string>(),
-		.sub = r["sub"].as<std::string>(),
+		.attrs = r["attrs"].as<Data::attrs_t>(),
+		.id    = r["_id"].as<std::string>(),
+		.sub   = r["sub"].as<std::string>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
@@ -41,20 +42,24 @@ void Identity::store() const {
 		insert into identities as t (
 			_id,
 			_rev,
-			sub
+			sub,
+			attrs
 		) values (
 			$1::text,
 			$2::integer,
-			$3::text
+			$3::text,
+			$4::jsonb
 		)
 		on conflict (_id)
 		do update
 			set (
 				_rev,
-				sub
+				sub,
+				attrs
 			) = (
 				excluded._rev + 1,
-				$3::text
+				$3::text,
+				$4::jsonb
 			)
 			where t._rev = $2::integer
 		returning _rev;
@@ -62,7 +67,9 @@ void Identity::store() const {
 
 	pg::result_t res;
 	try {
-		res = pg::exec(qry, _data.id, _rev, _data.sub);
+		res = pg::exec(qry, _data.id, _rev, _data.sub, _data.attrs);
+	} catch (pqxx::check_violation &) {
+		throw err::DatastoreInvalidIdentityData();
 	} catch (pg::unique_violation_t &) {
 		throw err::DatastoreDuplicateIdentity();
 	}
@@ -79,7 +86,8 @@ Identity RetrieveIdentity(const std::string &id) {
 		select
 			_id,
 			_rev,
-			sub
+			sub,
+			attrs
 		from identities
 		where
 			_id = $1::text;

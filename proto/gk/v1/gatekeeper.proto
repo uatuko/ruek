@@ -264,11 +264,15 @@ message ConsumeEventResponse {}
 message Identity {
 	string id  = 1;
 	string sub = 2;
+
+	optional google.protobuf.Struct attrs = 3;
 }
 
 message CreateIdentityRequest {
 	optional string id  = 1;
 	string          sub = 2;
+
+	optional google.protobuf.Struct attrs = 3;
 }
 
 message LookupIdentitiesRequest {
@@ -287,7 +291,8 @@ message RetrieveIdentityRequest {
 message UpdateIdentityRequest {
 	string id = 1;
 
-	optional string sub = 2;
+	optional string sub                   = 2;
+	optional google.protobuf.Struct attrs = 3;
 }
 
 // RBAC policies

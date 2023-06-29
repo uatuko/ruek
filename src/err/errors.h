@@ -10,8 +10,9 @@ using DatastoreRedisTimeout               = basic_error<"gk:1.0.2.503", "Operati
 
 using DatastoreRevisionMismatch = basic_error<"gk:1.1.1.409", "Revision mismatch">;
 
-using DatastoreDuplicateIdentity = basic_error<"gk:1.2.1.409", "Duplicate identity">;
-using DatastoreIdentityNotFound  = basic_error<"gk:1.2.2.404", "Identity not found">;
+using DatastoreDuplicateIdentity   = basic_error<"gk:1.2.1.409", "Duplicate identity">;
+using DatastoreIdentityNotFound    = basic_error<"gk:1.2.2.404", "Identity not found">;
+using DatastoreInvalidIdentityData = basic_error<"gk:1.2.3.400", "Invalid identity data">;
 
 using DatastoreCollectionNotFound = basic_error<"gk:1.3.3.404", "Collection not found">;
 using DatastoreDuplicateCollectionMember =
