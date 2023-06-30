@@ -196,7 +196,7 @@ TEST_F(GrpcTest, AddCollectionMember) {
 
 	// Success: add collection member
 	{
-		datastore::Identity identity({.sub="sub:GrpcTest.AddCollectionMember"});
+		datastore::Identity identity({.sub = "sub:GrpcTest.AddCollectionMember"});
 		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -208,6 +208,33 @@ TEST_F(GrpcTest, AddCollectionMember) {
 		request.set_identity_id(identity.id());
 
 		auto reactor = service.AddCollectionMember(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+	}
+}
+
+TEST_F(GrpcTest, RemoveCollectionMember) {
+	datastore::Collection collection({.name = "name:GrpcTest.RemoveCollectionMember"});
+	ASSERT_NO_THROW(collection.store());
+
+	service::Grpc service;
+
+	// Success: remove collection member
+	{
+		datastore::Identity identity({.sub = "sub:GrpcTest.RemoveCollectionMember"});
+		ASSERT_NO_THROW(identity.store());
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		grpc::CallbackServerContext            ctx;
+		grpc::testing::DefaultReactorTestPeer  peer(&ctx);
+		gk::v1::RemoveCollectionMemberResponse response;
+
+		gk::v1::RemoveCollectionMemberRequest request;
+		request.set_collection_id(collection.id());
+		request.set_identity_id(identity.id());
+
+		auto reactor = service.RemoveCollectionMember(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);

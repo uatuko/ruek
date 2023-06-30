@@ -116,6 +116,19 @@ grpc::ServerUnaryReactor *Grpc::AddCollectionMember(
 	return reactor;
 };
 
+grpc::ServerUnaryReactor *Grpc::RemoveCollectionMember(
+	grpc::CallbackServerContext *context, const gk::v1::RemoveCollectionMemberRequest *request,
+	gk::v1::RemoveCollectionMemberResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto collection = datastore::RetrieveCollection(request->collection_id());
+	collection.remove(request->identity_id());
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 // Identities
 grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
