@@ -18,6 +18,11 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::UpdateCollectionRequest *request,
 		gk::v1::Collection *response) override;
 
+	// Collections - members
+	grpc::ServerUnaryReactor *AddCollectionMember(
+		grpc::CallbackServerContext *context, const gk::v1::AddCollectionMemberRequest *request,
+		gk::v1::AddCollectionMemberResponse *response) override;
+
 	// Identities
 	grpc::ServerUnaryReactor *CreateIdentity(
 		grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,

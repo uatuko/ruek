@@ -187,6 +187,33 @@ TEST_F(GrpcTest, UpdateCollection) {
 	}
 }
 
+// Collections - members
+TEST_F(GrpcTest, AddCollectionMember) {
+	datastore::Collection collection({.name = "name:GrpcTest.AddCollectionMember"});
+	ASSERT_NO_THROW(collection.store());
+
+	service::Grpc service;
+
+	// Success: add collection member
+	{
+		datastore::Identity identity({.sub="sub:GrpcTest.AddCollectionMember"});
+		ASSERT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AddCollectionMemberResponse   response;
+
+		gk::v1::AddCollectionMemberRequest request;
+		request.set_collection_id(collection.id());
+		request.set_identity_id(identity.id());
+
+		auto reactor = service.AddCollectionMember(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+	}
+}
+
 // Identities
 TEST_F(GrpcTest, CreateIdentity) {
 	service::Grpc service;
