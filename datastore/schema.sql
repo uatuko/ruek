@@ -45,29 +45,30 @@ create table if not exists roles (
 	constraint "roles.pkey" primary key (_id)
 );
 
-create table if not exists "access-policies_collections" (
-	collection_id text not null,
-	policy_id     text not null,
 
-	constraint "access-policies_collections.pkey" primary key (collection_id, policy_id),
-	constraint "access-policies_collections.fkey-collection_id" foreign key (collection_id)
-		references collections(_id)
-		on delete cascade,
+create table if not exists "access-policies_collections" (
+	policy_id     text not null,
+	collection_id text not null,
+
+	constraint "access-policies_collections.pkey" primary key (policy_id, collection_id),
 	constraint "access-policies_collections.fkey-policy_id" foreign key (policy_id)
 		references "access-policies"(_id)
+		on delete cascade,
+	constraint "access-policies_collections.fkey-collection_id" foreign key (collection_id)
+		references collections(_id)
 		on delete cascade
 );
 
 create table if not exists "access-policies_identities" (
-	identity_id text not null,
 	policy_id   text not null,
+	identity_id text not null,
 
-	constraint "access-policies_identities.pkey" primary key (identity_id, policy_id),
-	constraint "access-policies_identities.fkey-identity_id" foreign key (identity_id)
-		references identities(_id)
-		on delete cascade,
+	constraint "access-policies_identities.pkey" primary key (policy_id, identity_id),
 	constraint "access-policies_identities.fkey-policy_id" foreign key (policy_id)
 		references "access-policies"(_id)
+		on delete cascade,
+	constraint "access-policies_identities.fkey-identity_id" foreign key (identity_id)
+		references identities(_id)
 		on delete cascade
 );
 
@@ -85,29 +86,28 @@ create table if not exists "collections_identities" (
 );
 
 create table if not exists "rbac-policies_collections" (
-	collection_id text not null,
 	policy_id     text not null,
+	collection_id text not null,
 
-	constraint "rbac-policies_collections.pkey" primary key (collection_id, policy_id),
-	constraint "rbac-policies_collections.fkey-collection_id" foreign key (collection_id)
-		references collections(_id)
-		on delete cascade,
+	constraint "rbac-policies_collections.pkey" primary key (policy_id, collection_id),
 	constraint "rbac-policies_collections.fkey-policy_id" foreign key (policy_id)
 		references "rbac-policies"(_id)
+		on delete cascade,
+	constraint "rbac-policies_collections.fkey-collection_id" foreign key (collection_id)
+		references collections(_id)
 		on delete cascade
 );
 
-
 create table if not exists "rbac-policies_identities" (
-	identity_id text not null,
 	policy_id   text not null,
+	identity_id text not null,
 
-	constraint "rbac-policies_identities.pkey" primary key (identity_id, policy_id),
-	constraint "rbac-policies_identities.fkey-identity_id" foreign key (identity_id)
-		references identities(_id)
-		on delete cascade,
+	constraint "rbac-policies_identities.pkey" primary key (policy_id, identity_id),
 	constraint "rbac-policies_identities.fkey-policy_id" foreign key (policy_id)
 		references "rbac-policies"(_id)
+		on delete cascade,
+	constraint "rbac-policies_identities.fkey-identity_id" foreign key (identity_id)
+		references identities(_id)
 		on delete cascade
 );
 
