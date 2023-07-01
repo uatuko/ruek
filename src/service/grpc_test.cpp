@@ -211,6 +211,22 @@ TEST_F(GrpcTest, AddCollectionMember) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
+
+		{
+			std::string_view qry = R"(
+					select count(*)
+					from collections_identities
+					where
+						collection_id = $1::text
+						and identity_id = $2::text;
+				)";
+
+			auto res = datastore::pg::exec(qry, collection.id(), identity.id());
+			ASSERT_EQ(1, res.size());
+
+			auto [count] = res[0].as<int>();
+			EXPECT_EQ(1, count);
+		}
 	}
 }
 
@@ -276,6 +292,22 @@ TEST_F(GrpcTest, RemoveCollectionMember) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
+
+		{
+			std::string_view qry = R"(
+					select count(*)
+					from collections_identities
+					where
+						collection_id = $1::text
+						and identity_id = $2::text;
+				)";
+
+			auto res = datastore::pg::exec(qry, collection.id(), identity.id());
+			ASSERT_EQ(1, res.size());
+
+			auto [count] = res[0].as<int>();
+			EXPECT_EQ(0, count);
+		}
 	}
 }
 
