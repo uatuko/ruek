@@ -102,6 +102,54 @@ grpc::ServerUnaryReactor *Grpc::UpdateCollection(
 	return reactor;
 }
 
+// Collections - members
+grpc::ServerUnaryReactor *Grpc::AddCollectionMember(
+	grpc::CallbackServerContext *context, const gk::v1::AddCollectionMemberRequest *request,
+	gk::v1::AddCollectionMemberResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto collection = datastore::RetrieveCollection(request->collection_id());
+	collection.add(request->identity_id());
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+};
+
+grpc::ServerUnaryReactor *Grpc::ListCollectionMembers(
+	grpc::CallbackServerContext *context, const gk::v1::ListCollectionMembersRequest *request,
+	gk::v1::ListCollectionMembersResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	// TODO: pagination and response metadata
+	auto collection = datastore::RetrieveCollection(request->id());
+	auto memberIds  = collection.members();
+
+	for (const auto &id : memberIds) {
+		auto identity   = datastore::RetrieveIdentity(id);
+		auto pbIdentity = response->add_data();
+
+		map(identity, pbIdentity);
+	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+grpc::ServerUnaryReactor *Grpc::RemoveCollectionMember(
+	grpc::CallbackServerContext *context, const gk::v1::RemoveCollectionMemberRequest *request,
+	gk::v1::RemoveCollectionMemberResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto collection = datastore::RetrieveCollection(request->collection_id());
+	collection.remove(request->identity_id());
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 // Identities
 grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,

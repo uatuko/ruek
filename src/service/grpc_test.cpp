@@ -187,6 +187,130 @@ TEST_F(GrpcTest, UpdateCollection) {
 	}
 }
 
+// Collections - members
+TEST_F(GrpcTest, AddCollectionMember) {
+	datastore::Collection collection({.name = "name:GrpcTest.AddCollectionMember"});
+	ASSERT_NO_THROW(collection.store());
+
+	service::Grpc service;
+
+	// Success: add collection member
+	{
+		datastore::Identity identity({.sub = "sub:GrpcTest.AddCollectionMember"});
+		ASSERT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AddCollectionMemberResponse   response;
+
+		gk::v1::AddCollectionMemberRequest request;
+		request.set_collection_id(collection.id());
+		request.set_identity_id(identity.id());
+
+		auto reactor = service.AddCollectionMember(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		{
+			std::string_view qry = R"(
+					select count(*)
+					from collections_identities
+					where
+						collection_id = $1::text
+						and identity_id = $2::text;
+				)";
+
+			auto res = datastore::pg::exec(qry, collection.id(), identity.id());
+			ASSERT_EQ(1, res.size());
+
+			auto [count] = res[0].as<int>();
+			EXPECT_EQ(1, count);
+		}
+	}
+}
+
+TEST_F(GrpcTest, ListCollectionMembers) {
+	datastore::Collection collection({.name = "name:GrpcTest.ListCollectionMembers"});
+	ASSERT_NO_THROW(collection.store());
+
+	service::Grpc service;
+
+	// Success: list collection members
+	{
+		std::array<datastore::Identity, 2> identities = {
+			datastore::Identity({.sub = "sub:GrpcTest.ListCollectionMembers-1"}),
+			datastore::Identity({.sub = "sub:GrpcTest.ListCollectionMembers-2"}),
+		};
+
+		for (const auto &idn : identities) {
+			ASSERT_NO_THROW(idn.store());
+		}
+
+		ASSERT_NO_THROW(collection.add(identities[0].id()));
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::ListCollectionMembersResponse response;
+
+		gk::v1::ListCollectionMembersRequest request;
+		request.set_id(collection.id());
+
+		auto reactor = service.ListCollectionMembers(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_FALSE(response.has_meta());
+
+		ASSERT_EQ(1, response.data_size());
+		EXPECT_EQ(identities[0].id(), response.data(0).id());
+	}
+}
+
+TEST_F(GrpcTest, RemoveCollectionMember) {
+	datastore::Collection collection({.name = "name:GrpcTest.RemoveCollectionMember"});
+	ASSERT_NO_THROW(collection.store());
+
+	service::Grpc service;
+
+	// Success: remove collection member
+	{
+		datastore::Identity identity({.sub = "sub:GrpcTest.RemoveCollectionMember"});
+		ASSERT_NO_THROW(identity.store());
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		grpc::CallbackServerContext            ctx;
+		grpc::testing::DefaultReactorTestPeer  peer(&ctx);
+		gk::v1::RemoveCollectionMemberResponse response;
+
+		gk::v1::RemoveCollectionMemberRequest request;
+		request.set_collection_id(collection.id());
+		request.set_identity_id(identity.id());
+
+		auto reactor = service.RemoveCollectionMember(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		{
+			std::string_view qry = R"(
+					select count(*)
+					from collections_identities
+					where
+						collection_id = $1::text
+						and identity_id = $2::text;
+				)";
+
+			auto res = datastore::pg::exec(qry, collection.id(), identity.id());
+			ASSERT_EQ(1, res.size());
+
+			auto [count] = res[0].as<int>();
+			EXPECT_EQ(0, count);
+		}
+	}
+}
+
 // Identities
 TEST_F(GrpcTest, CreateIdentity) {
 	service::Grpc service;
