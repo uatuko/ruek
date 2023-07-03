@@ -21,7 +21,7 @@ RUN cmake -B .build -G Ninja \
       -DBUILD_SHARED_LIBS=OFF \
       && cmake --build .build --config Release
 
-FROM debian:bookworm-slim AS deploy
+FROM --platform=linux/amd64 debian:bookworm-slim AS deploy
 
 WORKDIR /app
 
