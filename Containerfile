@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim as devtools
+FROM --platform=linux/amd64 debian:bookworm-slim as devtools
 
 RUN apt-get update && apt-get install -y --no-install-recommends clang libclang-rt-dev
 RUN apt-get update && apt-get install -y --no-install-recommends cmake ninja-build
