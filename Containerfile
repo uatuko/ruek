@@ -1,9 +1,10 @@
 FROM --platform=linux/amd64 debian:bookworm-slim as devtools
 
-RUN apt-get update && apt-get install -y --no-install-recommends clang libclang-rt-dev
-RUN apt-get update && apt-get install -y --no-install-recommends cmake ninja-build
-RUN apt-get update && apt-get install -y --no-install-recommends libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
-RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev postgresql-client
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    clang libclang-rt-dev \
+    cmake ninja-build \
+    libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc \
+    libpq-dev postgresql-clients
 
 FROM devtools AS build
 
@@ -18,17 +19,19 @@ COPY proto/ ./proto
 RUN cmake -B .build -G Ninja \ 
       -DCMAKE_CXX_COMPILER=clang++ \
       -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_SHARED_LIBS=OFF \
-      && cmake --build .build --config Release
+      -DBUILD_SHARED_LIBS=OFF
+
+RUN cmake --build .build --config Release
 
 FROM --platform=linux/amd64 debian:bookworm-slim AS deploy
 
-WORKDIR /app
+WORKDIR /opt/gatekeeper
 
 RUN apt-get update && apt-get install -y --no-install-recommends libpq5 libgrpc++1.51
 
 COPY conf ./conf
-COPY --from=build /home/build/.build/bin/gatekeeper ./gatekeeper
+
+COPY --from=build /home/build/.build/bin ./bin
 
 EXPOSE 8080
-CMD [ "/app/gatekeeper" ]
+CMD [ "/opt/bin/gatekeeper" ]
