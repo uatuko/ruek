@@ -3,6 +3,22 @@
 #include <google/protobuf/util/json_util.h>
 
 namespace service {
+datastore::AccessPolicy map(const gk::v1::CreateAccessPolicyRequest *from) {
+	datastore::AccessPolicy policy({
+		.id   = from->id(),
+		.name = from->name(),
+	});
+
+	// if (from->rules.()) {
+	// 	std::string rules;
+	// 	google::protobuf::util::MessageToJsonString(from->rules(), &rules);
+
+	// 	policy.rules(std::move(rules));
+	// }
+
+	return policy;
+}
+
 datastore::Collection map(const gk::v1::CreateCollectionRequest *from) {
 	return {{
 		.id   = from->id(),
@@ -24,6 +40,11 @@ datastore::Identity map(const gk::v1::CreateIdentityRequest *from) {
 	}
 
 	return identity;
+}
+
+void map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) {
+	to->set_id(from.id());
+	to->set_name(from.name());
 }
 
 datastore::Role map(const gk::v1::CreateRoleRequest *from) {
