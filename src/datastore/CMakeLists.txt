@@ -1,4 +1,5 @@
 add_library(datastore
+	access-policies.cpp access-policies.h
 	collections.cpp collections.h
 	config.h
 	datastore.h
@@ -40,6 +41,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 	)
 
 	add_executable(datastore_tests
+		access-policies_test.cpp
 		collections_test.cpp
 		identities_test.cpp
 		redis_test.cpp
