@@ -5,6 +5,7 @@ add_library(datastore
 	identities.cpp identities.h
 	pg.cpp pg.h
 	redis.cpp redis.h
+	roles.cpp roles.h
 )
 
 target_link_libraries(datastore
@@ -42,6 +43,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 		collections_test.cpp
 		identities_test.cpp
 		redis_test.cpp
+		roles_test.cpp
 	)
 
 	target_link_libraries(datastore_tests
