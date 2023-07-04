@@ -118,10 +118,11 @@ void map(const datastore::Identity &from, gk::v1::Identity *to) {
 void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());
-
-	if (from.rules().size() > 0) {	
-		for (int i = 0; i < from.rules().size(); i++) {
-			google::protobuf::util::JsonStringToMessage(*from.rules().at(i), to->mutable_rules(i));
+	if (from.rules().size() > 0) {
+		auto i = 0;
+		for (const auto &rule : from.rules()) {
+			google::protobuf::util::JsonStringToMessage(rule, to->mutable_rules(i));
+			i++;
 		}
 	}
 }
