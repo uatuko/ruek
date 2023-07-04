@@ -66,7 +66,6 @@ void AccessPolicy::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-
 void AccessPolicy::discard() const {
 	std::string_view qry = R"(
 		delete from "access-policies"

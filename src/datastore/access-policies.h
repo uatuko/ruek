@@ -23,7 +23,7 @@ public:
 
 	AccessPolicy(const pg::row_t &t);
 
-	const Data::rules_t  &rules() const noexcept { return _data.rules; }
+	const Data::rules_t &rules() const noexcept { return _data.rules; }
 	void                 rules(const Data::rules_t &rules) noexcept { _data.rules = rules; }
 	void                 rules(const std::string &rules) noexcept { _data.rules = rules; }
 	void                 rules(Data::rules_t &&rules) noexcept { _data.rules = std::move(rules); }
@@ -36,7 +36,7 @@ public:
 	void               name(const std::string &name) noexcept { _data.name = name; }
 	void               name(std::string &&name) noexcept { _data.name = std::move(name); }
 
-	void store()   const;
+	void store() const;
 	void discard() const;
 
 private:
