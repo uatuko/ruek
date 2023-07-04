@@ -77,3 +77,9 @@ jobs:
       - name: Publish
         run: |
           docker push ghcr.io/${{ github.repository }}:latest
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: gatekeeper
+          package-type: container
+          min-versions-to-keep: 1
+          delete-only-untagged-versions: true
