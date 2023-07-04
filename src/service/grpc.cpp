@@ -6,7 +6,7 @@
 
 namespace service {
 // Access Policies
-grpc::ServerUnaryReactor *Grpc:: CreateAccessPolicy(
+grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 	grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
 	gk::v1::AccessPolicy *response) {
 	auto *reactor = context->DefaultReactor();
@@ -14,8 +14,7 @@ grpc::ServerUnaryReactor *Grpc:: CreateAccessPolicy(
 	if (request->has_id()) {
 		try {
 			auto policy = datastore::RetrieveAccessPolicy(request->id());
-			reactor->Finish(
-				grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Duplicate policy id"));
+			reactor->Finish(grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Duplicate policy id"));
 			return reactor;
 		} catch (const err::DatastoreAccessPolicyNotFound &) {
 			// Policy with an `id` matching the request `id` doesn't exist, we can continue with

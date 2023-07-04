@@ -55,7 +55,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 	{
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::AccessPolicy                   response;
+		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
 		request.set_id("id:GrpcTest.CreateAccessPolicy");
@@ -76,7 +76,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::AccessPolicy                    response;
+		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
 		request.set_id(policy.id());
