@@ -346,6 +346,14 @@ grpc::ServerUnaryReactor *Grpc::UpdateIdentity(
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
+grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
+	grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
+	gk::v1::RbacPolicy *response) {
+	auto *reactor = context->DefaultReactor();
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
 
 // Roles
 grpc::ServerUnaryReactor *Grpc::CreateRole(
