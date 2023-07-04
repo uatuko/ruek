@@ -20,5 +20,7 @@ using DatastoreDuplicateCollectionMember =
 using DatastoreInvalidCollectionOrMember =
 	basic_error<"gk:1.3.1.400", "Invalid collection or member">;
 
+using DatastoreRoleNotFound = basic_error<"gk:1.3.1.404", "Role not found">;
+
 using EventsPubsubTransportFailure = basic_error<"gk:2.1.1.503", "Unavailable">;
 } // namespace err

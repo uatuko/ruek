@@ -43,5 +43,14 @@ public:
 	grpc::ServerUnaryReactor *UpdateIdentity(
 		grpc::CallbackServerContext *context, const gk::v1::UpdateIdentityRequest *request,
 		gk::v1::Identity *response) override;
+
+	// Roles
+	grpc::ServerUnaryReactor *CreateRole(
+		grpc::CallbackServerContext *context, const gk::v1::CreateRoleRequest *request,
+		gk::v1::Role *response) override;
+
+	grpc::ServerUnaryReactor *RetrieveRole(
+		grpc::CallbackServerContext *context, const gk::v1::RetrieveRoleRequest *request,
+		gk::v1::Role *response) override;
 };
 } // namespace service
