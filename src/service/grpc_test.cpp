@@ -1,6 +1,7 @@
 #include <grpcpp/test/default_reactor_test_peer.h>
 #include <gtest/gtest.h>
 
+#include "datastore/access-policies.h"
 #include "datastore/collections.h"
 #include "datastore/identities.h"
 #include "datastore/roles.h"
@@ -14,18 +15,79 @@ protected:
 		datastore::testing::setup();
 
 		// Clear data
+		datastore::pg::exec("truncate table \"access-policies\" cascade;");
 		datastore::pg::exec("truncate table collections cascade;");
 		datastore::pg::exec("truncate table identities cascade;");
 	}
 
 	void SetUp() {
 		// Clear data before each test
+		datastore::pg::exec("delete from \"access-policies\" cascade;");
 		datastore::pg::exec("delete from collections cascade;");
 		datastore::pg::exec("delete from identities cascade;");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
+
+// Access Policies
+TEST_F(GrpcTest, CreateAccessPolicy) {
+	service::Grpc service;
+
+	// Success: create access policy
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                  response;
+
+		gk::v1::CreateAccessPolicyRequest request;
+		request.set_name("name:GrpcTest.CreateAccessPolicy");
+
+		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(request.name(), response.name());
+		EXPECT_FALSE(response.id().empty());
+	}
+
+	// Success: create access policy with `id`
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                   response;
+
+		gk::v1::CreateAccessPolicyRequest request;
+		request.set_id("id:GrpcTest.CreateAccessPolicy");
+		request.set_name("name:GrpcTest.CreateAccessPolicy");
+
+		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(request.id(), response.id());
+		EXPECT_EQ(request.name(), response.name());
+	}
+
+	// // Error: duplicate `id`
+	{
+		const datastore::AccessPolicy policy({.name = "name:GrpcTest.CreateAccessPolicy"});
+		EXPECT_NO_THROW(policy.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                    response;
+
+		gk::v1::CreateAccessPolicyRequest request;
+		request.set_id(policy.id());
+		request.set_name("name:GrpcTest.CreateAccessPolicy-duplicate");
+
+		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
+		EXPECT_EQ("Duplicate policy id", peer.test_status().error_message());
+	}
+}
 
 // Collections
 TEST_F(GrpcTest, CreateCollection) {
