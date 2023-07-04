@@ -56,6 +56,33 @@ void map(const datastore::AccessPolicies &from, gk::v1::CheckAccessResponse *to)
 	}
 }
 
+datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
+	datastore::RbacPolicy rbacPolicy({
+		.id  = from->id(),
+		.name = from->name(),
+	});
+
+	if (from->principals_size() > 0) {
+		for (int i = 0; i < from->principals_size(); i++) {
+			auto id = from->principals(i).id();
+			auto type = from->principals(i).GetTypeName();
+		}
+	}
+	
+
+	if (from->rules_size() > 0) {
+		for (int i = 0; i < from->rules_size(); i++) {
+			auto roleId = from->rules(i).role_id();
+			if (from->rules(i).has_attrs()) {
+				std::string attrs;
+				google::protobuf::util::MessageToJsonString(from->rules(i).attrs(), &attrs);
+			}
+		}
+	}
+
+	return rbacPolicy;
+}
+
 datastore::Role map(const gk::v1::CreateRoleRequest *from) {
 	datastore::Role role({
 		.id   = from->id(),
@@ -88,6 +115,17 @@ void map(const datastore::Identity &from, gk::v1::Identity *to) {
 	}
 }
 
+void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
+	to->set_id(from.id());
+	to->set_name(from.name());
+
+	if (from.rules().size() > 0) {	
+		for (int i = 0; i < from.rules().size(); i++) {
+			google::protobuf::util::JsonStringToMessage(*from.rules().at(i), to->mutable_rules(i));
+		}
+	}
+}
+
 void map(const datastore::Role &from, gk::v1::Role *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());
@@ -96,4 +134,5 @@ void map(const datastore::Role &from, gk::v1::Role *to) {
 		to->add_permissions(perm);
 	}
 }
+
 } // namespace service

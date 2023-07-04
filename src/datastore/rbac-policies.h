@@ -9,7 +9,7 @@ namespace datastore {
 class RbacPolicy {
 public:
 	struct Data {
-		using rules_t = std::optional<std::string>;
+		using rules_t = std::vector<std::optional<std::string>>;
 
 		std::string id;
     std::string name;
@@ -32,9 +32,7 @@ public:
 
   const Data::rules_t &rules() const noexcept { return _data.rules; }
 	void                 rules(const Data::rules_t &rules) noexcept { _data.rules = rules; }
-	void                 rules(const std::string &rules) noexcept { _data.rules = rules; }
 	void                 rules(Data::rules_t &&rules) noexcept { _data.rules = std::move(rules); }
-	void                 rules(std::string &&rules) noexcept { _data.rules = std::move(rules); }
 
 	void store() const;
 
