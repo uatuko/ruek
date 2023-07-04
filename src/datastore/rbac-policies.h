@@ -43,5 +43,5 @@ private:
 	mutable int _rev;
 };
 
-using RbacPolicies = std::vector<RbacPolicies>;
+using RbacPolicies = std::vector<RbacPolicy>;
 } // namespace datastore

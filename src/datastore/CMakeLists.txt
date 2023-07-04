@@ -5,6 +5,7 @@ add_library(datastore
 	datastore.h
 	identities.cpp identities.h
 	pg.cpp pg.h
+	rbac-policies.cpp rbac-policies.h
 	redis.cpp redis.h
 	roles.cpp roles.h
 )
