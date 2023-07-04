@@ -42,7 +42,8 @@ create table if not exists roles (
 	name        text    not null,
 	permissions text[],
 
-	constraint "roles.pkey" primary key (_id)
+	constraint "roles.pkey" primary key (_id),
+	constraint "roles.check-permissions" check(array_position(permissions, null) = null and array_position(permissions, '') = null)
 );
 
 
