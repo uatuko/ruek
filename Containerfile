@@ -1,12 +1,12 @@
 FROM --platform=linux/amd64 debian:bookworm-slim as devtools
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    clang libclang-rt-dev \
-    cmake ninja-build \
-    libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc \
-    libpq-dev postgresql-clients
+      clang libclang-rt-dev \
+      cmake ninja-build \
+      libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc \
+      libpq-dev postgresql-client
 
-FROM devtools AS build
+FROM --platform=linux/amd64 devtools AS build
 
 WORKDIR /home/build
 
@@ -19,9 +19,8 @@ COPY proto/ ./proto
 RUN cmake -B .build -G Ninja \ 
       -DCMAKE_CXX_COMPILER=clang++ \
       -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_SHARED_LIBS=OFF
-
-RUN cmake --build .build --config Release
+      -DBUILD_SHARED_LIBS=OFF \
+      && cmake --build .build --config Release
 
 FROM --platform=linux/amd64 debian:bookworm-slim AS deploy
 
@@ -33,5 +32,5 @@ COPY conf ./conf
 
 COPY --from=build /home/build/.build/bin ./bin
 
-EXPOSE 8080
-CMD [ "/opt/bin/gatekeeper" ]
+EXPOSE 7000
+CMD [ "./bin/gatekeeper" ]
