@@ -136,7 +136,7 @@ std::vector<AccessPolicy> CheckAccess(
 
 	std::vector<AccessPolicy> policies;
 	for (int i = 0; i < reply->elements; i++) {
-		auto el = reply->element[i];
+		auto el     = reply->element[i];
 		auto policy = RetrieveAccessPolicy(el->str);
 		policies.push_back(policy);
 	}
