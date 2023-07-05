@@ -28,7 +28,7 @@ RbacPolicy::RbacPolicy(const pg::row_t &r) :
 
 void RbacPolicy::addPrincipal(const principal_t &pid) const {
 	std::string_view qry = R"(
-		insert into rbac-policies_identities (
+		insert into "rbac-policies_identities" (
 			policy_id,
 			identity_id
 		) values (
@@ -40,15 +40,15 @@ void RbacPolicy::addPrincipal(const principal_t &pid) const {
 	try {
 		pg::exec(qry, id(), pid);
 	} catch (pg::fkey_violation_t &) {
-		throw err::DatastoreInvalidCollectionOrMember();
+		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
 	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateCollectionMember();
+		throw err::DatastoreDuplicateRbacPolicyPrincipal();
 	}
 }
 
 void RbacPolicy::addRole(const role_t &rid) const {
 	std::string_view qry = R"(
-		insert into rbac-policies_roles (
+		insert into "rbac-policies_roles" (
 			policy_id,
 			role_id
 		) values (
@@ -60,15 +60,15 @@ void RbacPolicy::addRole(const role_t &rid) const {
 	try {
 		pg::exec(qry, id(), rid);
 	} catch (pg::fkey_violation_t &) {
-		throw err::DatastoreInvalidCollectionOrMember();
+		throw err::DatastoreInvalidRbacPolicyOrRole();
 	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateCollectionMember();
+		throw err::DatastoreDuplicateRbacPolicyRole();
 	}
 }
 
 void RbacPolicy::store() const {
 	std::string_view qry = R"(
-		insert into rbac-policies as t (
+		insert into "rbac-policies" as t (
 			_id,
 			_rev,
 			name
@@ -81,8 +81,7 @@ void RbacPolicy::store() const {
 		do update
 			set (
 				_rev,
-				name,
-				rules
+				name
 			) = (
 				excluded._rev + 1,
 				$3::text
@@ -94,10 +93,8 @@ void RbacPolicy::store() const {
 	pg::result_t res;
 	try {
 		res = pg::exec(qry, _data.id, _rev, _data.name);
-	} catch (pqxx::check_violation &) {
-		throw err::DatastoreInvalidIdentityData();
 	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateIdentity();
+		throw err::DatastoreDuplicateRbacPolicy();
 	}
 
 	if (res.empty()) {
@@ -112,7 +109,7 @@ const RbacPolicy::principals_t RbacPolicy::principals() const {
 		select
 			identity_id
 		from
-			rbac-policies_identities
+			"rbac-policies_identities"
 		where
 			policy_id = $1::text;
 	)";
@@ -127,34 +124,12 @@ const RbacPolicy::principals_t RbacPolicy::principals() const {
 	return members;
 }
 
-void RbacPolicy::removePrincipal(const principal_t &pid) const {
-	std::string_view qry = R"(
-		delete from rbac-policies_identities
-		where
-			policy_id = $1::text and
-			identity_id = $2::text;
-	)";
-
-	pg::exec(qry, id(), pid);
-}
-
-void RbacPolicy::removeRole(const role_t &rid) const {
-	std::string_view qry = R"(
-		delete from rbac-policies_roles
-		where
-			policy_id = $1::text and
-			role_id = $2::text;
-	)";
-
-	pg::exec(qry, id(), rid);
-}
-
 const RbacPolicy::roles_t RbacPolicy::roles() const {
 	std::string_view qry = R"(
 		select
 			role_id
 		from
-			rbac-policies_roles
+			"rbac-policies_roles"
 		where
 			policy_id = $1::text;
 	)";

@@ -33,11 +33,9 @@ public:
 
 	const principals_t principals() const;
 	void               addPrincipal(const principal_t &id) const;
-	void               removePrincipal(const principal_t &id) const;
 
 	const roles_t roles() const;
 	void          addRole(const role_t &id) const;
-	void          removeRole(const role_t &id) const;
 
 	void store() const;
 
