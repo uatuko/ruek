@@ -45,6 +45,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 		access-policies_test.cpp
 		collections_test.cpp
 		identities_test.cpp
+		rbac-policies_test.cpp
 		redis_test.cpp
 		roles_test.cpp
 	)
