@@ -33,6 +33,36 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 		return reactor;
 	}
 
+	for (const auto &principal : request->principals()) {
+		try {
+			switch (principal.type()) {
+			case 0:
+				policy.add_collection_principal(principal.id());
+				break;
+			case 1:
+				policy.add_identity_principal(principal.id());
+				break;
+			default:
+				reactor->Finish(
+					grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unhandled principal"));
+				return reactor;
+			}
+		} catch (...) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add principal"));
+			return reactor;
+		}
+
+		for (const auto &rule : request->rules()) {
+			try {
+				policy.add_access(principal.id(), rule.resource());
+			} catch (...) {
+				reactor->Finish(
+					grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add resource"));
+				return reactor;
+			}
+		}
+	}
+
 	map(policy, response);
 
 	reactor->Finish(grpc::Status::OK);

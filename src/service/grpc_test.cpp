@@ -69,7 +69,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_EQ(request.name(), response.name());
 	}
 
-	// // Error: duplicate `id`
+	// Error: duplicate `id`
 	{
 		const datastore::AccessPolicy policy({.name = "name:GrpcTest.CreateAccessPolicy"});
 		EXPECT_NO_THROW(policy.store());
@@ -86,6 +86,16 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
 		EXPECT_EQ("Duplicate policy id", peer.test_status().error_message());
+	}
+
+	// Success: create access policy with a principal
+	{
+		// TODO: this
+	}
+
+	// Success: create access policy with a resource
+	{
+		// TODO: this
 	}
 }
 
