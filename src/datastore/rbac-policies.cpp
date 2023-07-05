@@ -21,8 +21,8 @@ RbacPolicy::RbacPolicy(Data &&data) noexcept : _data(std::move(data)), _rev(0) {
 
 RbacPolicy::RbacPolicy(const pg::row_t &r) :
 	_data({
-		.id    = r["_id"].as<std::string>(),
-		.name   = r["name"].as<std::string>(),
+		.id   = r["_id"].as<std::string>(),
+		.name = r["name"].as<std::string>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
 

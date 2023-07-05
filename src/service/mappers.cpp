@@ -58,13 +58,13 @@ void map(const datastore::AccessPolicies &from, gk::v1::CheckAccessResponse *to)
 
 datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
 	datastore::RbacPolicy rbacPolicy({
-		.id  = from->id(),
+		.id   = from->id(),
 		.name = from->name(),
 	});
 
 	if (from->principals_size() > 0) {
 		for (int i = 0; i < from->principals_size(); i++) {
-			auto id = from->principals(i).id();
+			auto id   = from->principals(i).id();
 			auto type = from->principals(i).GetTypeName();
 		}
 	}

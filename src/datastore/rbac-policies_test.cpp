@@ -2,8 +2,8 @@
 
 #include "err/errors.h"
 
-#include "rbac-policies.h"
 #include "identities.h"
+#include "rbac-policies.h"
 #include "roles.h"
 #include "testing.h"
 
@@ -55,14 +55,15 @@ TEST_F(RbacPoliciesTest, principals) {
 		EXPECT_NO_THROW(identity.discard());
 	}
 
-  // Error: add invalid principals
+	// Error: add invalid principals
 	{
 		const datastore::RbacPolicy policy({
 			.name = "name:RbacPoliciesTest.principals-add_invalid-principal",
 		});
 		EXPECT_NO_THROW(policy.store());
 
-		EXPECT_THROW(policy.addPrincipal("invalid-principal"), err::DatastoreInvalidRbacPolicyOrPrincipal);
+		EXPECT_THROW(
+			policy.addPrincipal("invalid-principal"), err::DatastoreInvalidRbacPolicyOrPrincipal);
 	}
 
 	// Error: add principal to invalid policy
@@ -76,7 +77,8 @@ TEST_F(RbacPoliciesTest, principals) {
 		});
 		EXPECT_NO_THROW(identity.store());
 
-		EXPECT_THROW(policy.addPrincipal(identity.id()), err::DatastoreInvalidRbacPolicyOrPrincipal);
+		EXPECT_THROW(
+			policy.addPrincipal(identity.id()), err::DatastoreInvalidRbacPolicyOrPrincipal);
 	}
 
 	// Error: duplicate principal
@@ -92,7 +94,8 @@ TEST_F(RbacPoliciesTest, principals) {
 		EXPECT_NO_THROW(identity.store());
 
 		EXPECT_NO_THROW(policy.addPrincipal(identity.id()));
-		EXPECT_THROW(policy.addPrincipal(identity.id()), err::DatastoreDuplicateRbacPolicyPrincipal);
+		EXPECT_THROW(
+			policy.addPrincipal(identity.id()), err::DatastoreDuplicateRbacPolicyPrincipal);
 	}
 
 	// Success: list principals
@@ -166,7 +169,7 @@ TEST_F(RbacPoliciesTest, roles) {
 		EXPECT_EQ(1, res.at(0, 0).as<int>());
 	}
 
-  // Error: add invalid role
+	// Error: add invalid role
 	{
 		const datastore::RbacPolicy policy({
 			.name = "name:RbacPoliciesTest.roles-add_invalid-role",
@@ -233,8 +236,7 @@ TEST_F(RbacPoliciesTest, roles) {
 			auto actualRoles = policies[0].roles();
 			EXPECT_EQ(2, actualRoles.size());
 
-			const datastore::RbacPolicy::roles_t expected = {
-				roles[0].id(), roles[1].id()};
+			const datastore::RbacPolicy::roles_t expected = {roles[0].id(), roles[1].id()};
 			EXPECT_EQ(expected, actualRoles);
 		}
 		{

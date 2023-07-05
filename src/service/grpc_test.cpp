@@ -783,7 +783,7 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 	{
 		const datastore::Identity identity({.sub = "sub:GrpcTest.CreateRbacPolicy"});
 		ASSERT_NO_THROW(identity.store());
-		
+
 		const datastore::Role role({.name = "name:GrpcTest.CreateRbacPolicy"});
 		ASSERT_NO_THROW(role.store());
 

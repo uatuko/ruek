@@ -3,8 +3,8 @@
 #include "datastore/access-policies.h"
 #include "datastore/collections.h"
 #include "datastore/identities.h"
-#include "datastore/roles.h"
 #include "datastore/rbac-policies.h"
+#include "datastore/roles.h"
 #include "gk/v1/gatekeeper.grpc.pb.h"
 
 namespace service {

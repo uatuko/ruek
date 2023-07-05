@@ -10,11 +10,11 @@ class RbacPolicy {
 public:
 	using principal_t  = std::string;
 	using principals_t = std::set<principal_t>;
-	using role_t  = std::string;
-	using roles_t = std::set<role_t>;
+	using role_t       = std::string;
+	using roles_t      = std::set<role_t>;
 	struct Data {
 		std::string id;
-    std::string name;
+		std::string name;
 
 		bool operator==(const Data &) const noexcept = default;
 	};
