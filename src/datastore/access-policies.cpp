@@ -65,13 +65,13 @@ void AccessPolicy::discard() const {
 	pg::exec(qry, _data.id);
 }
 
-void AccessPolicy::add_access(
+void AccessPolicy::addAccess(
 	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource) const {
 	auto conn = datastore::redis::conn();
 	conn.cmd("SADD " + principal + ":" + resource + " " + _data.id);
 }
 
-void AccessPolicy::add_identity_principal(const AccessPolicy::principal_t principal_id) const {
+void AccessPolicy::addIdentityPrincipal(const AccessPolicy::principal_t principal_id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_identities" (
 			policy_id,
@@ -91,7 +91,7 @@ void AccessPolicy::add_identity_principal(const AccessPolicy::principal_t princi
 	}
 }
 
-void AccessPolicy::add_collection_principal(const AccessPolicy::principal_t principal_id) const {
+void AccessPolicy::addCollectionPrincipal(const AccessPolicy::principal_t principal_id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_collections" (
 			policy_id,

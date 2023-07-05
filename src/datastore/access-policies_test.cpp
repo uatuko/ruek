@@ -46,7 +46,7 @@ TEST_F(AccessPoliciesTest, create) {
 		// store access
 		auto principal = "principal-id:AccessPoliciesTest.add-access";
 		auto resource  = "resource-id:AccessPoliciesTest.add-access";
-		EXPECT_NO_THROW(policy.add_access(principal, resource));
+		EXPECT_NO_THROW(policy.addAccess(principal, resource));
 
 		EXPECT_EQ(datastore::CheckAccess(principal, resource).size(), 1);
 

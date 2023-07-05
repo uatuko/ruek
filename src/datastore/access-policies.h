@@ -11,10 +11,7 @@ namespace datastore {
 class AccessPolicy {
 public:
 	using principal_t = std::string;
-	// using principals_t = std::set<principal_t>;
-
 	using resource_t  = std::string;
-	using resources_t = std::set<resource_t>;
 
 	struct Data {
 		std::string id;
@@ -38,9 +35,9 @@ public:
 	void store() const;
 	void discard() const;
 
-	void add_access(const principal_t &principal, const resource_t &resource) const;
-	void add_identity_principal(const std::string principal_id) const;
-	void add_collection_principal(const std::string principal_id) const;
+	void addAccess(const principal_t &principal, const resource_t &resource) const;
+	void addIdentityPrincipal(const principal_t principal_id) const;
+	void addCollectionPrincipal(const principal_t principal_id) const;
 
 private:
 	Data        _data;

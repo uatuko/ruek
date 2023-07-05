@@ -121,14 +121,12 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 
 		// create access policy
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
-		std::cout << peer.test_status().error_message() << std::endl;
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
 		policies = datastore::CheckAccess(principal->id(), rule->resource());
-		datastore::redis::conn().cmd("SADD X Y");
 		EXPECT_EQ(policies.size(), 1);
 	}
 }

@@ -37,10 +37,10 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 		try {
 			switch (principal.type()) {
 			case gk::v1::PrincipalType::collection:
-				policy.add_collection_principal(principal.id());
+				policy.addCollectionPrincipal(principal.id());
 				break;
 			case gk::v1::PrincipalType::identity:
-				policy.add_identity_principal(principal.id());
+				policy.addIdentityPrincipal(principal.id());
 				break;
 			default:
 				reactor->Finish(
@@ -54,7 +54,7 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 
 		for (const auto &rule : request->rules()) {
 			try {
-				policy.add_access(principal.id(), rule.resource());
+				policy.addAccess(principal.id(), rule.resource());
 			} catch (...) {
 				reactor->Finish(
 					grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add resource"));
