@@ -21,7 +21,6 @@ AccessPolicy::AccessPolicy(Data &&data) noexcept : _data(std::move(data)), _rev(
 
 AccessPolicy::AccessPolicy(const pg::row_t &r) :
 	_data({
-		.rules = r["rules"].as<Data::rules_t>(),
 		.id    = r["_id"].as<std::string>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
@@ -30,29 +29,19 @@ void AccessPolicy::store() const {
 	std::string_view qry = R"(
 		insert into "access-policies" as t (
 			_id,
-			_rev,
-			rules
+			_rev
 		) values (
 			$1::text,
-			$2::integer,
-			$3::jsonb
+			$2::integer
 		)
 		on conflict (_id)
-		do update
-			set (
-				_rev,
-				rules
-			) = (
-				excluded._rev + 1,
-				$3::jsonb
-			)
-			where t._rev = $2::integer
+		do nothing
 		returning _rev;
 	)";
 
 	pg::result_t res;
 	try {
-		res = pg::exec(qry, _data.id, _rev, _data.rules);
+		res = pg::exec(qry, _data.id, _rev);
 	} catch (pqxx::check_violation &) {
 		throw err::DatastoreInvalidIdentityData();
 	} catch (pg::unique_violation_t &) {
@@ -100,8 +89,7 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	std::string_view qry = R"(
 		select
 			_id,
-			_rev,
-			rules
+			_rev
 		from "access-policies"
 		where
 			_id = $1::text;

@@ -13,9 +13,6 @@ public:
 	using resources_t = std::set<resource_t>;
 
 	struct Data {
-		using rules_t = std::optional<std::string>;
-
-		rules_t     rules;
 		std::string id;
 		std::string name;
 		resources_t resources;
@@ -28,11 +25,7 @@ public:
 
 	AccessPolicy(const pg::row_t &t);
 
-	const Data::rules_t &rules() const noexcept { return _data.rules; }
-	void                 rules(const Data::rules_t &rules) noexcept { _data.rules = rules; }
-	void                 rules(const std::string &rules) noexcept { _data.rules = rules; }
-	void                 rules(Data::rules_t &&rules) noexcept { _data.rules = std::move(rules); }
-	void                 rules(std::string &&rules) noexcept { _data.rules = std::move(rules); }
+	const resources_t &resources() const noexcept { return _data.resources; }
 
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
