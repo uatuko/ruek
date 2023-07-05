@@ -25,6 +25,7 @@ protected:
 		datastore::pg::exec("delete from \"access-policies\" cascade;");
 		datastore::pg::exec("delete from collections cascade;");
 		datastore::pg::exec("delete from identities cascade;");
+		datastore::redis::conn().cmd("FLUSHALL");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
@@ -88,14 +89,47 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_EQ("Duplicate policy id", peer.test_status().error_message());
 	}
 
-	// Success: create access policy with a principal
+	// Success: create access policy with a principal and resource
 	{
-		// TODO: this
-	}
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                  response;
 
-	// Success: create access policy with a resource
-	{
-		// TODO: this
+		gk::v1::CreateAccessPolicyRequest request;
+		request.set_name("name:GrpcTest.CreateAccessPolicy");
+
+		const datastore::Identity identity({
+			.sub = "principal_sub:GrpcTest.CreateAccessPolicy",
+		});
+
+		try {
+			identity.store();
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		auto principal = request.add_principals();
+		principal->set_id(identity.id());
+		principal->set_type(gk::v1::PrincipalType::identity);
+
+		auto rule = request.add_rules();
+		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
+
+		// expect no access before request
+		auto policies = datastore::CheckAccess(principal->id(), rule->resource());
+		EXPECT_EQ(policies.size(), 0);
+
+		// create access policy
+		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
+		std::cout << peer.test_status().error_message() << std::endl;
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// expect to find single policy when checking access
+		policies = datastore::CheckAccess(principal->id(), rule->resource());
+		datastore::redis::conn().cmd("SADD X Y");
+		EXPECT_EQ(policies.size(), 1);
 	}
 }
 
