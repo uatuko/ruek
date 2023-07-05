@@ -4,6 +4,7 @@
 
 #include "rbac-policies.h"
 #include "identities.h"
+#include "roles.h"
 #include "testing.h"
 
 class RbacPoliciesTest : public ::testing::Test {
@@ -133,6 +134,112 @@ TEST_F(RbacPoliciesTest, principals) {
 		// cleanup
 		for (const auto &identity : identities) {
 			EXPECT_NO_THROW(identity.discard());
+		}
+	}
+}
+
+TEST_F(RbacPoliciesTest, roles) {
+	// Success: add roles
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.roles-add",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		const datastore::Role role({
+			.name = "name:RbacPoliciesTest.roles-add",
+		});
+		EXPECT_NO_THROW(role.store());
+
+		EXPECT_NO_THROW(policy.addRole(role.id()));
+
+		std::string_view qry = R"(
+			select
+				count(*) as n_roles
+			from "rbac-policies_roles"
+			where
+				policy_id = $1::text and
+				role_id = $2::text;
+		)";
+
+		auto res = datastore::pg::exec(qry, policy.id(), role.id());
+		EXPECT_EQ(1, res.at(0, 0).as<int>());
+	}
+
+  // Error: add invalid role
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.roles-add_invalid-role",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		EXPECT_THROW(policy.addRole("invalid-role"), err::DatastoreInvalidRbacPolicyOrRole);
+	}
+
+	// Error: add role to invalid policy
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.roles-add_invalid-policy",
+		});
+
+		const datastore::Role role({
+			.name = "name:RbacPoliciesTest.roles-add_invalid-policy",
+		});
+		EXPECT_NO_THROW(role.store());
+
+		EXPECT_THROW(policy.addRole(role.id()), err::DatastoreInvalidRbacPolicyOrRole);
+	}
+
+	// Error: duplicate role
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.roles-add_duplicate-role",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		const datastore::Role role({
+			.name = "sub:RbacPoliciesTest.roles-add_duplicate-role",
+		});
+		EXPECT_NO_THROW(role.store());
+
+		EXPECT_NO_THROW(policy.addRole(role.id()));
+		EXPECT_THROW(policy.addRole(role.id()), err::DatastoreDuplicateRbacPolicyRole);
+	}
+
+	// Success: list roles
+	{
+		const datastore::RbacPolicies policies({
+			{{.name = "name:RbacPoliciesTest.roles-list[0]"}},
+			{{.name = "name:RbacPoliciesTest.roles-list[1]"}},
+		});
+
+		for (const auto &policy : policies) {
+			EXPECT_NO_THROW(policy.store());
+		}
+
+		const datastore::Roles roles({
+			{{.name = "sub:RbacPoliciesTest.role-list[0]"}},
+			{{.name = "sub:RbacPoliciesTest.role-list[1]"}},
+		});
+
+		for (const auto &role : roles) {
+			EXPECT_NO_THROW(role.store());
+		}
+
+		EXPECT_NO_THROW(policies[0].addRole(roles[0].id()));
+		EXPECT_NO_THROW(policies[0].addRole(roles[1].id()));
+
+		{
+			auto actualRoles = policies[0].roles();
+			EXPECT_EQ(2, actualRoles.size());
+
+			const datastore::RbacPolicy::roles_t expected = {
+				roles[0].id(), roles[1].id()};
+			EXPECT_EQ(expected, actualRoles);
+		}
+		{
+			auto actualRoles = policies[1].roles();
+			EXPECT_EQ(0, actualRoles.size());
 		}
 	}
 }
