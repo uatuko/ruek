@@ -366,7 +366,7 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 		// Add principals to junction table
 		if (request->principals().size() > 0) {
 			for (const auto &principal : request->principals()) {
-				policy.addMember(principal.id());
+				policy.addPrincipal(principal.id());
 			}
 		}
 	} catch (...) {
