@@ -23,11 +23,10 @@ RbacPolicy::RbacPolicy(const pg::row_t &r) :
 	_data({
 		.id    = r["_id"].as<std::string>(),
 		.name   = r["name"].as<std::string>(),
-		.rules = r["rules"].as<rules_t>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
-void RbacPolicy::addMember(const member_t &mid) const {
+void RbacPolicy::addPrincipal(const principal_t &pid) const {
 	std::string_view qry = R"(
 		insert into rbac-policies_identities (
 			policy_id,
@@ -39,7 +38,7 @@ void RbacPolicy::addMember(const member_t &mid) const {
 	)";
 
 	try {
-		pg::exec(qry, id(), mid);
+		pg::exec(qry, id(), pid);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidCollectionOrMember();
 	} catch (pg::unique_violation_t &) {
@@ -72,13 +71,11 @@ void RbacPolicy::store() const {
 		insert into rbac-policies as t (
 			_id,
 			_rev,
-			name,
-			rules
+			name
 		) values (
 			$1::text,
 			$2::integer,
-			$3::text,
-			$4::jsonb
+			$3::text
 		)
 		on conflict (_id)
 		do update
@@ -88,21 +85,15 @@ void RbacPolicy::store() const {
 				rules
 			) = (
 				excluded._rev + 1,
-				$3::text,
-				$4::jsonb
+				$3::text
 			)
 			where t._rev = $2::integer
 		returning _rev;
 	)";
 
-		// FIXME: add pqxx support for rules_t
-	//        ref: https://github.com/jtv/libpqxx/blob/master/include/pqxx/doc/datatypes.md
-	std::vector<std::string> rules(_data.rules.size());
-	rules.assign(_data.rules.begin(), _data.rules.end());
-
 	pg::result_t res;
 	try {
-		res = pg::exec(qry, _data.id, _rev, _data.name, rules);
+		res = pg::exec(qry, _data.id, _rev, _data.name);
 	} catch (pqxx::check_violation &) {
 		throw err::DatastoreInvalidIdentityData();
 	} catch (pg::unique_violation_t &) {
@@ -116,7 +107,7 @@ void RbacPolicy::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-const RbacPolicy::members_t RbacPolicy::members() const {
+const RbacPolicy::principals_t RbacPolicy::principals() const {
 	std::string_view qry = R"(
 		select
 			identity_id
@@ -128,15 +119,15 @@ const RbacPolicy::members_t RbacPolicy::members() const {
 
 	auto res = pg::exec(qry, id());
 
-	members_t members;
+	principals_t members;
 	for (const auto &r : res) {
-		members.insert(r["identity_id"].as<member_t>());
+		members.insert(r["identity_id"].as<principal_t>());
 	}
 
 	return members;
 }
 
-void RbacPolicy::removeMember(const member_t &mid) const {
+void RbacPolicy::removePrincipal(const principal_t &pid) const {
 	std::string_view qry = R"(
 		delete from rbac-policies_identities
 		where
@@ -144,7 +135,7 @@ void RbacPolicy::removeMember(const member_t &mid) const {
 			identity_id = $2::text;
 	)";
 
-	pg::exec(qry, id(), mid);
+	pg::exec(qry, id(), pid);
 }
 
 void RbacPolicy::removeRole(const role_t &rid) const {
@@ -170,11 +161,11 @@ const RbacPolicy::roles_t RbacPolicy::roles() const {
 
 	auto res = pg::exec(qry, id());
 
-	roles_t members;
+	roles_t roles;
 	for (const auto &r : res) {
-		members.insert(r["role_id"].as<role_t>());
+		roles.insert(r["role_id"].as<role_t>());
 	}
 
-	return members;
+	return roles;
 }
 } // namespace datastore

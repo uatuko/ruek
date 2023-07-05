@@ -351,6 +351,31 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 	gk::v1::RbacPolicy *response) {
 	auto *reactor = context->DefaultReactor();
 
+	auto policy = map(request);
+	try {
+		// Store the policy
+		policy.store();
+
+		// Add rules to junction table
+		if (request->rules().size() > 0) {
+			for (const auto &rule : request->rules()) {
+				policy.addRole(rule.role_id());
+			}
+		}
+
+		// Add principals to junction table
+		if (request->principals().size() > 0) {
+			for (const auto &principal : request->principals()) {
+				policy.addMember(principal.id());
+			}
+		}
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
+		return reactor;
+	}
+
+	map(policy, response);
+
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }

@@ -68,17 +68,6 @@ datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
 			auto type = from->principals(i).GetTypeName();
 		}
 	}
-	
-
-	if (from->rules_size() > 0) {
-		for (int i = 0; i < from->rules_size(); i++) {
-			auto roleId = from->rules(i).role_id();
-			if (from->rules(i).has_attrs()) {
-				std::string attrs;
-				google::protobuf::util::MessageToJsonString(from->rules(i).attrs(), &attrs);
-			}
-		}
-	}
 
 	return rbacPolicy;
 }
@@ -118,10 +107,23 @@ void map(const datastore::Identity &from, gk::v1::Identity *to) {
 void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());
-	if (from.rules().size() > 0) {
+
+	// Set role ids from DB table
+	auto roles = from.roles();
+	if (from.roles().size() > 0) {
 		auto i = 0;
-		for (const auto &rule : from.rules()) {
-			google::protobuf::util::JsonStringToMessage(rule, to->mutable_rules(i));
+		for (const auto &role : roles) {
+			to->mutable_rules(i)->set_role_id(role);
+			i++;
+		}
+	}
+
+	// Set principals ids from DB table
+	auto principals = from.principals();
+	if (from.principals().size() > 0) {
+		auto i = 0;
+		for (const auto &principal : principals) {
+			to->mutable_principals(i)->set_id(principal);
 			i++;
 		}
 	}
