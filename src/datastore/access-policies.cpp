@@ -21,7 +21,7 @@ AccessPolicy::AccessPolicy(Data &&data) noexcept : _data(std::move(data)), _rev(
 
 AccessPolicy::AccessPolicy(const pg::row_t &r) :
 	_data({
-		.id    = r["_id"].as<std::string>(),
+		.id = r["_id"].as<std::string>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
@@ -65,11 +65,35 @@ void AccessPolicy::discard() const {
 	pg::exec(qry, _data.id);
 }
 
-void AccessPolicy::addIdentityPrincipal(const std::string principal_id) const {
+void AccessPolicy::add_resource(const AccessPolicy::resource_t &resource) {
+	redis::conn();
+}
+
+void AccessPolicy::add_identity_principal(const std::string principal_id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_identities" (
 			policy_id,
 			identity_id
+		) values (
+			$1::text,
+			$2::text
+		);
+	)";
+
+	try {
+		pg::exec(qry, id(), principal_id);
+	} catch (pg::fkey_violation_t &) {
+		throw err::DatastoreInvalidCollectionOrMember();
+	} catch (pg::unique_violation_t &) {
+		throw err::DatastoreDuplicateCollectionMember();
+	}
+}
+
+void AccessPolicy::add_collection_principal(const std::string principal_id) const {
+	std::string_view qry = R"(
+		insert into "access-policies_collections" (
+			policy_id,
+			collection_id
 		) values (
 			$1::text,
 			$2::text

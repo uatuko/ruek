@@ -5,17 +5,20 @@
 #include <vector>
 
 #include "pg.h"
+#include "redis.h"
 
 namespace datastore {
 class AccessPolicy {
 public:
-	using resource_t = std::string;
+	// using principal_t = std::string;
+	// using principals_t = std::set<principal_t>;
+
+	using resource_t  = std::string;
 	using resources_t = std::set<resource_t>;
 
 	struct Data {
 		std::string id;
 		std::string name;
-		resources_t resources;
 
 		bool operator==(const Data &) const noexcept = default;
 	};
@@ -24,8 +27,6 @@ public:
 	AccessPolicy(Data &&data) noexcept;
 
 	AccessPolicy(const pg::row_t &t);
-
-	const resources_t &resources() const noexcept { return _data.resources; }
 
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
@@ -37,8 +38,9 @@ public:
 	void store() const;
 	void discard() const;
 
-	void addIdentityPrincipal(const std::string principal_id) const;
-	void addCollectionPrincipal(const std::string principal_id) const;
+	void add_resource(const resource_t &resource);
+	void add_identity_principal(const std::string principal_id) const;
+	void add_collection_principal(const std::string principal_id) const;
 
 private:
 	Data        _data;
