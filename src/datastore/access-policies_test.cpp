@@ -44,14 +44,15 @@ TEST_F(AccessPoliciesTest, create) {
 		EXPECT_NO_THROW(policy.store());
 
 		// store access
-		auto principal = "principal-id:AccessPoliciesTest.add-access";
-		auto resource  = "resource-id:AccessPoliciesTest.add-access";
-		EXPECT_NO_THROW(policy.addAccess(principal, resource));
+		auto record = datastore::AccessPolicy::Record(
+			"principal-id:AccessPoliciesTest.add-access",
+			"resource-id:AccessPoliciesTest.add-access");
+		EXPECT_NO_THROW(policy.add(record));
 
-		EXPECT_EQ(datastore::CheckAccess(principal, resource).size(), 1);
+		EXPECT_EQ(datastore::CheckAccess(record).size(), 1);
 
 		// cleanup
 		EXPECT_NO_THROW(policy.discard());
-		EXPECT_NO_THROW(datastore::DeleteAccess(principal, resource));
+		EXPECT_NO_THROW(datastore::DeleteAccess(record));
 	}
 }

@@ -10,6 +10,7 @@
 namespace datastore {
 class AccessPolicy {
 public:
+	using identity_t  = std::string;
 	using principal_t = std::string;
 	using resource_t  = std::string;
 
@@ -18,6 +19,19 @@ public:
 		std::string name;
 
 		bool operator==(const Data &) const noexcept = default;
+	};
+
+	struct Record {
+		identity_t identity_id;
+		resource_t resource;
+
+		const std::string key() const noexcept {
+			return "access:(" + identity_id + ")>[" + resource + "]";
+		};
+
+		Record(const identity_t i, const resource_t r) : identity_id(i), resource(r) {}
+
+		bool operator==(const Record &) const noexcept = default;
 	};
 
 	AccessPolicy(const Data &data) noexcept;
@@ -35,7 +49,7 @@ public:
 	void store() const;
 	void discard() const;
 
-	void addAccess(const principal_t &principal, const resource_t &resource) const;
+	void add(const Record &record) const;
 	void addIdentityPrincipal(const principal_t principal_id) const;
 	void addCollectionPrincipal(const principal_t principal_id) const;
 
@@ -48,8 +62,6 @@ using AccessPolicies = std::vector<AccessPolicy>;
 
 AccessPolicy RetrieveAccessPolicy(const std::string &id);
 
-void DeleteAccess(
-	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource);
-std::vector<AccessPolicy> CheckAccess(
-	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource);
+void                      DeleteAccess(const AccessPolicy::Record &record);
+std::vector<AccessPolicy> CheckAccess(const AccessPolicy::Record &record);
 } // namespace datastore

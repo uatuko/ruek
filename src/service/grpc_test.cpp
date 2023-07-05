@@ -115,8 +115,9 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		auto rule = request.add_rules();
 		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
 
+		auto record = datastore::AccessPolicy::Record(principal->id(), rule->resource());
 		// expect no access before request
-		auto policies = datastore::CheckAccess(principal->id(), rule->resource());
+		auto policies = datastore::CheckAccess(record);
 		EXPECT_EQ(policies.size(), 0);
 
 		// create access policy
@@ -126,7 +127,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
-		policies = datastore::CheckAccess(principal->id(), rule->resource());
+		policies = datastore::CheckAccess(record);
 		EXPECT_EQ(policies.size(), 1);
 	}
 }

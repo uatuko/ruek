@@ -54,7 +54,8 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 
 		for (const auto &rule : request->rules()) {
 			try {
-				policy.addAccess(principal.id(), rule.resource());
+				datastore::AccessPolicy::Record record(principal.id(), rule.resource());
+				policy.add(record);
 			} catch (...) {
 				reactor->Finish(
 					grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add resource"));

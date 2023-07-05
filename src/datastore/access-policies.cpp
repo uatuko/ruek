@@ -65,10 +65,9 @@ void AccessPolicy::discard() const {
 	pg::exec(qry, _data.id);
 }
 
-void AccessPolicy::addAccess(
-	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource) const {
+void AccessPolicy::add(const AccessPolicy::Record &record) const {
 	auto conn = datastore::redis::conn();
-	conn.cmd("SADD " + principal + ":" + resource + " " + _data.id);
+	conn.cmd("SADD " + record.key() + " " + _data.id);
 }
 
 void AccessPolicy::addIdentityPrincipal(const AccessPolicy::principal_t principal_id) const {
@@ -129,10 +128,10 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	return AccessPolicy(res[0]);
 }
 
-std::vector<AccessPolicy> CheckAccess(
-	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource) {
-	auto conn  = datastore::redis::conn();
-	auto reply = conn.cmd("SMEMBERS " + principal + ":" + resource);
+std::vector<AccessPolicy> CheckAccess(const AccessPolicy::Record &record) {
+	auto conn = datastore::redis::conn();
+
+	auto reply = conn.cmd("SMEMBERS " + record.key());
 
 	std::vector<AccessPolicy> policies;
 	for (int i = 0; i < reply->elements; i++) {
@@ -144,9 +143,7 @@ std::vector<AccessPolicy> CheckAccess(
 	return policies;
 }
 
-void DeleteAccess(
-	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource) {
-	auto conn = datastore::redis::conn();
-	conn.cmd("DEL " + principal + ":" + resource);
+void DeleteAccess(const AccessPolicy::Record &record) {
+	datastore::redis::conn().cmd("DEL " + record.key());
 }
 } // namespace datastore
