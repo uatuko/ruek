@@ -111,20 +111,18 @@ void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 	// Set role ids from DB table
 	auto roles = from.roles();
 	if (from.roles().size() > 0) {
-		auto i = 0;
 		for (const auto &role : roles) {
-			to->mutable_rules(i)->set_role_id(role);
-			i++;
+			auto r = to->add_rules();
+			r->set_role_id(role);
 		}
 	}
 
 	// Set principals ids from DB table
 	auto principals = from.principals();
 	if (from.principals().size() > 0) {
-		auto i = 0;
 		for (const auto &principal : principals) {
-			to->mutable_principals(i)->set_id(principal);
-			i++;
+			auto p = to->add_principals();
+			p->set_id(principal);
 		}
 	}
 }
