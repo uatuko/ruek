@@ -26,25 +26,32 @@ TEST_F(AccessPoliciesTest, create) {
 	// Success: add policy
 	{
 		const datastore::AccessPolicy policy({
-			.name = "name:AccessPoliciesTest.XXX",
+			.name = "name:AccessPoliciesTest.add",
 		});
 		EXPECT_NO_THROW(policy.store());
 
 		EXPECT_NO_THROW(datastore::RetrieveAccessPolicy(policy.id()));
 
-		// std::string_view qry = R"(
-		// 	select
-		// 		count(*) as n_members
-		// 	from access-policies
-		// 	where
-		// 		collection_id = $1::text and
-		// 		identity_id = $2::text;
-		// )";
+		// cleanup
+		EXPECT_NO_THROW(policy.discard());
+	}
 
-		// auto res = datastore::pg::exec(qry, collection.id(), identity.id());
-		// EXPECT_EQ(1, res.at(0, 0).as<int>());
+	// Success: add an access entry to a policy
+	{
+		const datastore::AccessPolicy policy({
+			.name = "name:AccessPoliciesTest.add-access",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		// store access
+		auto principal = "principal-id:AccessPoliciesTest.add-access";
+		auto resource  = "resource-id:AccessPoliciesTest.add-access";
+		EXPECT_NO_THROW(policy.add_access(principal, resource));
+
+		EXPECT_EQ(datastore::CheckAccess(principal, resource).size(), 1);
 
 		// cleanup
 		EXPECT_NO_THROW(policy.discard());
+		EXPECT_NO_THROW(datastore::DeleteAccess(principal, resource));
 	}
 }

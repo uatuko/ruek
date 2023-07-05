@@ -10,7 +10,7 @@
 namespace datastore {
 class AccessPolicy {
 public:
-	// using principal_t = std::string;
+	using principal_t = std::string;
 	// using principals_t = std::set<principal_t>;
 
 	using resource_t  = std::string;
@@ -38,7 +38,7 @@ public:
 	void store() const;
 	void discard() const;
 
-	void add_resource(const resource_t &resource);
+	void add_access(const principal_t &principal, const resource_t &resource) const;
 	void add_identity_principal(const std::string principal_id) const;
 	void add_collection_principal(const std::string principal_id) const;
 
@@ -50,4 +50,9 @@ private:
 using AccessPolicies = std::vector<AccessPolicy>;
 
 AccessPolicy RetrieveAccessPolicy(const std::string &id);
+
+void DeleteAccess(
+	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource);
+std::vector<AccessPolicy> CheckAccess(
+	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource);
 } // namespace datastore

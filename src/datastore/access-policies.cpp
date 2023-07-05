@@ -65,11 +65,13 @@ void AccessPolicy::discard() const {
 	pg::exec(qry, _data.id);
 }
 
-void AccessPolicy::add_resource(const AccessPolicy::resource_t &resource) {
-	redis::conn();
+void AccessPolicy::add_access(
+	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource) const {
+	auto conn = datastore::redis::conn();
+	conn.cmd("SADD " + principal + ":" + resource + " " + _data.id);
 }
 
-void AccessPolicy::add_identity_principal(const std::string principal_id) const {
+void AccessPolicy::add_identity_principal(const AccessPolicy::principal_t principal_id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_identities" (
 			policy_id,
@@ -83,13 +85,13 @@ void AccessPolicy::add_identity_principal(const std::string principal_id) const 
 	try {
 		pg::exec(qry, id(), principal_id);
 	} catch (pg::fkey_violation_t &) {
-		throw err::DatastoreInvalidCollectionOrMember();
+		throw err::DatastoreInvalidAccessPolicyOrIdentity();
 	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateCollectionMember();
+		throw err::DatastoreDuplicateAccessPolicyIdentity();
 	}
 }
 
-void AccessPolicy::add_collection_principal(const std::string principal_id) const {
+void AccessPolicy::add_collection_principal(const AccessPolicy::principal_t principal_id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_collections" (
 			policy_id,
@@ -103,9 +105,9 @@ void AccessPolicy::add_collection_principal(const std::string principal_id) cons
 	try {
 		pg::exec(qry, id(), principal_id);
 	} catch (pg::fkey_violation_t &) {
-		throw err::DatastoreInvalidCollectionOrMember();
+		throw err::DatastoreInvalidAccessPolicyOrCollection();
 	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateCollectionMember();
+		throw err::DatastoreDuplicateAccessPolicyCollection();
 	}
 }
 
@@ -125,5 +127,26 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	}
 
 	return AccessPolicy(res[0]);
+}
+
+std::vector<AccessPolicy> CheckAccess(
+	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource) {
+	auto conn  = datastore::redis::conn();
+	auto reply = conn.cmd("SMEMBERS " + principal + ":" + resource);
+
+	std::vector<AccessPolicy> policies;
+	for (int i = 0; i < reply->elements; i++) {
+		auto el = reply->element[i];
+		auto policy = RetrieveAccessPolicy(el->str);
+		policies.push_back(policy);
+	}
+
+	return policies;
+}
+
+void DeleteAccess(
+	const AccessPolicy::principal_t &principal, const AccessPolicy::resource_t &resource) {
+	auto conn = datastore::redis::conn();
+	conn.cmd("DEL " + principal + ":" + resource);
 }
 } // namespace datastore
