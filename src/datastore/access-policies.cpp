@@ -76,6 +76,26 @@ void AccessPolicy::discard() const {
 	pg::exec(qry, _data.id);
 }
 
+void AccessPolicy::addIdentityPrincipal(const std::string principal_id) const {
+	std::string_view qry = R"(
+		insert into "access-policies_identities" (
+			policy_id,
+			identity_id
+		) values (
+			$1::text,
+			$2::text
+		);
+	)";
+
+	try {
+		pg::exec(qry, id(), principal_id);
+	} catch (pg::fkey_violation_t &) {
+		throw err::DatastoreInvalidCollectionOrMember();
+	} catch (pg::unique_violation_t &) {
+		throw err::DatastoreDuplicateCollectionMember();
+	}
+}
+
 AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	std::string_view qry = R"(
 		select

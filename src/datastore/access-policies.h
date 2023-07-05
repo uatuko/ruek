@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -8,12 +9,16 @@
 namespace datastore {
 class AccessPolicy {
 public:
+	using resource_t = std::string;
+	using resources_t = std::set<resource_t>;
+
 	struct Data {
 		using rules_t = std::optional<std::string>;
 
 		rules_t     rules;
 		std::string id;
 		std::string name;
+		resources_t resources;
 
 		bool operator==(const Data &) const noexcept = default;
 	};
@@ -38,6 +43,9 @@ public:
 
 	void store() const;
 	void discard() const;
+
+	void addIdentityPrincipal(const std::string principal_id) const;
+	void addCollectionPrincipal(const std::string principal_id) const;
 
 private:
 	Data        _data;
