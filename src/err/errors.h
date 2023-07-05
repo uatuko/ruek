@@ -16,6 +16,18 @@ using DatastoreInvalidIdentityData = basic_error<"gk:1.2.3.400", "Invalid identi
 
 using DatastoreAccessPolicyNotFound =
 	basic_error<"gk:1.3.4.404", "Access policy not found">; // TODO: is this number significant?
+using DatastoreDuplicateAccessPolicyIdentity =
+	basic_error<"gk:1.3.6.409", "Duplicate access policy identity">; // TODO: is this number
+																	 // significant?
+using DatastoreInvalidAccessPolicyOrIdentity =
+	basic_error<"gk:1.3.5.400", "Invalid access policy or identity">; // TODO: is this number
+																	  // significant?
+using DatastoreDuplicateAccessPolicyCollection =
+	basic_error<"gk:1.3.7.409", "Duplicate access policy collection">; // TODO: is this number
+																	   // significant?
+using DatastoreInvalidAccessPolicyOrCollection =
+	basic_error<"gk:1.3.8.400", "Invalid access policy or collection">; // TODO: is this number
+																		// significant?
 
 using DatastoreCollectionNotFound = basic_error<"gk:1.3.3.404", "Collection not found">;
 using DatastoreDuplicateCollectionMember =
