@@ -401,14 +401,33 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 			}
 		}
 
+		// Get all related identities
+		std::vector<std::string> identities;
+		for (const auto &principal : request->principals()) {
+			switch (principal.type()) {
+			case gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION:
+				for (const auto id : datastore::ListIdentitiesInCollection(principal.id())){
+					identities.push_back(id);
+				}
+				break;
+			case gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY:
+				identities.push_back(principal.id());
+				break;
+			default:
+				reactor->Finish(
+					grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unhandled principal"));
+				return reactor;
+			}
+		}
+
 		// Add records to redis
 		if (request->principals().size() > 0 && request->rules().size() > 0) {
 			for (const auto &rule : request->rules()) {
 				auto role = datastore::RetrieveRole(rule.role_id());
 				for(const auto &permission : role.permissions()){
-					for (const auto &principal : request->principals()) {
+					for(const auto &identity : identities){
 						policy.add(datastore::RbacPolicy::Record({
-							.identityId = principal.id(),
+							.identityId = identity,
 							.permission = permission,
 						}));
 					}
