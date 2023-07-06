@@ -1,4 +1,6 @@
 #include "rbac-policies.h"
+#include "redis.h"
+#include "roles.h"
 
 #include <utility>
 
@@ -78,6 +80,11 @@ void RbacPolicy::addIdentity(const std::string identityId) const {
 	} catch (pg::unique_violation_t &) {
 		throw err::DatastoreDuplicateRbacPolicyPrincipal();
 	}
+}
+
+void RbacPolicy::addRecord(const RbacPolicy::Record &record) const {
+	auto conn = datastore::redis::conn();
+	conn.cmd("HSET " + record.key() + " " + _data.id + " \"\"");
 }
 
 void RbacPolicy::addRule(const Rule &r) const {
@@ -189,5 +196,19 @@ const RbacPolicy::Rules RbacPolicy::rules() const {
 	}
 
 	return rules;
+}
+
+std::vector<RbacPolicy> RbacPolicy::Record::check() const {
+	auto conn = datastore::redis::conn();
+	auto reply = conn.cmd("HGETALL " + key());
+
+	std::vector<RbacPolicy> policies;
+	for (int i = 0; i < reply->elements; i += 2) {
+		policies.push_back(RbacPolicy({
+			.id = reply->element[i]->str,
+		}));
+	}
+
+	return policies;
 }
 } // namespace datastore

@@ -30,6 +30,19 @@ public:
 		bool operator==(const Principal &) const noexcept = default;
 	};
 
+	struct Record {
+		std::string identityId;
+		std::string permission;
+
+		const std::string key() const noexcept {
+			return "rbac:(" + identityId + ")>[" + permission + "]";
+		};
+
+		bool operator==(const Record &) const noexcept = default;
+
+		std::vector<RbacPolicy> check() const;
+	};
+
 	using Rules      = std::vector<Rule>;
 	using Principals = std::vector<Principal>;
 
@@ -49,6 +62,8 @@ public:
 	void             addPrincipal(const Principal principal) const;
 	void             addCollection(const std::string collectionId) const;
 	void             addIdentity(const std::string IdentityId) const;
+
+	void             addRecord(const Record &record) const;
 
 	const Rules rules() const;
 	void        addRule(const Rule &rule) const;
