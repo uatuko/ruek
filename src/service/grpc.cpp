@@ -5,6 +5,71 @@
 #include "mappers.h"
 
 namespace service {
+// Access Policies
+grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
+	grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
+	gk::v1::AccessPolicy *response) {
+	auto *reactor = context->DefaultReactor();
+
+	if (request->has_id()) {
+		try {
+			auto policy = datastore::RetrieveAccessPolicy(request->id());
+			reactor->Finish(grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Duplicate policy id"));
+			return reactor;
+		} catch (const err::DatastoreAccessPolicyNotFound &) {
+			// Policy with an `id` matching the request `id` doesn't exist, we can continue with
+			// creating a new one.
+		} catch (...) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+			return reactor;
+		}
+	}
+
+	auto policy = map(request);
+	try {
+		policy.store();
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
+		return reactor;
+	}
+
+	for (const auto &principal : request->principals()) {
+		try {
+			switch (principal.type()) {
+			case gk::v1::PrincipalType::collection:
+				policy.addCollectionPrincipal(principal.id());
+				break;
+			case gk::v1::PrincipalType::identity:
+				policy.addIdentityPrincipal(principal.id());
+				break;
+			default:
+				reactor->Finish(
+					grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unhandled principal"));
+				return reactor;
+			}
+		} catch (...) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add principal"));
+			return reactor;
+		}
+
+		for (const auto &rule : request->rules()) {
+			try {
+				datastore::AccessPolicy::Record record(principal.id(), rule.resource());
+				policy.add(record);
+			} catch (...) {
+				reactor->Finish(
+					grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add resource"));
+				return reactor;
+			}
+		}
+	}
+
+	map(policy, response);
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 // Collections
 grpc::ServerUnaryReactor *Grpc::CreateCollection(
 	grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
