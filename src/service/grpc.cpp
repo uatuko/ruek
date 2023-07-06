@@ -373,6 +373,23 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 				}));
 			}
 		}
+
+		// Add records to redis
+		if (request->principals().size() > 0 && request->rules().size() > 0) {
+			for (const auto &rule : request->rules()) {
+				auto role = datastore::RetrieveRole(rule.role_id());
+				for(const auto &permission : role.permissions()){
+					for (const auto &principal : request->principals()) {
+						policy.addRecord(datastore::RbacPolicy::Record({
+							.identityId = principal.id(),
+							.permission = permission,
+						}));
+					}
+				}
+			}
+		}
+
+
 	} catch (...) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
 		return reactor;
