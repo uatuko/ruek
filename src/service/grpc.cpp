@@ -407,7 +407,7 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 				auto role = datastore::RetrieveRole(rule.role_id());
 				for(const auto &permission : role.permissions()){
 					for (const auto &principal : request->principals()) {
-						policy.addRecord(datastore::RbacPolicy::Record({
+						policy.add(datastore::RbacPolicy::Record({
 							.identityId = principal.id(),
 							.permission = permission,
 						}));

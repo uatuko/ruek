@@ -82,7 +82,7 @@ void RbacPolicy::addIdentity(const std::string identityId) const {
 	}
 }
 
-void RbacPolicy::addRecord(const RbacPolicy::Record &record) const {
+void RbacPolicy::add(const RbacPolicy::Record &record) const {
 	auto conn = datastore::redis::conn();
 	conn.cmd("HSET " + record.key() + " " + _data.id + " \"\"");
 }
