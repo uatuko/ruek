@@ -60,32 +60,32 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 
 	for (const auto &principal : request->principals()) {
 		try {
+			std::vector<std::string> identities;
+
 			switch (principal.type()) {
 			case gk::v1::PrincipalType::collection:
 				policy.addCollectionPrincipal(principal.id());
+				identities = datastore::ListIdentitiesInCollection(principal.id());
 				break;
 			case gk::v1::PrincipalType::identity:
 				policy.addIdentityPrincipal(principal.id());
+				identities.push_back(principal.id());
 				break;
 			default:
 				reactor->Finish(
 					grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unhandled principal"));
 				return reactor;
 			}
+
+			for (const auto &identity : identities) {
+				for (const auto &rule : request->rules()) {
+					datastore::AccessPolicy::Record record(identity, rule.resource());
+					policy.add(record);
+				}
+			}
 		} catch (...) {
 			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add principal"));
 			return reactor;
-		}
-
-		for (const auto &rule : request->rules()) {
-			try {
-				datastore::AccessPolicy::Record record(principal.id(), rule.resource());
-				policy.add(record);
-			} catch (...) {
-				reactor->Finish(
-					grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add resource"));
-				return reactor;
-			}
 		}
 	}
 
