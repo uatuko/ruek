@@ -26,7 +26,7 @@ public:
 		resource_t resource;
 
 		const std::string key() const noexcept {
-			return "access:(" + identity_id + ")>[" + resource + "]";
+			return "access:(" + identity_id + ")›[" + resource + "]";
 		};
 
 		Record(const identity_t i, const resource_t r) : identity_id(i), resource(r) {}

@@ -35,7 +35,7 @@ public:
 		std::string permission;
 
 		const std::string key() const noexcept {
-			return "rbac:(" + identityId + ")>[" + permission + "]";
+			return "rbac:(" + identityId + ")›[" + permission + "]";
 		};
 
 		bool operator==(const Record &) const noexcept = default;
