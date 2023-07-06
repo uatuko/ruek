@@ -81,25 +81,21 @@ void Identity::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-Identities ListIdentitiesInCollection(const std::string &id) {
+std::vector<std::string> ListIdentitiesInCollection(const std::string &id) {
 	// FIXME: make this query recursive when collections can have parents
 	std::string_view qry = R"(
 		select
-			_id,
-			_rev,
-			sub,
-			attrs
+			identity_id
 		from collections_identities
-		left join identities on identity_id = identities._id
 		where
 			collection_id = $1::text;
 	)";
 
 	auto res = pg::exec(qry, id);
 
-	Identities identities;
+	std::vector<std::string> identities;
 	for (auto row : res) {
-		identities.push_back(Identity(row));
+		identities.push_back(row["identity_id"].as<std::string>());
 	}
 
 	return identities;

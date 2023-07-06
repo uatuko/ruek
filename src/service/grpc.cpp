@@ -54,7 +54,7 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 
 	for (const auto &principal : request->principals()) {
 		try {
-			datastore::Identities identities;
+			std::vector<std::string> identities;
 
 			switch (principal.type()) {
 			case gk::v1::PrincipalType::collection:
@@ -63,7 +63,7 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 				break;
 			case gk::v1::PrincipalType::identity:
 				policy.addIdentityPrincipal(principal.id());
-				identities.push_back(datastore::Identity({.id = principal.id()}));
+				identities.push_back(principal.id());
 				break;
 			default:
 				reactor->Finish(
@@ -73,7 +73,7 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 
 			for (const auto &identity : identities) {
 				for (const auto &rule : request->rules()) {
-					datastore::AccessPolicy::Record record(identity.id(), rule.resource());
+					datastore::AccessPolicy::Record record(identity, rule.resource());
 					policy.add(record);
 				}
 			}
