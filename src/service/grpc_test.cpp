@@ -32,6 +32,59 @@ protected:
 };
 
 // Access Policies
+TEST_F(GrpcTest, CheckAccess) {
+	service::Grpc service;
+
+	// Success: returns empty list when no policy set
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::CheckAccessResponse           response;
+
+		gk::v1::CheckAccessRequest request;
+
+		auto reactor = service.CheckAccess(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(response.policies().size(), 0);
+	}
+
+	// Success: returns policy when found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::CheckAccessResponse           response;
+
+		// create identity
+		const datastore::Identity identity({.sub = "identity:GrpcTest.CheckAccess"});
+		try {
+			identity.store();
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		datastore::AccessPolicy policy({
+			.name = "policy::GrpcTest.CheckAccess",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		const auto                            resource = "resource:GrpcTest.CheckAccess";
+		const datastore::AccessPolicy::Record access(identity.id(), resource);
+		EXPECT_NO_THROW(policy.add(access));
+
+		gk::v1::CheckAccessRequest request;
+		request.set_resource(resource);
+		request.set_identity_id(identity.id());
+
+		auto reactor = service.CheckAccess(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(response.policies().size(), 1);
+	}
+}
+
 TEST_F(GrpcTest, CreateAccessPolicy) {
 	service::Grpc service;
 
