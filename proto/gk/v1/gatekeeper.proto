@@ -189,8 +189,12 @@ message AccessPolicyRule {
 }
 
 message CheckAccessRequest {
-	string identity_id = 1;
-	string resource    = 2;
+	oneof identity {
+		string identity_id  = 1;
+		string identity_sub = 2;
+	}
+
+	string resource = 3;
 }
 
 message CheckAccessResponse {
@@ -310,8 +314,12 @@ message RbacPolicyRule {
 }
 
 message CheckRbacRequest {
-	string identity_id = 1;
-	string permission  = 2;
+	oneof identity {
+		string identity_id  = 1;
+		string identity_sub = 2;
+	}
+
+	string permission = 3;
 }
 
 message CheckRbacResponse {
