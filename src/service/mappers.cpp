@@ -56,6 +56,15 @@ void map(const datastore::AccessPolicies &from, gk::v1::CheckAccessResponse *to)
 	}
 }
 
+datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
+	datastore::RbacPolicy rbacPolicy({
+		.id   = from->id(),
+		.name = from->name(),
+	});
+
+	return rbacPolicy;
+}
+
 datastore::Role map(const gk::v1::CreateRoleRequest *from) {
 	datastore::Role role({
 		.id   = from->id(),
@@ -85,6 +94,30 @@ void map(const datastore::Identity &from, gk::v1::Identity *to) {
 
 	if (from.attrs()) {
 		google::protobuf::util::JsonStringToMessage(*from.attrs(), to->mutable_attrs());
+	}
+}
+
+void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
+	to->set_id(from.id());
+	to->set_name(from.name());
+
+	// Set role ids from DB table
+	auto rules = from.rules();
+	if (rules.size() > 0) {
+		for (const auto &rule : rules) {
+			auto r = to->add_rules();
+			r->set_role_id(rule.roleId);
+		}
+	}
+
+	// Set principals ids from DB table
+	auto principals = from.principals();
+	if (principals.size() > 0) {
+		for (const auto &principal : principals) {
+			auto p = to->add_principals();
+			p->set_id(principal.id);
+			p->set_type(static_cast<gk::v1::PrincipalType>(principal.type));
+		}
 	}
 }
 
