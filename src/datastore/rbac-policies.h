@@ -25,7 +25,7 @@ public:
 
 	struct Principal {
 		std::string id;
-		enum class Type { kUnspecified, kCollection, kIdentity } type;
+		enum class Type { Unspecified, Collection, Identity } type;
 
 		bool operator==(const Principal &) const noexcept = default;
 	};

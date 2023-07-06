@@ -28,10 +28,10 @@ RbacPolicy::RbacPolicy(const pg::row_t &r) :
 
 void RbacPolicy::addPrincipal(const Principal principal) const {
 	switch (principal.type) {
-	case Principal::Type::kCollection:
+	case Principal::Type::Collection:
 		addCollection(principal.id);
 		break;
-	case Principal::Type::kIdentity:
+	case Principal::Type::Identity:
 		addIdentity(principal.id);
 		break;
 
