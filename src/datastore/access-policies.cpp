@@ -67,10 +67,10 @@ void AccessPolicy::discard() const {
 
 void AccessPolicy::add(const AccessPolicy::Record &record) const {
 	auto conn = datastore::redis::conn();
-	conn.cmd("SADD " + record.key() + " " + _data.id);
+	conn.cmd("HSET " + record.key() + " " + _data.id + " \"\"");
 }
 
-void AccessPolicy::addIdentityPrincipal(const AccessPolicy::principal_t principal_id) const {
+void AccessPolicy::addIdentityPrincipal(const AccessPolicy::principal_t principalId) const {
 	std::string_view qry = R"(
 		insert into "access-policies_identities" (
 			policy_id,
@@ -82,7 +82,7 @@ void AccessPolicy::addIdentityPrincipal(const AccessPolicy::principal_t principa
 	)";
 
 	try {
-		pg::exec(qry, id(), principal_id);
+		pg::exec(qry, id(), principalId);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidAccessPolicyOrIdentity();
 	} catch (pg::unique_violation_t &) {
@@ -90,7 +90,7 @@ void AccessPolicy::addIdentityPrincipal(const AccessPolicy::principal_t principa
 	}
 }
 
-void AccessPolicy::addCollectionPrincipal(const AccessPolicy::principal_t principal_id) const {
+void AccessPolicy::addCollectionPrincipal(const AccessPolicy::principal_t principalId) const {
 	std::string_view qry = R"(
 		insert into "access-policies_collections" (
 			policy_id,
@@ -102,7 +102,7 @@ void AccessPolicy::addCollectionPrincipal(const AccessPolicy::principal_t princi
 	)";
 
 	try {
-		pg::exec(qry, id(), principal_id);
+		pg::exec(qry, id(), principalId);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidAccessPolicyOrCollection();
 	} catch (pg::unique_violation_t &) {
@@ -128,22 +128,22 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	return AccessPolicy(res[0]);
 }
 
-std::vector<AccessPolicy> CheckAccess(const AccessPolicy::Record &record) {
+std::vector<AccessPolicy> AccessPolicy::Record::check() const {
 	auto conn = datastore::redis::conn();
 
-	auto reply = conn.cmd("SMEMBERS " + record.key());
+	auto reply = conn.cmd("HGETALL " + key());
 
 	std::vector<AccessPolicy> policies;
-	for (int i = 0; i < reply->elements; i++) {
-		auto el     = reply->element[i];
-		auto policy = RetrieveAccessPolicy(el->str);
-		policies.push_back(policy);
+	for (int i = 0; i < reply->elements; i += 2) {
+		policies.push_back(AccessPolicy({
+			.id = reply->element[i]->str,
+		}));
 	}
 
 	return policies;
 }
 
-void DeleteAccess(const AccessPolicy::Record &record) {
-	datastore::redis::conn().cmd("DEL " + record.key());
+void AccessPolicy::Record::discard() const {
+	datastore::redis::conn().cmd("DEL " + key());
 }
 } // namespace datastore

@@ -32,6 +32,9 @@ public:
 		Record(const identity_t i, const resource_t r) : identity_id(i), resource(r) {}
 
 		bool operator==(const Record &) const noexcept = default;
+
+		void                      discard() const;
+		std::vector<AccessPolicy> check() const;
 	};
 
 	AccessPolicy(const Data &data) noexcept;
@@ -50,8 +53,8 @@ public:
 	void discard() const;
 
 	void add(const Record &record) const;
-	void addIdentityPrincipal(const principal_t principal_id) const;
-	void addCollectionPrincipal(const principal_t principal_id) const;
+	void addIdentityPrincipal(const principal_t principalId) const;
+	void addCollectionPrincipal(const principal_t principalId) const;
 
 private:
 	Data        _data;
@@ -61,7 +64,4 @@ private:
 using AccessPolicies = std::vector<AccessPolicy>;
 
 AccessPolicy RetrieveAccessPolicy(const std::string &id);
-
-void                      DeleteAccess(const AccessPolicy::Record &record);
-std::vector<AccessPolicy> CheckAccess(const AccessPolicy::Record &record);
 } // namespace datastore

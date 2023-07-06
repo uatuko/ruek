@@ -49,10 +49,10 @@ TEST_F(AccessPoliciesTest, create) {
 			"resource-id:AccessPoliciesTest.add-access");
 		EXPECT_NO_THROW(policy.add(record));
 
-		EXPECT_EQ(datastore::CheckAccess(record).size(), 1);
+		EXPECT_EQ(record.check().size(), 1);
 
 		// cleanup
 		EXPECT_NO_THROW(policy.discard());
-		EXPECT_NO_THROW(datastore::DeleteAccess(record));
+		EXPECT_NO_THROW(record.discard());
 	}
 }
