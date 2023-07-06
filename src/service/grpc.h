@@ -44,6 +44,11 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::RemoveCollectionMemberRequest *request,
 		gk::v1::RemoveCollectionMemberResponse *response) override;
 
+	// Events
+	grpc::ServerUnaryReactor *ConsumeEvent(
+		grpc::CallbackServerContext *context, const gk::v1::Event *request,
+		gk::v1::ConsumeEventResponse *response) override;
+
 	// Identities
 	grpc::ServerUnaryReactor *CreateIdentity(
 		grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,

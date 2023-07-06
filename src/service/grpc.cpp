@@ -265,6 +265,42 @@ grpc::ServerUnaryReactor *Grpc::RemoveCollectionMember(
 	return reactor;
 }
 
+// Events
+grpc::ServerUnaryReactor *Grpc::ConsumeEvent(
+	grpc::CallbackServerContext *context, const gk::v1::Event *request,
+	gk::v1::ConsumeEventResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	if (request->name() == "request/cache.rebuild:access") {
+		gk::v1::RebuildAccessCacheEventPayload payload;
+		if (!request->payload().UnpackTo(&payload)) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Invalid payload"));
+			return reactor;
+		}
+
+		for (const auto &id : payload.ids()) {
+			const auto policy = datastore::RetrieveAccessPolicy(id);
+			// TODO:
+		}
+	} else if (request->name() == "request/cache.rebuild:rbac") {
+		gk::v1::RebuildRbacCacheEventPayload payload;
+		if (!request->payload().UnpackTo(&payload)) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Invalid payload"));
+			return reactor;
+		}
+
+		for (const auto &id : payload.ids()) {
+			// TODO:
+		}
+	} else {
+		reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unknown event"));
+		return reactor;
+	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 // Identities
 grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,

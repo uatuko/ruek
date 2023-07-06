@@ -258,12 +258,24 @@ message RemoveCollectionMemberResponse {}
 
 // Events
 message Event {
+	// A name that uniquely identify the event.
+	// Supported names are,
+	//   - "request/cache.rebuild:access"
+	//   - "request/cache.rebuild:rbac"
 	string                    name      = 1;
 	google.protobuf.Any       payload   = 3;
 	google.protobuf.Timestamp timestamp = 2;
 }
 
 message ConsumeEventResponse {}
+
+message RebuildAccessCacheEventPayload {
+	repeated string ids = 1;
+}
+
+message RebuildRbacCacheEventPayload {
+	repeated string ids = 1;
+}
 
 // Identities
 message Identity {
