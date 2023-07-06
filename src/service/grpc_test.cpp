@@ -86,6 +86,59 @@ TEST_F(GrpcTest, CheckAccess) {
 	}
 }
 
+TEST_F(GrpcTest, CheckRbac) {
+	service::Grpc service;
+
+	// Success: returns empty list when no policy set
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::CheckRbacResponse             response;
+
+		gk::v1::CheckRbacRequest request;
+
+		auto reactor = service.CheckRbac(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(response.policies().size(), 0);
+	}
+
+	// Success: returns policy when found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::CheckRbacResponse             response;
+
+		// create identity
+		const datastore::Identity identity({.sub = "sub:GrpcTest.CheckRbac"});
+		EXPECT_NO_THROW(identity.store());
+
+		datastore::RbacPolicy policy({
+			.name = "name::GrpcTest.CheckRbac",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		const auto                            permission = "permission:GrpcTest.CheckRbac";
+		const datastore::RbacPolicy::Record record({
+			.identityId = identity.id(), 
+			.permission = permission,
+		});
+
+		EXPECT_NO_THROW(policy.add(record));
+
+		gk::v1::CheckRbacRequest request;
+		request.set_permission(permission);
+		request.set_identity_id(identity.id());
+
+		auto reactor = service.CheckRbac(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(response.policies().size(), 1);
+	}
+}
+
 TEST_F(GrpcTest, CreateAccessPolicy) {
 	service::Grpc service;
 
