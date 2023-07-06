@@ -36,5 +36,14 @@ using DatastoreInvalidCollectionOrMember =
 
 using DatastoreRoleNotFound = basic_error<"gk:1.3.1.404", "Role not found">;
 
+using DatastoreDuplicateRbacPolicy = basic_error<"gk:1.4.1.409", "Duplicate rbac policy">;
+using DatastoreRbacPolicyNotFound  = basic_error<"gk:1.4.2.404", "Rbac Policy not found">;
+using DatastoreInvalidRbacPolicyOrPrincipal =
+	basic_error<"gk:1.4.3.400", "Invalid rbac policy or principal">;
+using DatastoreDuplicateRbacPolicyPrincipal =
+	basic_error<"gk:1.4.4.409", "Duplicate rbac policy principal">;
+using DatastoreInvalidRbacPolicyOrRole = basic_error<"gk:1.4.3.400", "Invalid rbac policy or role">;
+using DatastoreDuplicateRbacPolicyRole = basic_error<"gk:1.4.4.409", "Duplicate rbac policy role">;
+
 using EventsPubsubTransportFailure = basic_error<"gk:2.1.1.503", "Unavailable">;
 } // namespace err

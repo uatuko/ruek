@@ -151,8 +151,9 @@ service Gatekeeper {
 }
 
 enum PrincipalType {
-	collection = 0;
-	identity   = 1;
+	PRINCIPAL_TYPE_UNSPECIFIED = 0;
+	PRINCIPAL_TYPE_COLLECTION  = 1;
+	PRINCIPAL_TYPE_IDENTITY    = 2;
 }
 
 message Meta {
