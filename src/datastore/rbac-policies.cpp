@@ -1,12 +1,13 @@
 #include "rbac-policies.h"
-#include "redis.h"
-#include "roles.h"
 
 #include <utility>
 
 #include <xid/xid.h>
 
 #include "err/errors.h"
+
+#include "redis.h"
+#include "roles.h"
 
 namespace datastore {
 RbacPolicy::RbacPolicy(const RbacPolicy::Data &data) noexcept : _data(data), _rev(0) {
@@ -199,7 +200,7 @@ const RbacPolicy::Rules RbacPolicy::rules() const {
 }
 
 std::vector<RbacPolicy> RbacPolicy::Record::check() const {
-	auto conn = datastore::redis::conn();
+	auto conn  = datastore::redis::conn();
 	auto reply = conn.cmd("HGETALL " + key());
 
 	std::vector<RbacPolicy> policies;

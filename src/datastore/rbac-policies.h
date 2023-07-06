@@ -63,7 +63,7 @@ public:
 	void             addCollection(const std::string collectionId) const;
 	void             addIdentity(const std::string IdentityId) const;
 
-	void             add(const Record &record) const;
+	void add(const Record &record) const;
 
 	const Rules rules() const;
 	void        addRule(const Rule &rule) const;

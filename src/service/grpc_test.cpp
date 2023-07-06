@@ -119,9 +119,9 @@ TEST_F(GrpcTest, CheckRbac) {
 		});
 		EXPECT_NO_THROW(policy.store());
 
-		const auto                            permission = "permission:GrpcTest.CheckRbac";
+		const auto                          permission = "permission:GrpcTest.CheckRbac";
 		const datastore::RbacPolicy::Record record({
-			.identityId = identity.id(), 
+			.identityId = identity.id(),
 			.permission = permission,
 		});
 
@@ -890,7 +890,7 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 	{
 		const datastore::Identity identity({.sub = "sub:GrpcTest.CreateRbacPolicy"});
 		ASSERT_NO_THROW(identity.store());
-		auto permission = "permissions[0]:GrpcTest.CreateRbacRbacPolicy";
+		auto                  permission = "permissions[0]:GrpcTest.CreateRbacRbacPolicy";
 		const datastore::Role role({
 			.name = "name:GrpcTest.CreateRbacPolicy",
 			.permissions =
@@ -914,10 +914,10 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY);
 
 		// expect no access before request
-		auto rbac = datastore::RbacPolicy::Record({
-			.identityId = principal->id(), 
-			.permission = permission,
-		});
+		auto rbac     = datastore::RbacPolicy::Record({
+				.identityId = principal->id(),
+				.permission = permission,
+        });
 		auto policies = rbac.check();
 		EXPECT_EQ(policies.size(), 0);
 
@@ -943,9 +943,9 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		const datastore::Identity   identity({
-			  .sub = "sub:GrpcTest.CreateRbacPolicy-collection",
-        });
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.CreateRbacPolicy-collection",
+		});
 		ASSERT_NO_THROW(identity.store());
 		const datastore::Collection collection({
 			.name = "name:GrpcTest.CreateRbacPolicy-collection",
@@ -953,7 +953,7 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
-		auto permission = "permissions[0]:GrpcTest.CreateRbacPolicy-collection";
+		auto                  permission = "permissions[0]:GrpcTest.CreateRbacPolicy-collection";
 		const datastore::Role role({
 			.name = "name:GrpcTest.CreateRbacPolicy",
 			.permissions =
@@ -973,7 +973,7 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION);
 
 		auto rbac = datastore::RbacPolicy::Record({
-			.identityId = identity.id(), 
+			.identityId = identity.id(),
 			.permission = permission,
 		});
 
@@ -993,7 +993,6 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 	}
 
 	// FIXME: nested collections
-
 }
 
 // Roles

@@ -43,11 +43,9 @@ grpc::ServerUnaryReactor *Grpc::CheckRbac(
 	}
 
 	try {
-		const auto rbac = datastore::RbacPolicy::Record({
-			.identityId = request->identity_id(),
-			.permission = request->permission()
-		});
-	
+		const auto rbac = datastore::RbacPolicy::Record(
+			{.identityId = request->identity_id(), .permission = request->permission()});
+
 		const auto policies = rbac.check();
 		map(policies, response);
 	} catch (...) {
@@ -406,7 +404,7 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 		for (const auto &principal : request->principals()) {
 			switch (principal.type()) {
 			case gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION:
-				for (const auto id : datastore::ListIdentitiesInCollection(principal.id())){
+				for (const auto id : datastore::ListIdentitiesInCollection(principal.id())) {
 					identities.push_back(id);
 				}
 				break;
@@ -424,8 +422,8 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 		if (request->principals().size() > 0 && request->rules().size() > 0) {
 			for (const auto &rule : request->rules()) {
 				auto role = datastore::RetrieveRole(rule.role_id());
-				for(const auto &permission : role.permissions()){
-					for(const auto &identity : identities){
+				for (const auto &permission : role.permissions()) {
+					for (const auto &identity : identities) {
 						policy.add(datastore::RbacPolicy::Record({
 							.identityId = identity,
 							.permission = permission,
@@ -434,7 +432,6 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 				}
 			}
 		}
-
 
 	} catch (...) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
