@@ -8,7 +8,7 @@
 
 namespace datastore {
 RbacPolicy::RbacPolicy(const RbacPolicy::Data &data) noexcept : _data(data), _rev(0) {
-  if (_data.id.empty()) {
+	if (_data.id.empty()) {
 		_data.id = xid::next();
 	}
 }
