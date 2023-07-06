@@ -27,15 +27,14 @@ RbacPolicy::RbacPolicy(const pg::row_t &r) :
 	_rev(r["_rev"].as<int>()) {}
 
 void RbacPolicy::addPrincipal(const Principal principal) const {
-	switch (principal.type)
-	{
+	switch (principal.type) {
 	case Principal::Type::kCollection:
 		addCollection(principal.id);
 		break;
 	case Principal::Type::kIdentity:
 		addIdentity(principal.id);
 		break;
-	
+
 	default:
 		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
 	}
@@ -158,11 +157,11 @@ const RbacPolicy::Principals RbacPolicy::principals() const {
 			policy_id = $1::text
 	)";
 
-	auto res = pg::exec(qry, id());
+	auto       res = pg::exec(qry, id());
 	Principals members;
 	for (const auto &r : res) {
 		members.push_back(Principal({
-			.id = r["id"].as<std::string>(),
+			.id   = r["id"].as<std::string>(),
 			.type = static_cast<Principal::Type>(r["type"].as<int>()),
 		}));
 	}

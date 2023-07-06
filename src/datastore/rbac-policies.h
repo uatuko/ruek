@@ -25,12 +25,12 @@ public:
 
 	struct Principal {
 		std::string id;
-		enum class Type {kUnspecified, kCollection, kIdentity} type;
+		enum class Type { kUnspecified, kCollection, kIdentity } type;
 
 		bool operator==(const Principal &) const noexcept = default;
 	};
 
-	using Rules = std::vector<Rule>;
+	using Rules      = std::vector<Rule>;
 	using Principals = std::vector<Principal>;
 
 	RbacPolicy(const Data &data) noexcept;
