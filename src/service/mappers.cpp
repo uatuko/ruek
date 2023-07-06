@@ -56,6 +56,13 @@ void map(const datastore::AccessPolicies &from, gk::v1::CheckAccessResponse *to)
 	}
 }
 
+void map(const datastore::RbacPolicies &from, gk::v1::CheckRbacResponse *to) {
+	for (const auto &policy : from) {
+		auto p = to->add_policies();
+		p->set_id(policy.id());
+	}
+}
+
 datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
 	datastore::RbacPolicy rbacPolicy({
 		.id   = from->id(),

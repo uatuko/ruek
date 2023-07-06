@@ -31,6 +31,33 @@ grpc::ServerUnaryReactor *Grpc::CheckAccess(
 	return reactor;
 }
 
+grpc::ServerUnaryReactor *Grpc::CheckRbac(
+	grpc::CallbackServerContext *context, const gk::v1::CheckRbacRequest *request,
+	gk::v1::CheckRbacResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	if (request->has_identity_sub()) {
+		// TODO: implement checking access by sub
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNIMPLEMENTED, "Not implemented"));
+		return reactor;
+	}
+
+	try {
+		const auto rbac = datastore::RbacPolicy::Record({
+			.identityId = request->identity_id(),
+			.permission = request->permission()
+		});
+	
+		const auto policies = rbac.check();
+		map(policies, response);
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to check access"));
+		return reactor;
+	}
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 	grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
 	gk::v1::AccessPolicy *response) {
