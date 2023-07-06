@@ -70,6 +70,25 @@ TEST_F(IdentitiesTest, listInCollection) {
 	}
 }
 
+TEST_F(IdentitiesTest, lookup) {
+	// Success:
+	{
+		const datastore::Identity identity({
+			.sub = "sub:IdentitiesTest.lookup",
+		});
+
+		// expect no entries before adding to collection
+		auto identities = datastore::LookupIdentities(identity.sub());
+		EXPECT_EQ(0, identities.size());
+
+		ASSERT_NO_THROW(identity.store());
+
+		// expect single entry
+		identities = datastore::LookupIdentities(identity.sub());
+		EXPECT_EQ(1, identities.size());
+	}
+}
+
 TEST_F(IdentitiesTest, retrieve) {
 	// Success: retrieve data
 	{
