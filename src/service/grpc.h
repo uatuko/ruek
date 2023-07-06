@@ -53,6 +53,11 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::UpdateIdentityRequest *request,
 		gk::v1::Identity *response) override;
 
+	// RBAC policies
+	grpc::ServerUnaryReactor *CreateRbacPolicy(
+		grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
+		gk::v1::RbacPolicy *response) override;
+
 	// Roles
 	grpc::ServerUnaryReactor *CreateRole(
 		grpc::CallbackServerContext *context, const gk::v1::CreateRoleRequest *request,

@@ -63,11 +63,11 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 			std::vector<std::string> identities;
 
 			switch (principal.type()) {
-			case gk::v1::PrincipalType::collection:
+			case gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION:
 				policy.addCollectionPrincipal(principal.id());
 				identities = datastore::ListIdentitiesInCollection(principal.id());
 				break;
-			case gk::v1::PrincipalType::identity:
+			case gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY:
 				policy.addIdentityPrincipal(principal.id());
 				identities.push_back(principal.id());
 				break;
@@ -343,6 +343,43 @@ grpc::ServerUnaryReactor *Grpc::UpdateIdentity(
 	}
 
 	map(*identity, response);
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
+	grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
+	gk::v1::RbacPolicy *response) {
+	auto *reactor = context->DefaultReactor();
+
+	auto policy = map(request);
+	try {
+		// Store the policy
+		policy.store();
+
+		// Add rules to junction table
+		if (request->rules().size() > 0) {
+			for (const auto &rule : request->rules()) {
+				policy.addRule(datastore::RbacPolicy::Rule({.roleId = rule.role_id()}));
+			}
+		}
+
+		// Add principals to junction table
+		if (request->principals().size() > 0) {
+			for (const auto &principal : request->principals()) {
+				policy.addPrincipal(datastore::RbacPolicy::Principal({
+					.id   = principal.id(),
+					.type = static_cast<datastore::RbacPolicy::Principal::Type>(principal.type()),
+				}));
+			}
+		}
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
+		return reactor;
+	}
+
+	map(policy, response);
+
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
