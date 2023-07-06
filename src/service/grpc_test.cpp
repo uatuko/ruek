@@ -183,6 +183,59 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		policies = access.check();
 		EXPECT_EQ(policies.size(), 1);
 	}
+
+	// Success: create an access policy for collection
+	// all members of collection should be granted access
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                  response;
+
+		const datastore::Identity   identity({
+			  .id  = "identity_id:GrpcTest.CreateAccessPolicy",
+			  .sub = "identity_sub:GrpcTest.CreateAccessPolicy",
+        });
+		const datastore::Collection collection({
+			.id   = "collection_id:GrpcTest.CreateAccessPolicy",
+			.name = "collection_name:GrpcTest.CreateAccessPolicy",
+		});
+
+		try {
+			identity.store();
+			collection.store();
+			collection.add(identity.id());
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		gk::v1::CreateAccessPolicyRequest request;
+		request.set_name("name:GrpcTest.CreateAccessPolicy");
+
+		auto principal = request.add_principals();
+		principal->set_id(collection.id());
+		principal->set_type(gk::v1::PrincipalType::collection);
+
+		auto rule = request.add_rules();
+		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
+
+		const auto access = datastore::AccessPolicy::Record(identity.id(), rule->resource());
+
+		// expect no access before request
+		auto policies = access.check();
+		EXPECT_EQ(policies.size(), 0);
+
+		// create access policy
+		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// expect to find single policy when checking access
+		policies = access.check();
+		EXPECT_EQ(policies.size(), 1);
+	}
+
+	// FIXME: nested collections
 }
 
 // Collections
