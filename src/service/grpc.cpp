@@ -11,6 +11,12 @@ grpc::ServerUnaryReactor *Grpc::CheckAccess(
 	gk::v1::CheckAccessResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
+	if (request->has_identity_sub()) {
+		// TODO: implement checking access by sub
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNIMPLEMENTED, "Not implemented"));
+		return reactor;
+	}
+
 	try {
 		const auto access =
 			datastore::AccessPolicy::Record(request->identity_id(), request->resource());
