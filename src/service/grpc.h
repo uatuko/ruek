@@ -6,6 +6,10 @@ namespace service {
 class Grpc final : public gk::v1::Gatekeeper::CallbackService {
 public:
 	// Access Policies
+	grpc::ServerUnaryReactor *CheckAccess(
+		grpc::CallbackServerContext *context, const gk::v1::CheckAccessRequest *request,
+		gk::v1::CheckAccessResponse *response) override;
+
 	grpc::ServerUnaryReactor *CreateAccessPolicy(
 		grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
 		gk::v1::AccessPolicy *response) override;

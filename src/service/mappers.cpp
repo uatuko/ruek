@@ -49,6 +49,13 @@ void map(const datastore::AccessPolicy &from, gk::v1::Policy *to) {
 	// FIXME: add attributes
 }
 
+void map(const datastore::AccessPolicies &from, gk::v1::CheckAccessResponse *to) {
+	for (const auto &policy : from) {
+		auto p = to->add_policies();
+		map(policy, p);
+	}
+}
+
 datastore::Role map(const gk::v1::CreateRoleRequest *from) {
 	datastore::Role role({
 		.id   = from->id(),

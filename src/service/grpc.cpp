@@ -6,6 +6,25 @@
 
 namespace service {
 // Access Policies
+grpc::ServerUnaryReactor *Grpc::CheckAccess(
+	grpc::CallbackServerContext *context, const gk::v1::CheckAccessRequest *request,
+	gk::v1::CheckAccessResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	try {
+		const auto access =
+			datastore::AccessPolicy::Record(request->identity_id(), request->resource());
+		const auto policies = access.check();
+		map(policies, response);
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to check access"));
+		return reactor;
+	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 	grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
 	gk::v1::AccessPolicy *response) {
