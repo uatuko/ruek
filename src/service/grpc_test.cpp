@@ -882,6 +882,7 @@ TEST_F(GrpcTest, UpdateIndentity) {
 	}
 }
 
+// RBAC
 TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 	service::Grpc service;
 
@@ -889,8 +890,14 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 	{
 		const datastore::Identity identity({.sub = "sub:GrpcTest.CreateRbacPolicy"});
 		ASSERT_NO_THROW(identity.store());
-
-		const datastore::Role role({.name = "name:GrpcTest.CreateRbacPolicy"});
+		auto permission = "permissions[0]:GrpcTest.CreateRbacRbacPolicy";
+		const datastore::Role role({
+			.name = "name:GrpcTest.CreateRbacPolicy",
+			.permissions =
+				{
+					permission,
+				},
+		});
 		ASSERT_NO_THROW(role.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -906,6 +913,14 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 		principal->set_id(identity.id());
 		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY);
 
+		// expect no access before request
+		auto rbac = datastore::RbacPolicy::Record({
+			.identityId = principal->id(), 
+			.permission = permission,
+		});
+		auto policies = rbac.check();
+		EXPECT_EQ(policies.size(), 0);
+
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
@@ -915,7 +930,70 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 		EXPECT_EQ(request.name(), response.name());
 		EXPECT_EQ(identity.id(), response.principals(0).id());
 		EXPECT_EQ(role.id(), response.rules(0).role_id());
+
+		// expect to find single policy when checking access
+		policies = rbac.check();
+		EXPECT_EQ(policies.size(), 1);
 	}
+
+	// Success: create an rbac policy for collection
+	// all members of collection should be granted access
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::RbacPolicy                    response;
+
+		const datastore::Identity   identity({
+			  .sub = "sub:GrpcTest.CreateRbacPolicy-collection",
+        });
+		ASSERT_NO_THROW(identity.store());
+		const datastore::Collection collection({
+			.name = "name:GrpcTest.CreateRbacPolicy-collection",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		auto permission = "permissions[0]:GrpcTest.CreateRbacPolicy-collection";
+		const datastore::Role role({
+			.name = "name:GrpcTest.CreateRbacPolicy",
+			.permissions =
+				{
+					permission,
+				},
+		});
+		ASSERT_NO_THROW(role.store());
+
+		gk::v1::CreateRbacPolicyRequest request;
+		request.set_name("name:GrpcTest.CreateRbacPolicy");
+		auto rule = request.add_rules();
+		rule->set_role_id(role.id());
+
+		auto principal = request.add_principals();
+		principal->set_id(collection.id());
+		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION);
+
+		auto rbac = datastore::RbacPolicy::Record({
+			.identityId = identity.id(), 
+			.permission = permission,
+		});
+
+		// expect no access before request
+		auto policies = rbac.check();
+		EXPECT_EQ(policies.size(), 0);
+
+		// create access policy
+		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// expect to find single policy when checking access
+		policies = rbac.check();
+		EXPECT_EQ(policies.size(), 1);
+	}
+
+	// FIXME: nested collections
+
 }
 
 // Roles
