@@ -214,7 +214,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 
 		auto principal = request.add_principals();
 		principal->set_id(collection.id());
-		principal->set_type(gk::v1::PrincipalType::collection);
+		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION);
 
 		auto rule = request.add_rules();
 		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
