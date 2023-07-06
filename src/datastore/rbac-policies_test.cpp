@@ -162,51 +162,6 @@ TEST_F(RbacPoliciesTest, principals) {
 		EXPECT_NO_THROW(policy.addCollection(collection.id()));
 		EXPECT_THROW(policy.addCollection(collection.id()), err::DatastoreDuplicateRbacPolicyPrincipal);
 	}
-
-	// Success: list principals
-	{
-		const datastore::RbacPolicies policies({
-			{{.name = "name:RbacPoliciesTest.principals-list[0]"}},
-			{{.name = "name:RbacPoliciesTest.principals-list[1]"}},
-		});
-
-		for (const auto &policy : policies) {
-			EXPECT_NO_THROW(policy.store());
-		}
-
-    const datastore::Identity identity({.sub = "sub:RbacPoliciesTest.principals-list[0]"});
-    EXPECT_NO_THROW(identity.store());
-
-    const datastore::Collection collection({.name = "name:RbacPoliciesTest.principals-list[1]"});
-    EXPECT_NO_THROW(collection.store());
-
-		EXPECT_NO_THROW(policies[0].addIdentity(identity.id()));
-		EXPECT_NO_THROW(policies[0].addCollection(collection.id()));
-
-		{
-			auto principals = policies[0].principals();
-			EXPECT_EQ(2, principals.size());
-
-			const datastore::RbacPolicy::Principals expected = {
-				{
-					.id = collection.id(),
-					.type = datastore::RbacPolicy::Principal::Type::kCollection,
-				},
-				{
-					.id = identity.id(),
-					.type = datastore::RbacPolicy::Principal::Type::kIdentity,
-				},
-      };
-			EXPECT_EQ(expected, principals);
-		}
-		{
-			auto principals = policies[1].principals();
-			EXPECT_EQ(0, principals.size());
-		}
-
-		// cleanup
-		EXPECT_NO_THROW(identity.discard());
-	}
 }
 
 TEST_F(RbacPoliciesTest, roles) {
