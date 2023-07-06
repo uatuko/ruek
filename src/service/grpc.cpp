@@ -61,10 +61,10 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 	for (const auto &principal : request->principals()) {
 		try {
 			switch (principal.type()) {
-			case gk::v1::PrincipalType::collection:
+			case gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION:
 				policy.addCollectionPrincipal(principal.id());
 				break;
-			case gk::v1::PrincipalType::identity:
+			case gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY:
 				policy.addIdentityPrincipal(principal.id());
 				break;
 			default:
