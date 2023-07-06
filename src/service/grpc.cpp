@@ -299,6 +299,18 @@ grpc::ServerUnaryReactor *Grpc::RetrieveIdentity(
 	return reactor;
 }
 
+grpc::ServerUnaryReactor *Grpc::LookupIdentities(
+	grpc::CallbackServerContext *context, const gk::v1::LookupIdentitiesRequest *request,
+	gk::v1::LookupIdentitiesResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	const auto identities = datastore::LookupIdentities(request->sub());
+
+	map(identities, response);
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 grpc::ServerUnaryReactor *Grpc::UpdateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::UpdateIdentityRequest *request,
 	gk::v1::Identity *response) {

@@ -97,6 +97,13 @@ void map(const datastore::Identity &from, gk::v1::Identity *to) {
 	}
 }
 
+void map(const datastore::Identities &from, gk::v1::LookupIdentitiesResponse *to) {
+	for (const auto &identity : from) {
+		auto i = to->add_data();
+		map(identity, i);
+	}
+}
+
 void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());

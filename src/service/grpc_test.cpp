@@ -705,6 +705,31 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 	}
 }
 
+TEST_F(GrpcTest, LookupIdentities) {
+	service::Grpc service;
+
+	// Success: lookup identities by sub
+	{
+		const datastore::Identity identity(
+			{.id = "id:GrpcTest.LookupIdentities", .sub = "sub:GrpcTest.LookupIdentities"});
+		EXPECT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::LookupIdentitiesResponse      response;
+
+		gk::v1::LookupIdentitiesRequest request;
+		request.set_sub(identity.sub());
+
+		auto reactor = service.LookupIdentities(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(response.data().size(), 1);
+		EXPECT_EQ(response.data()[0].id(), identity.id());
+	}
+}
+
 TEST_F(GrpcTest, UpdateIndentity) {
 	service::Grpc service;
 
