@@ -10,6 +10,10 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::CheckAccessRequest *request,
 		gk::v1::CheckAccessResponse *response) override;
 
+	grpc::ServerUnaryReactor *CheckRbac(
+		grpc::CallbackServerContext *context, const gk::v1::CheckRbacRequest *request,
+		gk::v1::CheckRbacResponse *response) override;
+
 	grpc::ServerUnaryReactor *CreateAccessPolicy(
 		grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
 		gk::v1::AccessPolicy *response) override;

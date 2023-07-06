@@ -20,5 +20,6 @@ void map(const datastore::AccessPolicies &from, gk::v1::CheckAccessResponse *to)
 void map(const datastore::Collection &from, gk::v1::Collection *to);
 void map(const datastore::Identity &from, gk::v1::Identity *to);
 void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to);
+void map(const datastore::RbacPolicies &from, gk::v1::CheckRbacResponse *to);
 void map(const datastore::Role &from, gk::v1::Role *to);
 } // namespace service
