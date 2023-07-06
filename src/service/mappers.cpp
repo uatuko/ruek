@@ -62,13 +62,6 @@ datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
 		.name = from->name(),
 	});
 
-	if (from->principals_size() > 0) {
-		for (int i = 0; i < from->principals_size(); i++) {
-			auto id   = from->principals(i).id();
-			auto type = from->principals(i).GetTypeName();
-		}
-	}
-
 	return rbacPolicy;
 }
 
@@ -109,20 +102,21 @@ void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 	to->set_name(from.name());
 
 	// Set role ids from DB table
-	auto roles = from.roles();
-	if (from.roles().size() > 0) {
-		for (const auto &role : roles) {
+	auto rules = from.rules();
+	if (rules.size() > 0) {
+		for (const auto &rule : rules) {
 			auto r = to->add_rules();
-			r->set_role_id(role);
+			r->set_role_id(rule.roleId);
 		}
 	}
 
 	// Set principals ids from DB table
 	auto principals = from.principals();
-	if (from.principals().size() > 0) {
+	if (principals.size() > 0) {
 		for (const auto &principal : principals) {
 			auto p = to->add_principals();
-			p->set_id(principal);
+			p->set_id(principal.id);
+			p->set_type(static_cast<gk::v1::PrincipalType>(principal.type));
 		}
 	}
 }

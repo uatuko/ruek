@@ -26,7 +26,42 @@ RbacPolicy::RbacPolicy(const pg::row_t &r) :
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
-void RbacPolicy::addPrincipal(const principal_t &pid) const {
+void RbacPolicy::addPrincipal(const Principal principal) const {
+	switch (principal.type)
+	{
+	case Principal::Type::kCollection:
+		addCollection(principal.id);
+		break;
+	case Principal::Type::kIdentity:
+		addIdentity(principal.id);
+		break;
+	
+	default:
+		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
+	}
+}
+
+void RbacPolicy::addCollection(const std::string collectionId) const {
+	std::string_view qry = R"(
+		insert into "rbac-policies_collections" (
+			policy_id,
+			collection_id
+		) values (
+			$1::text,
+			$2::text
+		);
+	)";
+
+	try {
+		pg::exec(qry, id(), collectionId);
+	} catch (pg::fkey_violation_t &) {
+		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
+	} catch (pg::unique_violation_t &) {
+		throw err::DatastoreDuplicateRbacPolicyPrincipal();
+	}
+}
+
+void RbacPolicy::addIdentity(const std::string identityId) const {
 	std::string_view qry = R"(
 		insert into "rbac-policies_identities" (
 			policy_id,
@@ -38,7 +73,7 @@ void RbacPolicy::addPrincipal(const principal_t &pid) const {
 	)";
 
 	try {
-		pg::exec(qry, id(), pid);
+		pg::exec(qry, id(), identityId);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
 	} catch (pg::unique_violation_t &) {
@@ -46,7 +81,7 @@ void RbacPolicy::addPrincipal(const principal_t &pid) const {
 	}
 }
 
-void RbacPolicy::addRole(const role_t &rid) const {
+void RbacPolicy::addRule(const Rule &r) const {
 	std::string_view qry = R"(
 		insert into "rbac-policies_roles" (
 			policy_id,
@@ -58,7 +93,7 @@ void RbacPolicy::addRole(const role_t &rid) const {
 	)";
 
 	try {
-		pg::exec(qry, id(), rid);
+		pg::exec(qry, id(), r.roleId);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidRbacPolicyOrRole();
 	} catch (pg::unique_violation_t &) {
@@ -104,27 +139,38 @@ void RbacPolicy::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-const RbacPolicy::principals_t RbacPolicy::principals() const {
+const RbacPolicy::Principals RbacPolicy::principals() const {
 	std::string_view qry = R"(
 		select
-			identity_id
+			collection_id as id,
+			1::int as type
+		from
+			"rbac-policies_collections"
+		where
+			policy_id = $1::text
+		UNION
+		select
+			identity_id as id,
+			2::int as type
 		from
 			"rbac-policies_identities"
 		where
-			policy_id = $1::text;
+			policy_id = $1::text
 	)";
 
 	auto res = pg::exec(qry, id());
-
-	principals_t members;
+	Principals members;
 	for (const auto &r : res) {
-		members.insert(r["identity_id"].as<principal_t>());
+		members.push_back(Principal({
+			.id = r["id"].as<std::string>(),
+			.type = static_cast<Principal::Type>(r["type"].as<int>()),
+		}));
 	}
 
 	return members;
 }
 
-const RbacPolicy::roles_t RbacPolicy::roles() const {
+const RbacPolicy::Rules RbacPolicy::rules() const {
 	std::string_view qry = R"(
 		select
 			role_id
@@ -136,11 +182,13 @@ const RbacPolicy::roles_t RbacPolicy::roles() const {
 
 	auto res = pg::exec(qry, id());
 
-	roles_t roles;
+	Rules rules;
 	for (const auto &r : res) {
-		roles.insert(r["role_id"].as<role_t>());
+		rules.push_back(Rule({
+			.roleId = r["role_id"].as<std::string>(),
+		}));
 	}
 
-	return roles;
+	return rules;
 }
 } // namespace datastore

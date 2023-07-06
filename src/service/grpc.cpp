@@ -359,14 +359,19 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 		// Add rules to junction table
 		if (request->rules().size() > 0) {
 			for (const auto &rule : request->rules()) {
-				policy.addRole(rule.role_id());
+				policy.addRule(datastore::RbacPolicy::Rule({
+					.roleId = rule.role_id()
+				}));
 			}
 		}
 
 		// Add principals to junction table
 		if (request->principals().size() > 0) {
 			for (const auto &principal : request->principals()) {
-				policy.addPrincipal(principal.id());
+				policy.addPrincipal(datastore::RbacPolicy::Principal({
+					.id = principal.id(),
+					.type = static_cast<datastore::RbacPolicy::Principal::Type>(principal.type()),
+				}));
 			}
 		}
 	} catch (...) {

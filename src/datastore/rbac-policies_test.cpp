@@ -2,6 +2,7 @@
 
 #include "err/errors.h"
 
+#include "collections.h"
 #include "identities.h"
 #include "rbac-policies.h"
 #include "roles.h"
@@ -25,19 +26,19 @@ protected:
 };
 
 TEST_F(RbacPoliciesTest, principals) {
-	// Success: add principals
+	// Success: add identity principal
 	{
 		const datastore::RbacPolicy policy({
-			.name = "name:RbacPoliciesTest.principals-add",
+			.name = "name:RbacPoliciesTest.principals-add-identity",
 		});
 		EXPECT_NO_THROW(policy.store());
 
 		const datastore::Identity identity({
-			.sub = "sub:RbacPoliciesTest.principals-add",
+			.sub = "sub:RbacPoliciesTest.principals-add-identity",
 		});
 		EXPECT_NO_THROW(identity.store());
 
-		EXPECT_NO_THROW(policy.addPrincipal(identity.id()));
+		EXPECT_NO_THROW(policy.addIdentity(identity.id()));
 
 		std::string_view qry = R"(
 			select
@@ -55,47 +56,111 @@ TEST_F(RbacPoliciesTest, principals) {
 		EXPECT_NO_THROW(identity.discard());
 	}
 
-	// Error: add invalid principals
+  	// Success: add collection principal
 	{
 		const datastore::RbacPolicy policy({
-			.name = "name:RbacPoliciesTest.principals-add_invalid-principal",
+			.name = "name:RbacPoliciesTest.principals-add-collection",
 		});
 		EXPECT_NO_THROW(policy.store());
 
-		EXPECT_THROW(
-			policy.addPrincipal("invalid-principal"), err::DatastoreInvalidRbacPolicyOrPrincipal);
+		const datastore::Collection collection({
+			.name = "name:RbacPoliciesTest.principals-add-collection",
+		});
+		EXPECT_NO_THROW(collection.store());
+
+		EXPECT_NO_THROW(policy.addCollection(collection.id()));
+
+		std::string_view qry = R"(
+			select
+				count(*) as n_principals
+			from "rbac-policies_collections"
+			where
+				policy_id = $1::text and
+				collection_id = $2::text;
+		)";
+
+		auto res = datastore::pg::exec(qry, policy.id(), collection.id());
+		EXPECT_EQ(1, res.at(0, 0).as<int>());
 	}
 
-	// Error: add principal to invalid policy
+	// Error: add invalid identity principals
 	{
 		const datastore::RbacPolicy policy({
-			.name = "name:RbacPoliciesTest.principals-add_invalid-policy",
+			.name = "name:RbacPoliciesTest.principals-add_invalid-principal-identity",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		EXPECT_THROW(policy.addIdentity("invalid-principal-identity"), err::DatastoreInvalidRbacPolicyOrPrincipal);
+	}
+
+  	// Error: add invalid collection principals
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.principals-add_invalid-principal-collection",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		EXPECT_THROW(policy.addCollection("invalid-principal-collection"), err::DatastoreInvalidRbacPolicyOrPrincipal);
+	}
+
+	// Error: add identity principal to invalid policy
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.principals-add_invalid-policy-identity",
 		});
 
 		const datastore::Identity identity({
-			.sub = "sub:RbacPoliciesTest.principals-add_invalid-policy",
+			.sub = "sub:RbacPoliciesTest.principals-add_invalid-policy-identity",
 		});
 		EXPECT_NO_THROW(identity.store());
 
-		EXPECT_THROW(
-			policy.addPrincipal(identity.id()), err::DatastoreInvalidRbacPolicyOrPrincipal);
+		EXPECT_THROW(policy.addIdentity(identity.id()), err::DatastoreInvalidRbacPolicyOrPrincipal);
 	}
 
-	// Error: duplicate principal
+  	// Error: add collection principal to invalid policy
 	{
 		const datastore::RbacPolicy policy({
-			.name = "name:RbacPoliciesTest.principals-add_duplicate-principal",
+			.name = "name:RbacPoliciesTest.principals-add_invalid-policy-collection",
+		});
+
+		const datastore::Collection collection({
+			.name = "name:RbacPoliciesTest.principals-add_invalid-policy-collection",
+		});
+		EXPECT_NO_THROW(collection.store());
+
+		EXPECT_THROW(policy.addCollection(collection.id()), err::DatastoreInvalidRbacPolicyOrPrincipal);
+	}
+
+	// Error: duplicate identity principal
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.principals-add_duplicate-identity-principal",
 		});
 		EXPECT_NO_THROW(policy.store());
 
 		const datastore::Identity identity({
-			.sub = "sub:RbacPoliciesTest.principals-add_duplicate-principal",
+			.sub = "sub:RbacPoliciesTest.principals-add_duplicate-identity-principal",
 		});
 		EXPECT_NO_THROW(identity.store());
 
-		EXPECT_NO_THROW(policy.addPrincipal(identity.id()));
-		EXPECT_THROW(
-			policy.addPrincipal(identity.id()), err::DatastoreDuplicateRbacPolicyPrincipal);
+		EXPECT_NO_THROW(policy.addIdentity(identity.id()));
+		EXPECT_THROW(policy.addIdentity(identity.id()), err::DatastoreDuplicateRbacPolicyPrincipal);
+	}
+
+  	// Error: duplicate collection principal
+	{
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.principals-add_duplicate-collection-principal",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		const datastore::Collection collection({
+			.name = "name:RbacPoliciesTest.principals-add_duplicate-collection-principal",
+		});
+		EXPECT_NO_THROW(collection.store());
+
+		EXPECT_NO_THROW(policy.addCollection(collection.id()));
+		EXPECT_THROW(policy.addCollection(collection.id()), err::DatastoreDuplicateRbacPolicyPrincipal);
 	}
 
 	// Success: list principals
@@ -109,24 +174,29 @@ TEST_F(RbacPoliciesTest, principals) {
 			EXPECT_NO_THROW(policy.store());
 		}
 
-		const datastore::Identities identities({
-			{{.sub = "sub:RbacPoliciesTest.principals-list[0]"}},
-			{{.sub = "sub:RbacPoliciesTest.principals-list[1]"}},
-		});
+    const datastore::Identity identity({.sub = "sub:RbacPoliciesTest.principals-list[0]"});
+    EXPECT_NO_THROW(identity.store());
 
-		for (const auto &identity : identities) {
-			EXPECT_NO_THROW(identity.store());
-		}
+    const datastore::Collection collection({.name = "name:RbacPoliciesTest.principals-list[1]"});
+    EXPECT_NO_THROW(collection.store());
 
-		EXPECT_NO_THROW(policies[0].addPrincipal(identities[0].id()));
-		EXPECT_NO_THROW(policies[0].addPrincipal(identities[1].id()));
+		EXPECT_NO_THROW(policies[0].addIdentity(identity.id()));
+		EXPECT_NO_THROW(policies[0].addCollection(collection.id()));
 
 		{
 			auto principals = policies[0].principals();
 			EXPECT_EQ(2, principals.size());
 
-			const datastore::RbacPolicy::principals_t expected = {
-				identities[0].id(), identities[1].id()};
+			const datastore::RbacPolicy::Principals expected = {
+				{
+					.id = collection.id(),
+					.type = datastore::RbacPolicy::Principal::Type::kCollection,
+				},
+				{
+					.id = identity.id(),
+					.type = datastore::RbacPolicy::Principal::Type::kIdentity,
+				},
+      };
 			EXPECT_EQ(expected, principals);
 		}
 		{
@@ -135,9 +205,7 @@ TEST_F(RbacPoliciesTest, principals) {
 		}
 
 		// cleanup
-		for (const auto &identity : identities) {
-			EXPECT_NO_THROW(identity.discard());
-		}
+		EXPECT_NO_THROW(identity.discard());
 	}
 }
 
@@ -154,7 +222,11 @@ TEST_F(RbacPoliciesTest, roles) {
 		});
 		EXPECT_NO_THROW(role.store());
 
-		EXPECT_NO_THROW(policy.addRole(role.id()));
+    auto rule = datastore::RbacPolicy::Rule({
+      .roleId = role.id()
+    });
+
+		EXPECT_NO_THROW(policy.addRule(rule));
 
 		std::string_view qry = R"(
 			select
@@ -176,7 +248,11 @@ TEST_F(RbacPoliciesTest, roles) {
 		});
 		EXPECT_NO_THROW(policy.store());
 
-		EXPECT_THROW(policy.addRole("invalid-role"), err::DatastoreInvalidRbacPolicyOrRole);
+    auto rule = datastore::RbacPolicy::Rule({
+      .roleId = "invalid-role"
+    });
+
+		EXPECT_THROW(policy.addRule(rule), err::DatastoreInvalidRbacPolicyOrRole);
 	}
 
 	// Error: add role to invalid policy
@@ -190,7 +266,11 @@ TEST_F(RbacPoliciesTest, roles) {
 		});
 		EXPECT_NO_THROW(role.store());
 
-		EXPECT_THROW(policy.addRole(role.id()), err::DatastoreInvalidRbacPolicyOrRole);
+    auto rule = datastore::RbacPolicy::Rule({
+      .roleId = role.id()
+    });
+
+		EXPECT_THROW(policy.addRule(rule), err::DatastoreInvalidRbacPolicyOrRole);
 	}
 
 	// Error: duplicate role
@@ -205,8 +285,12 @@ TEST_F(RbacPoliciesTest, roles) {
 		});
 		EXPECT_NO_THROW(role.store());
 
-		EXPECT_NO_THROW(policy.addRole(role.id()));
-		EXPECT_THROW(policy.addRole(role.id()), err::DatastoreDuplicateRbacPolicyRole);
+    auto rule = datastore::RbacPolicy::Rule({
+      .roleId = role.id()
+    });
+
+		EXPECT_NO_THROW(policy.addRule(rule));
+		EXPECT_THROW(policy.addRule(rule), err::DatastoreDuplicateRbacPolicyRole);
 	}
 
 	// Success: list roles
@@ -229,18 +313,27 @@ TEST_F(RbacPoliciesTest, roles) {
 			EXPECT_NO_THROW(role.store());
 		}
 
-		EXPECT_NO_THROW(policies[0].addRole(roles[0].id()));
-		EXPECT_NO_THROW(policies[0].addRole(roles[1].id()));
+    const datastore::RbacPolicy::Rules rules({
+      {.roleId = roles[0].id()},
+      {.roleId = roles[1].id()},
+    });
+
+		EXPECT_NO_THROW(policies[0].addRule(rules[0]));
+		EXPECT_NO_THROW(policies[0].addRule(rules[1]));
 
 		{
-			auto actualRoles = policies[0].roles();
+			auto actualRoles = policies[0].rules();
 			EXPECT_EQ(2, actualRoles.size());
 
-			const datastore::RbacPolicy::roles_t expected = {roles[0].id(), roles[1].id()};
+			const datastore::RbacPolicy::Rules expected({
+        {.roleId = roles[0].id()},
+        {.roleId = roles[1].id()},
+      });
+    
 			EXPECT_EQ(expected, actualRoles);
 		}
 		{
-			auto actualRoles = policies[1].roles();
+			auto actualRoles = policies[1].rules();
 			EXPECT_EQ(0, actualRoles.size());
 		}
 	}

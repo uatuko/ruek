@@ -798,6 +798,7 @@ TEST_F(GrpcTest, CreateRbacRbacPolicy) {
 
 		auto principal = request.add_principals();
 		principal->set_id(identity.id());
+		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY);
 
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());

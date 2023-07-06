@@ -2,22 +2,36 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 #include "pg.h"
 
 namespace datastore {
 class RbacPolicy {
 public:
-	using principal_t  = std::string;
-	using principals_t = std::set<principal_t>;
-	using role_t       = std::string;
-	using roles_t      = std::set<role_t>;
 	struct Data {
 		std::string id;
 		std::string name;
 
 		bool operator==(const Data &) const noexcept = default;
 	};
+
+	struct Rule {
+		std::string roleId;
+		std::string attrs;
+
+		bool operator==(const Rule &) const noexcept = default;
+	};
+
+	struct Principal {
+		std::string id;
+		enum class Type {kUnspecified, kCollection, kIdentity} type;
+
+		bool operator==(const Principal &) const noexcept = default;
+	};
+
+	using Rules = std::vector<Rule>;
+	using Principals = std::vector<Principal>;
 
 	RbacPolicy(const Data &data) noexcept;
 	RbacPolicy(Data &&data) noexcept;
@@ -31,11 +45,13 @@ public:
 	void               name(const std::string &name) noexcept { _data.name = name; }
 	void               name(std::string &&name) noexcept { _data.name = std::move(name); }
 
-	const principals_t principals() const;
-	void               addPrincipal(const principal_t &id) const;
+	const Principals principals() const;
+	void             addPrincipal(const Principal principal) const;
+	void             addCollection(const std::string collectionId) const;
+	void             addIdentity(const std::string IdentityId) const;
 
-	const roles_t roles() const;
-	void          addRole(const role_t &id) const;
+	const Rules rules() const;
+	void        addRule(const Rule &rule) const;
 
 	void store() const;
 
