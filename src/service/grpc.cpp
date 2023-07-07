@@ -398,7 +398,7 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 			// Policy with an `id` matching the request `id` doesn't exist, we can continue with
 			// creating a new one.
 		} catch (const std::exception &e) {
-		std::cout << "Y " << e.what() << std::endl;
+			std::cout << "Y " << e.what() << std::endl;
 			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
 			return reactor;
 		}
