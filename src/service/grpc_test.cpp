@@ -908,8 +908,44 @@ TEST_F(GrpcTest, UpdateIndentity) {
 }
 
 // RBAC
-TEST_F(GrpcTest, CreateRbacRbacPolicy) {
+TEST_F(GrpcTest, CreateRbacPolicy) {
 	service::Grpc service;
+	// Success: create rbac policy with `id`
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::RbacPolicy                    response;
+
+		gk::v1::CreateRbacPolicyRequest request;
+		request.set_id("id:GrpcTest.CreateRbacPolicy-id");
+		request.set_name("name:GrpcTest.CreateRbacPolicy-id");
+
+		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(request.id(), response.id());
+		EXPECT_EQ(request.name(), response.name());
+	}
+
+	// Error: duplicate `id`
+	{
+		const datastore::RbacPolicy policy({.name = "name:GrpcTest.CreateRbacPolicy-duplicate"});
+		EXPECT_NO_THROW(policy.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::RbacPolicy                    response;
+
+		gk::v1::CreateRbacPolicyRequest request;
+		request.set_id(policy.id());
+		request.set_name("name:GrpcTest.CreateRbacPolicy-duplicate");
+
+		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
+		EXPECT_EQ("Duplicate policy id", peer.test_status().error_message());
+	}
 
 	// Success: create rbac policy
 	{

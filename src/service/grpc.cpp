@@ -389,6 +389,21 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 	gk::v1::RbacPolicy *response) {
 	auto *reactor = context->DefaultReactor();
 
+	if (request->has_id()) {
+		try {
+			auto policy = datastore::RetrieveRbacPolicy(request->id());
+			reactor->Finish(grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Duplicate policy id"));
+			return reactor;
+		} catch (const err::DatastoreRbacPolicyNotFound &) {
+			// Policy with an `id` matching the request `id` doesn't exist, we can continue with
+			// creating a new one.
+		} catch (const std::exception &e) {
+		std::cout << "Y " << e.what() << std::endl;
+			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+			return reactor;
+		}
+	}
+
 	auto policy = map(request);
 	try {
 		// Store the policy
@@ -444,8 +459,7 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 				}
 			}
 		}
-
-	} catch (...) {
+	} catch (std::exception &e) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
 		return reactor;
 	}
