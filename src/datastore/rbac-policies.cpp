@@ -212,4 +212,23 @@ std::vector<RbacPolicy> RbacPolicy::Record::check() const {
 
 	return policies;
 }
+
+RbacPolicy RetrieveRbacPolicy(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			name
+		from "rbac-policies"
+		where
+			_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+	if (res.empty()) {
+		throw err::DatastoreRbacPolicyNotFound();
+	}
+
+	return RbacPolicy(res[0]);
+}
 } // namespace datastore
