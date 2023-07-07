@@ -64,4 +64,6 @@ private:
 using AccessPolicies = std::vector<AccessPolicy>;
 
 AccessPolicy RetrieveAccessPolicy(const std::string &id);
+
+std::set<std::string> RetrieveAccessPolicyIdentities(const std::string &id);
 } // namespace datastore

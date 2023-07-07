@@ -128,6 +128,31 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	return AccessPolicy(res[0]);
 }
 
+std::set<std::string> RetrieveAccessPolicyIdentities(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			identity_id
+		from "access-policies_identities"
+		where policy_id = $1::text
+		union
+		select
+			c.identity_id
+		from
+			"access-policies_collections" p
+			join "collections_identities" c on p.collection_id = c.collection_id
+		;
+	)";
+
+	auto res = pg::exec(qry, id);
+
+	std::set<std::string> results;
+	for (const auto &r : res) {
+		results.insert(r["identity_id"].as<std::string>());
+	}
+
+	return results;
+}
+
 std::vector<AccessPolicy> AccessPolicy::Record::check() const {
 	auto conn = datastore::redis::conn();
 

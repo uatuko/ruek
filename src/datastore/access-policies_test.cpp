@@ -3,6 +3,8 @@
 #include "err/errors.h"
 
 #include "access-policies.h"
+#include "collections.h"
+#include "identities.h"
 #include "testing.h"
 
 class AccessPoliciesTest : public ::testing::Test {
@@ -17,6 +19,8 @@ protected:
 	void SetUp() {
 		// Clear data before each test
 		datastore::pg::exec("delete from \"access-policies\" cascade;");
+		datastore::pg::exec("delete from collections cascade;");
+		datastore::pg::exec("delete from identities cascade;");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
@@ -54,5 +58,40 @@ TEST_F(AccessPoliciesTest, create) {
 		// cleanup
 		EXPECT_NO_THROW(policy.discard());
 		EXPECT_NO_THROW(record.discard());
+	}
+}
+
+TEST_F(AccessPoliciesTest, retrieveIdentities) {
+	// Success: retrieve identities
+	{
+		const datastore::Identities identities({
+			datastore::Identity::Data{.sub = "sub:AccessPoliciesTest.retrieveIdentities[0]"},
+			datastore::Identity::Data{.sub = "sub:AccessPoliciesTest.retrieveIdentities[1]"},
+		});
+
+		for (const auto &idn : identities) {
+			ASSERT_NO_THROW(idn.store());
+		}
+
+		const datastore::Collection collection({
+			.name = "name:AccessPoliciesTest.retrieveIdentities",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identities[0].id()));
+
+		const datastore::AccessPolicy policy({
+			.name = "name:AccessPoliciesTest.retrieveIdentities",
+		});
+		ASSERT_NO_THROW(policy.store());
+
+		ASSERT_NO_THROW(policy.addCollectionPrincipal(collection.id()));
+		ASSERT_NO_THROW(policy.addIdentityPrincipal(identities[1].id()));
+
+		const auto results = datastore::RetrieveAccessPolicyIdentities(policy.id());
+		EXPECT_EQ(2, results.size());
+
+		for (const auto &idn : identities) {
+			EXPECT_TRUE(results.contains(idn.id()));
+		}
 	}
 }
