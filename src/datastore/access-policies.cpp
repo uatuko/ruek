@@ -53,15 +53,7 @@ void AccessPolicy::store() const {
 		returning _rev;
 	)";
 
-	pg::result_t res;
-	try {
-		res = pg::exec(qry, _data.id, _rev, _data.name, _data.rules);
-	} catch (pqxx::check_violation &) {
-		throw err::DatastoreInvalidIdentityData();
-	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateIdentity();
-	}
-
+	auto res = pg::exec(qry, _data.id, _rev, _data.name, _data.rules);
 	if (res.empty()) {
 		throw err::DatastoreRevisionMismatch();
 	}
