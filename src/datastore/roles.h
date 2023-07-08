@@ -50,18 +50,18 @@ Role RetrieveRole(const std::string &id);
 } // namespace datastore
 
 namespace pqxx {
-using T = datastore::Role::permissions_t;
+using permissions_t = datastore::Role::permissions_t;
 
-template <> struct nullness<T> {
+template <> struct nullness<permissions_t> {
 	static constexpr bool has_null = {true};
 
-	[[nodiscard]] static T null() { return {}; }
+	[[nodiscard]] static permissions_t null() { return {}; }
 };
 
-template <> struct string_traits<T> {
-	static T from_string(std::string_view text) {
+template <> struct string_traits<permissions_t> {
+	static permissions_t from_string(std::string_view text) {
 		// FIXME: this is a very optimistic lookup, expects `{string,string}` with no escaped chars
-		T result;
+		permissions_t result;
 
 		using size_t = std::string_view::size_type;
 		for (size_t next, pos = 1; pos < text.size() - 1; pos = next + 1) {
