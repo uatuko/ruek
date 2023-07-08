@@ -95,3 +95,72 @@ TEST_F(AccessPoliciesTest, retrieveIdentities) {
 		}
 	}
 }
+
+TEST_F(AccessPoliciesTest, rev) {
+	// Success: revision increment
+	{
+		const datastore::AccessPolicy policy({
+			.name = "name:AccessPoliciesTest.rev",
+		});
+		ASSERT_NO_THROW(policy.store());
+		EXPECT_EQ(0, policy.rev());
+
+		EXPECT_NO_THROW(policy.store());
+		EXPECT_EQ(1, policy.rev());
+	}
+
+	// Error: revision mismatch
+	{
+		const datastore::AccessPolicy policy({
+			.name = "name:AccessPoliciesTest.rev-mismatch",
+		});
+
+		std::string_view qry = R"(
+			insert into "access-policies" (
+				_id,
+				_rev,
+				name
+			) values (
+				$1::text,
+				$2::integer,
+				$3::text
+			)
+		)";
+
+		ASSERT_NO_THROW(datastore::pg::exec(qry, policy.id(), policy.rev() + 1, policy.name()));
+		EXPECT_THROW(policy.store(), err::DatastoreRevisionMismatch);
+	}
+}
+
+TEST_F(AccessPoliciesTest, store) {
+	const datastore::AccessPolicy policy({
+		.name = "name:AccessPoliciesTest.store",
+		.rules =
+			{
+				{
+					.attrs    = R"({"key":"value"})",
+					.resource = "resource/AccessPoliciesTest.store",
+				},
+			},
+	});
+	ASSERT_NO_THROW(policy.store());
+
+	std::string_view qry = R"(
+		select
+			_rev,
+			name,
+			rules
+		from "access-policies"
+		where _id = $1::text;
+	)";
+
+	auto res = datastore::pg::exec(qry, policy.id());
+	ASSERT_EQ(1, res.size());
+
+	auto [_rev, name, rules] = res[0].as<int, std::string, std::string>();
+	EXPECT_EQ(policy.rev(), _rev);
+	EXPECT_EQ(policy.name(), name);
+	EXPECT_EQ(
+		R"([{"attrs": "{\"key\":\"value\"}", "resource": "resource/AccessPoliciesTest.store"}])",
+		rules);
+}
