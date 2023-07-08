@@ -45,31 +45,6 @@ TEST_F(IdentitiesTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
-TEST_F(IdentitiesTest, listInCollection) {
-	// Success:
-	{
-		const datastore::Identity identity({
-			.sub = "sub:IdentitiesTest.listInCollection",
-		});
-		ASSERT_NO_THROW(identity.store());
-
-		const datastore::Collection collection({
-			.name = "collection:IdentitiesTest.listInCollection",
-		});
-		ASSERT_NO_THROW(collection.store());
-
-		// expect no entries before adding to collection
-		auto identities = datastore::ListIdentitiesInCollection(collection.id());
-		EXPECT_EQ(0, identities.size());
-
-		ASSERT_NO_THROW(collection.add(identity.id()));
-
-		// expect single entry
-		identities = datastore::ListIdentitiesInCollection(collection.id());
-		EXPECT_EQ(1, identities.size());
-	}
-}
-
 TEST_F(IdentitiesTest, lookup) {
 	// Success:
 	{

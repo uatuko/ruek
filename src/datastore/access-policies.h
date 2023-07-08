@@ -7,20 +7,39 @@
 #include <glaze/glaze.hpp>
 
 #include "pg.h"
+#include "policies.h"
 #include "redis.h"
 
 namespace datastore {
 class AccessPolicy {
 public:
-	using identity_t  = std::string;
-	using principal_t = std::string;
-	using resource_t  = std::string;
+	using collection_t  = std::string;
+	using collections_t = std::set<collection_t>;
+	using identity_t    = std::string;
+	using identities_t  = std::set<identity_t>;
 
 	struct Rule {
-		std::string attrs;
-		std::string resource;
+		const std::string attrs;
+		const std::string resource;
 
 		bool operator<(const Rule &rhs) const noexcept { return resource < rhs.resource; }
+	};
+
+	struct Cache {
+		const std::string identity;
+		const std::string policy;
+		const std::string resource;
+
+		static const Policies check(const std::string &identity, const std::string &resource);
+
+		static constexpr std::string key(const std::string &identity, const std::string &resource) {
+			return "access:(" + identity + ")›[" + resource + "]";
+		}
+
+		constexpr std::string key() const noexcept { return key(identity, resource); };
+
+		void discard() const;
+		void store() const;
 	};
 
 	struct Data {
@@ -32,22 +51,6 @@ public:
 		rules_t     rules;
 
 		bool operator==(const Data &) const noexcept = default;
-	};
-
-	struct Record {
-		identity_t identity_id;
-		resource_t resource;
-
-		const std::string key() const noexcept {
-			return "access:(" + identity_id + ")›[" + resource + "]";
-		};
-
-		Record(const identity_t i, const resource_t r) : identity_id(i), resource(r) {}
-
-		bool operator==(const Record &) const noexcept = default;
-
-		void                      discard() const;
-		std::vector<AccessPolicy> check() const;
 	};
 
 	AccessPolicy(const Data &data) noexcept;
@@ -62,12 +65,10 @@ public:
 	void                name(const std::string &name) noexcept { _data.name = name; }
 	void                name(std::string &&name) noexcept { _data.name = std::move(name); }
 
-	void store() const;
-	void discard() const;
+	void addCollection(const collection_t &id) const;
+	void addIdentity(const identity_t &id) const;
 
-	void add(const Record &record) const;
-	void addIdentityPrincipal(const principal_t principalId) const;
-	void addCollectionPrincipal(const principal_t principalId) const;
+	void store() const;
 
 private:
 	Data        _data;

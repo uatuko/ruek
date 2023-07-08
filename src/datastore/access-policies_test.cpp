@@ -26,41 +26,6 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-TEST_F(AccessPoliciesTest, create) {
-	// Success: add policy
-	{
-		const datastore::AccessPolicy policy({
-			.name = "name:AccessPoliciesTest.add",
-		});
-		EXPECT_NO_THROW(policy.store());
-
-		EXPECT_NO_THROW(datastore::RetrieveAccessPolicy(policy.id()));
-
-		// cleanup
-		EXPECT_NO_THROW(policy.discard());
-	}
-
-	// Success: add an access entry to a policy
-	{
-		const datastore::AccessPolicy policy({
-			.name = "name:AccessPoliciesTest.add-access",
-		});
-		EXPECT_NO_THROW(policy.store());
-
-		// store access
-		auto record = datastore::AccessPolicy::Record(
-			"principal-id:AccessPoliciesTest.add-access",
-			"resource-id:AccessPoliciesTest.add-access");
-		EXPECT_NO_THROW(policy.add(record));
-
-		EXPECT_EQ(record.check().size(), 1);
-
-		// cleanup
-		EXPECT_NO_THROW(policy.discard());
-		EXPECT_NO_THROW(record.discard());
-	}
-}
-
 TEST_F(AccessPoliciesTest, retrieveIdentities) {
 	// Success: retrieve identities
 	{
@@ -84,8 +49,8 @@ TEST_F(AccessPoliciesTest, retrieveIdentities) {
 		});
 		ASSERT_NO_THROW(policy.store());
 
-		ASSERT_NO_THROW(policy.addCollectionPrincipal(collection.id()));
-		ASSERT_NO_THROW(policy.addIdentityPrincipal(identities[1].id()));
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+		ASSERT_NO_THROW(policy.addIdentity(identities[1].id()));
 
 		const auto results = datastore::RetrieveAccessPolicyIdentities(policy.id());
 		EXPECT_EQ(2, results.size());

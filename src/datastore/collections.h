@@ -44,5 +44,6 @@ private:
 
 using Collections = std::vector<Collection>;
 
-Collection RetrieveCollection(const std::string &id);
+Collection                  RetrieveCollection(const std::string &id);
+const Collection::members_t RetrieveCollectionMembers(const std::string &id);
 } // namespace datastore

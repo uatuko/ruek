@@ -57,22 +57,24 @@ TEST_F(GrpcTest, CheckAccess) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::CheckAccessResponse           response;
 
-		// create identity
-		const datastore::Identity identity({.sub = "identity:GrpcTest.CheckAccess"});
-		try {
-			identity.store();
-		} catch (const std::exception &e) {
-			FAIL() << e.what();
-		}
-
-		datastore::AccessPolicy policy({
-			.name = "policy::GrpcTest.CheckAccess",
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.CheckAccess",
 		});
-		EXPECT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(identity.store());
 
-		const auto                            resource = "resource:GrpcTest.CheckAccess";
-		const datastore::AccessPolicy::Record access(identity.id(), resource);
-		EXPECT_NO_THROW(policy.add(access));
+		const datastore::AccessPolicy policy({
+			.name = "name:GrpcTest.CheckAccess",
+		});
+		ASSERT_NO_THROW(policy.store());
+
+		const std::string resource = "resource/GrpcTest.CheckAccess";
+
+		const datastore::AccessPolicy::Cache cache({
+			.identity = identity.id(),
+			.policy   = policy.id(),
+			.resource = resource,
+		});
+		ASSERT_NO_THROW(cache.store());
 
 		gk::v1::CheckAccessRequest request;
 		request.set_resource(resource);
@@ -198,22 +200,17 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 
 	// Success: create access policy with a principal and resource
 	{
+		const datastore::Identity identity({
+			.sub = "principal_sub:GrpcTest.CreateAccessPolicy",
+		});
+		ASSERT_NO_THROW(identity.store());
+
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
 		request.set_name("name:GrpcTest.CreateAccessPolicy");
-
-		const datastore::Identity identity({
-			.sub = "principal_sub:GrpcTest.CreateAccessPolicy",
-		});
-
-		try {
-			identity.store();
-		} catch (const std::exception &e) {
-			FAIL() << e.what();
-		}
 
 		auto principal = request.add_principals();
 		principal->set_id(identity.id());
@@ -222,10 +219,12 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		auto rule = request.add_rules();
 		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
 
-		auto access = datastore::AccessPolicy::Record(principal->id(), rule->resource());
 		// expect no access before request
-		auto policies = access.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(0, policies.size());
+		}
 
 		// create access policy
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
@@ -234,8 +233,11 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
-		policies = access.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// Success: create an access policy for collection
@@ -272,11 +274,12 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		auto rule = request.add_rules();
 		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
 
-		const auto access = datastore::AccessPolicy::Record(identity.id(), rule->resource());
-
 		// expect no access before request
-		auto policies = access.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(0, policies.size());
+		}
 
 		// create access policy
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
@@ -285,8 +288,11 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
-		policies = access.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// FIXME: nested collections

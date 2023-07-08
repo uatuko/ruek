@@ -38,7 +38,7 @@ void Collection::add(const member_t &mid) const {
 	)";
 
 	try {
-		pg::exec(qry, id(), mid);
+		pg::exec(qry, _data.id, mid);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidCollectionOrMember();
 	} catch (pg::unique_violation_t &) {
@@ -88,7 +88,7 @@ const Collection::members_t Collection::members() const {
 			collection_id = $1::text;
 	)";
 
-	auto res = pg::exec(qry, id());
+	auto res = pg::exec(qry, _data.id);
 
 	members_t members;
 	for (const auto &r : res) {
@@ -106,7 +106,7 @@ void Collection::remove(const member_t &mid) const {
 			identity_id = $2::text;
 	)";
 
-	pg::exec(qry, id(), mid);
+	pg::exec(qry, _data.id, mid);
 }
 
 Collection RetrieveCollection(const std::string &id) {
@@ -126,5 +126,24 @@ Collection RetrieveCollection(const std::string &id) {
 	}
 
 	return Collection(res[0]);
+}
+
+const Collection::members_t RetrieveCollectionMembers(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			identity_id
+		from collections_identities
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+
+	Collection::members_t members;
+	for (const auto &r : res) {
+		members.insert(r["identity_id"].as<Collection::member_t>());
+	}
+
+	return members;
 }
 } // namespace datastore

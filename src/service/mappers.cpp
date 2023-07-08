@@ -4,8 +4,16 @@
 
 namespace service {
 datastore::AccessPolicy map(const gk::v1::CreateAccessPolicyRequest *from) {
+	datastore::AccessPolicy::Data::rules_t rules;
+	for (const auto &rule : from->rules()) {
+		rules.insert({
+			.resource = rule.resource(),
+		});
+	}
+
 	datastore::AccessPolicy policy({
-		.id = from->id(),
+		.id    = from->id(),
+		.rules = rules,
 	});
 
 	if (from->has_name()) {
@@ -38,35 +46,6 @@ datastore::Identity map(const gk::v1::CreateIdentityRequest *from) {
 	return identity;
 }
 
-void map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) {
-	to->set_id(from.id());
-	if (from.name()) {
-		to->set_name(*from.name());
-	}
-
-	// FIXME: add rules
-}
-
-void map(const datastore::AccessPolicy &from, gk::v1::Policy *to) {
-	to->set_id(from.id());
-
-	// FIXME: add attributes
-}
-
-void map(const datastore::AccessPolicies &from, gk::v1::CheckAccessResponse *to) {
-	for (const auto &policy : from) {
-		auto p = to->add_policies();
-		map(policy, p);
-	}
-}
-
-void map(const datastore::RbacPolicies &from, gk::v1::CheckRbacResponse *to) {
-	for (const auto &policy : from) {
-		auto p = to->add_policies();
-		p->set_id(policy.id());
-	}
-}
-
 datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
 	datastore::RbacPolicy rbacPolicy({
 		.id   = from->id(),
@@ -94,6 +73,21 @@ datastore::Role map(const gk::v1::CreateRoleRequest *from) {
 	return role;
 }
 
+void map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) {
+	to->set_id(from.id());
+	if (from.name()) {
+		to->set_name(*from.name());
+	}
+
+	// FIXME: add rules
+}
+
+void map(const datastore::AccessPolicy &from, gk::v1::Policy *to) {
+	to->set_id(from.id());
+
+	// FIXME: add attributes
+}
+
 void map(const datastore::Collection &from, gk::v1::Collection *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());
@@ -112,6 +106,13 @@ void map(const datastore::Identities &from, gk::v1::LookupIdentitiesResponse *to
 	for (const auto &identity : from) {
 		auto i = to->add_data();
 		map(identity, i);
+	}
+}
+
+void map(const datastore::Policies &from, gk::v1::CheckAccessResponse *to) {
+	for (const auto &policy : from) {
+		auto p = to->add_policies();
+		p->set_id(policy.id);
 	}
 }
 
@@ -136,6 +137,13 @@ void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 			p->set_id(principal.id);
 			p->set_type(static_cast<gk::v1::PrincipalType>(principal.type));
 		}
+	}
+}
+
+void map(const datastore::RbacPolicies &from, gk::v1::CheckRbacResponse *to) {
+	for (const auto &policy : from) {
+		auto p = to->add_policies();
+		p->set_id(policy.id());
 	}
 }
 

@@ -6,6 +6,8 @@
 
 #include "err/errors.h"
 
+#include "collections.h"
+
 namespace datastore {
 AccessPolicy::AccessPolicy(const AccessPolicy::Data &data) noexcept : _data(data), _rev(0) {
 	if (_data.id.empty()) {
@@ -61,42 +63,7 @@ void AccessPolicy::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-void AccessPolicy::discard() const {
-	std::string_view qry = R"(
-		delete from "access-policies"
-		where
-			_id = $1::text;
-	)";
-
-	pg::exec(qry, _data.id);
-}
-
-void AccessPolicy::add(const AccessPolicy::Record &record) const {
-	auto conn = datastore::redis::conn();
-	conn.cmd("HSET " + record.key() + " " + _data.id + " \"\"");
-}
-
-void AccessPolicy::addIdentityPrincipal(const AccessPolicy::principal_t principalId) const {
-	std::string_view qry = R"(
-		insert into "access-policies_identities" (
-			policy_id,
-			identity_id
-		) values (
-			$1::text,
-			$2::text
-		);
-	)";
-
-	try {
-		pg::exec(qry, id(), principalId);
-	} catch (pg::fkey_violation_t &) {
-		throw err::DatastoreInvalidAccessPolicyOrIdentity();
-	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateAccessPolicyIdentity();
-	}
-}
-
-void AccessPolicy::addCollectionPrincipal(const AccessPolicy::principal_t principalId) const {
+void AccessPolicy::addCollection(const AccessPolicy::collection_t &id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_collections" (
 			policy_id,
@@ -108,12 +75,79 @@ void AccessPolicy::addCollectionPrincipal(const AccessPolicy::principal_t princi
 	)";
 
 	try {
-		pg::exec(qry, id(), principalId);
+		pg::exec(qry, _data.id, id);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidAccessPolicyOrCollection();
 	} catch (pg::unique_violation_t &) {
 		throw err::DatastoreDuplicateAccessPolicyCollection();
 	}
+
+	const auto members = RetrieveCollectionMembers(id);
+	for (const auto &mid : members) {
+		for (const auto &rule : _data.rules) {
+			Cache cache({
+				.identity = mid,
+				.policy   = _data.id,
+				.resource = rule.resource,
+			});
+
+			cache.store();
+		}
+	}
+}
+
+void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
+	std::string_view qry = R"(
+		insert into "access-policies_identities" (
+			policy_id,
+			identity_id
+		) values (
+			$1::text,
+			$2::text
+		);
+	)";
+
+	try {
+		pg::exec(qry, _data.id, id);
+	} catch (pg::fkey_violation_t &) {
+		throw err::DatastoreInvalidAccessPolicyOrIdentity();
+	} catch (pg::unique_violation_t &) {
+		throw err::DatastoreDuplicateAccessPolicyIdentity();
+	}
+
+	for (const auto &rule : _data.rules) {
+		Cache cache({
+			.identity = id,
+			.policy   = _data.id,
+			.resource = rule.resource,
+		});
+
+		cache.store();
+	}
+}
+
+const Policies AccessPolicy::Cache::check(
+	const std::string &identity, const std::string &resource) {
+	auto conn  = datastore::redis::conn();
+	auto reply = conn.cmd("hgetall %s", key(identity, resource).c_str());
+
+	Policies policies;
+	for (int i = 0; i < reply->elements; i += 2) {
+		policies.push_back(Policy({
+			.id = reply->element[i]->str,
+		}));
+	}
+
+	return policies;
+}
+
+void AccessPolicy::Cache::discard() const {
+	datastore::redis::conn().cmd("del %s", key().c_str());
+}
+
+void AccessPolicy::Cache::store() const {
+	auto conn = datastore::redis::conn();
+	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), "");
 }
 
 AccessPolicy RetrieveAccessPolicy(const std::string &id) {
@@ -157,24 +191,5 @@ std::set<std::string> RetrieveAccessPolicyIdentities(const std::string &id) {
 	}
 
 	return results;
-}
-
-std::vector<AccessPolicy> AccessPolicy::Record::check() const {
-	auto conn = datastore::redis::conn();
-
-	auto reply = conn.cmd("HGETALL " + key());
-
-	std::vector<AccessPolicy> policies;
-	for (int i = 0; i < reply->elements; i += 2) {
-		policies.push_back(AccessPolicy({
-			.id = reply->element[i]->str,
-		}));
-	}
-
-	return policies;
-}
-
-void AccessPolicy::Record::discard() const {
-	datastore::redis::conn().cmd("DEL " + key());
 }
 } // namespace datastore
