@@ -177,8 +177,8 @@ message Principal {
 
 // Access policies
 message AccessPolicy {
-	string id   = 1;
-	string name = 2;
+	string          id   = 1;
+	optional string name = 2;
 
 	repeated Principal        principals = 3;
 	repeated AccessPolicyRule rules      = 4;
@@ -204,7 +204,7 @@ message CheckAccessResponse {
 
 message CreateAccessPolicyRequest {
 	optional string id   = 1;
-	string          name = 2;
+	optional string name = 2;
 
 	repeated Principal        principals = 3;
 	repeated AccessPolicyRule rules      = 4;

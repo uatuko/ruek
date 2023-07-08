@@ -4,11 +4,13 @@
 
 namespace service {
 datastore::AccessPolicy map(const gk::v1::CreateAccessPolicyRequest *from) {
-
 	datastore::AccessPolicy policy({
-		.id   = from->id(),
-		.name = from->name(),
+		.id = from->id(),
 	});
+
+	if (from->has_name()) {
+		policy.name(from->name());
+	}
 
 	return policy;
 }
