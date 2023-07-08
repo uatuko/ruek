@@ -3,7 +3,7 @@
 Database schema is defined in [`datastore/schema.sql`](../datastore/schema.sql).
 
 ### Overview
-The diagram in this section includes the main tables in the gatekeeper database.The relationships between tables are many-to-many, with the junction table named on the connecting lines.
+The diagram in this section includes the main tables in the gatekeeper database. The relationships between tables are many-to-many, with the junction table named on the connecting lines.
 
 ```mermaid
 erDiagram
@@ -26,7 +26,7 @@ erDiagram
         jsonb   attrs
     }
 
-      RBAC-POLICIES {
+    RBAC-POLICIES {
         text    _id  PK
         integer _rev "not null"
         text    name "not null"
