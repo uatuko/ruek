@@ -1,9 +1,12 @@
 create table if not exists "access-policies" (
 	_id   text    not null,
 	_rev  integer not null,
+	name  text,
 	rules jsonb,
 
-	constraint "access-policies.pkey" primary key (_id)
+	constraint "access-policies.pkey" primary key (_id),
+	constraint "access-policies.check-name" check (name <> ''),
+	constraint "access-policies.check-rules" check(jsonb_typeof(rules) = 'array')
 );
 
 create table if not exists collections (

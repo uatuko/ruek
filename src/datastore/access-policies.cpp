@@ -29,19 +29,33 @@ void AccessPolicy::store() const {
 	std::string_view qry = R"(
 		insert into "access-policies" as t (
 			_id,
-			_rev
+			_rev,
+			name,
+			rules
 		) values (
 			$1::text,
-			$2::integer
+			$2::integer,
+			$3::text,
+			$4::jsonb
 		)
 		on conflict (_id)
-		do nothing
+		do update
+			set (
+				_rev,
+				name,
+				rules
+			) = (
+				excluded._rev + 1,
+				$3::text,
+				$4::jsonb
+			)
+			where t._rev = $2::integer
 		returning _rev;
 	)";
 
 	pg::result_t res;
 	try {
-		res = pg::exec(qry, _data.id, _rev);
+		res = pg::exec(qry, _data.id, _rev, _data.name, _data.rules);
 	} catch (pqxx::check_violation &) {
 		throw err::DatastoreInvalidIdentityData();
 	} catch (pg::unique_violation_t &) {

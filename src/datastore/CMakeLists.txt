@@ -13,6 +13,7 @@ add_library(datastore
 target_link_libraries(datastore
 	PUBLIC
 		${PROJECT_NAME}::err
+		glaze::glaze
 		hiredis::hiredis_static
 		pqxx
 	PRIVATE

@@ -38,7 +38,9 @@ datastore::Identity map(const gk::v1::CreateIdentityRequest *from) {
 
 void map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) {
 	to->set_id(from.id());
-	to->set_name(from.name());
+	if (from.name()) {
+		to->set_name(*from.name());
+	}
 
 	// FIXME: add rules
 }
