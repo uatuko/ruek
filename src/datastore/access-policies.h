@@ -66,7 +66,9 @@ public:
 	void                name(std::string &&name) noexcept { _data.name = std::move(name); }
 
 	void addCollection(const collection_t &id) const;
-	void addIdentity(const identity_t &id) const;
+
+	const identities_t identities(bool expand = false) const;
+	void               addIdentity(const identity_t &id) const;
 
 	void store() const;
 
@@ -78,8 +80,6 @@ private:
 using AccessPolicies = std::vector<AccessPolicy>;
 
 AccessPolicy RetrieveAccessPolicy(const std::string &id);
-
-std::set<std::string> RetrieveAccessPolicyIdentities(const std::string &id);
 } // namespace datastore
 
 template <> struct glz::meta<datastore::AccessPolicy::Rule> {

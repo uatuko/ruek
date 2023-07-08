@@ -26,7 +26,7 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-TEST_F(AccessPoliciesTest, retrieveIdentities) {
+TEST_F(AccessPoliciesTest, identities) {
 	// Success: retrieve identities
 	{
 		const datastore::Identities identities({
@@ -52,11 +52,21 @@ TEST_F(AccessPoliciesTest, retrieveIdentities) {
 		ASSERT_NO_THROW(policy.addCollection(collection.id()));
 		ASSERT_NO_THROW(policy.addIdentity(identities[1].id()));
 
-		const auto results = datastore::RetrieveAccessPolicyIdentities(policy.id());
-		EXPECT_EQ(2, results.size());
+		// without expand should only return direct identities
+		{
+			const auto results = policy.identities();
+			EXPECT_EQ(1, results.size());
+			EXPECT_TRUE(results.contains(identities[1].id()));
+		}
 
-		for (const auto &idn : identities) {
-			EXPECT_TRUE(results.contains(idn.id()));
+		// with expand should return direct and indirect identities
+		{
+			const auto results = policy.identities(true);
+			EXPECT_EQ(2, results.size());
+
+			for (const auto &idn : identities) {
+				EXPECT_TRUE(results.contains(idn.id()));
+			}
 		}
 	}
 }

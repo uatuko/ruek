@@ -96,6 +96,38 @@ void AccessPolicy::addCollection(const AccessPolicy::collection_t &id) const {
 	}
 }
 
+const AccessPolicy::identities_t AccessPolicy::identities(bool expand) const {
+	std::string qry = R"(
+		select
+			identity_id
+		from "access-policies_identities"
+		where policy_id = $1::text
+	)";
+
+	if (expand) {
+		qry += R"(
+			union
+			select
+				c.identity_id
+			from
+				"access-policies_collections" p
+				join "collections_identities" c on p.collection_id = c.collection_id
+			;
+		)";
+	} else {
+		qry += ';';
+	}
+
+	auto res = pg::exec(qry, _data.id);
+
+	AccessPolicy::identities_t identities;
+	for (const auto &r : res) {
+		identities.insert(r["identity_id"].as<std::string>());
+	}
+
+	return identities;
+}
+
 void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_identities" (
@@ -166,30 +198,5 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	}
 
 	return AccessPolicy(res[0]);
-}
-
-std::set<std::string> RetrieveAccessPolicyIdentities(const std::string &id) {
-	std::string_view qry = R"(
-		select
-			identity_id
-		from "access-policies_identities"
-		where policy_id = $1::text
-		union
-		select
-			c.identity_id
-		from
-			"access-policies_collections" p
-			join "collections_identities" c on p.collection_id = c.collection_id
-		;
-	)";
-
-	auto res = pg::exec(qry, id);
-
-	std::set<std::string> results;
-	for (const auto &r : res) {
-		results.insert(r["identity_id"].as<std::string>());
-	}
-
-	return results;
 }
 } // namespace datastore
