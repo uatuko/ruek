@@ -33,12 +33,11 @@ public:
 
 		static const Policies check(const std::string &identity, const std::string &permission);
 
-		static constexpr std::string key(
-			const std::string &identity, const std::string &permission) {
+		static const std::string key(const std::string &identity, const std::string &permission) {
 			return "rbac:(" + identity + ")›[" + permission + "]";
 		}
 
-		constexpr std::string key() const noexcept { return key(identity, permission); };
+		const std::string key() const noexcept { return key(identity, permission); };
 
 		void store() const;
 	};

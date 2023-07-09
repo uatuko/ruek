@@ -31,11 +31,11 @@ public:
 
 		static const Policies check(const std::string &identity, const std::string &resource);
 
-		static constexpr std::string key(const std::string &identity, const std::string &resource) {
+		static const std::string key(const std::string &identity, const std::string &resource) {
 			return "access:(" + identity + ")›[" + resource + "]";
 		}
 
-		constexpr std::string key() const noexcept { return key(identity, rule.resource); };
+		const std::string key() const noexcept { return key(identity, rule.resource); };
 
 		void discard() const;
 		void store() const;
