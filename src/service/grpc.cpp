@@ -268,7 +268,17 @@ grpc::ServerUnaryReactor *Grpc::ConsumeEvent(
 
 		for (const auto &id : payload.ids()) {
 			const auto policy = datastore::RetrieveAccessPolicy(id);
-			// TODO:
+			for (const auto &identity : policy.identities()) {
+				for (const auto &rule : policy.rules()) {
+					const datastore::AccessPolicy::Cache cache({
+						.identity = identity,
+						.policy   = policy.id(),
+						.rule     = rule,
+					});
+
+					cache.store();
+				}
+			}
 		}
 	} else if (request->name() == "request/cache.rebuild:rbac") {
 		gk::v1::RebuildRbacCacheEventPayload payload;
