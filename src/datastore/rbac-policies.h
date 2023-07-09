@@ -70,6 +70,9 @@ public:
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
 
+	const identities_t identities(bool expand = false) const;
+	void               addIdentity(const identity_t &id) const;
+
 	const Data::name_t &name() const noexcept { return _data.name; }
 	void                name(const std::string &name) noexcept { _data.name = name; }
 	void                name(std::string &&name) noexcept { _data.name = std::move(name); }
@@ -77,7 +80,6 @@ public:
 	const Principals principals() const;
 	void             addPrincipal(const Principal principal) const;
 	void             addCollection(const collection_t &id) const;
-	void             addIdentity(const identity_t &id) const;
 
 	const Rules rules() const;
 	void        addRule(const Rule &rule) const;

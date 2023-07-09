@@ -137,6 +137,38 @@ void RbacPolicy::addPrincipal(const Principal principal) const {
 	}
 }
 
+const RbacPolicy::identities_t RbacPolicy::identities(bool expand) const {
+	std::string qry = R"(
+		select
+			identity_id
+		from "rbac-policies_identities"
+		where policy_id = $1::text
+	)";
+
+	if (expand) {
+		qry += R"(
+			union
+			select
+				c.identity_id
+			from
+				"rbac-policies_collections" p
+				join "collections_identities" c on p.collection_id = c.collection_id
+			;
+		)";
+	} else {
+		qry += ';';
+	}
+
+	auto res = pg::exec(qry, _data.id);
+
+	RbacPolicy::identities_t identities;
+	for (const auto &r : res) {
+		identities.insert(r["identity_id"].as<std::string>());
+	}
+
+	return identities;
+}
+
 const RbacPolicy::Principals RbacPolicy::principals() const {
 	std::string_view qry = R"(
 		select
