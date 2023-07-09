@@ -28,7 +28,7 @@ public:
 	struct Cache {
 		const std::string identity;
 		const std::string policy;
-		const std::string resource;
+		const Rule        rule;
 
 		static const Policies check(const std::string &identity, const std::string &resource);
 
@@ -36,7 +36,7 @@ public:
 			return "access:(" + identity + ")›[" + resource + "]";
 		}
 
-		constexpr std::string key() const noexcept { return key(identity, resource); };
+		constexpr std::string key() const noexcept { return key(identity, rule.resource); };
 
 		void discard() const;
 		void store() const;
@@ -64,6 +64,8 @@ public:
 	const Data::name_t &name() const noexcept { return _data.name; }
 	void                name(const std::string &name) noexcept { _data.name = name; }
 	void                name(std::string &&name) noexcept { _data.name = std::move(name); }
+
+	const Data::rules_t &rules() const noexcept { return _data.rules; }
 
 	void addCollection(const collection_t &id) const;
 

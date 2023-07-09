@@ -88,7 +88,7 @@ void AccessPolicy::addCollection(const AccessPolicy::collection_t &id) const {
 			Cache cache({
 				.identity = mid,
 				.policy   = _data.id,
-				.resource = rule.resource,
+				.rule     = rule,
 			});
 
 			cache.store();
@@ -151,7 +151,7 @@ void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
 		Cache cache({
 			.identity = id,
 			.policy   = _data.id,
-			.resource = rule.resource,
+			.rule     = rule,
 		});
 
 		cache.store();
@@ -179,7 +179,7 @@ void AccessPolicy::Cache::discard() const {
 
 void AccessPolicy::Cache::store() const {
 	auto conn = datastore::redis::conn();
-	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), "");
+	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), rule.attrs.c_str());
 }
 
 AccessPolicy RetrieveAccessPolicy(const std::string &id) {

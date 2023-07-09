@@ -72,7 +72,7 @@ TEST_F(GrpcTest, CheckAccess) {
 		const datastore::AccessPolicy::Cache cache({
 			.identity = identity.id(),
 			.policy   = policy.id(),
-			.resource = resource,
+			.rule     = {.resource = resource},
 		});
 		ASSERT_NO_THROW(cache.store());
 
