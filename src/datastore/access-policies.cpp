@@ -7,6 +7,7 @@
 #include "err/errors.h"
 
 #include "collections.h"
+#include "redis.h"
 
 namespace datastore {
 AccessPolicy::AccessPolicy(const AccessPolicy::Data &data) noexcept : _data(data), _rev(0) {
@@ -165,9 +166,9 @@ const Policies AccessPolicy::Cache::check(
 
 	Policies policies;
 	for (int i = 0; i < reply->elements; i += 2) {
-		policies.push_back(Policy({
+		policies.push_back({
 			.id = reply->element[i]->str,
-		}));
+		});
 	}
 
 	return policies;

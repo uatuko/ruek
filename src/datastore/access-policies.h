@@ -8,7 +8,6 @@
 
 #include "pg.h"
 #include "policies.h"
-#include "redis.h"
 
 namespace datastore {
 class AccessPolicy {
@@ -90,21 +89,21 @@ template <> struct glz::meta<datastore::AccessPolicy::Rule> {
 };
 
 namespace pqxx {
-using rules_t = datastore::AccessPolicy::Data::rules_t;
+using access_rules_t = datastore::AccessPolicy::Data::rules_t;
 
-template <> struct nullness<rules_t> {
+template <> struct nullness<access_rules_t> {
 	static constexpr bool has_null    = {true};
 	static constexpr bool always_null = {false};
 
-	static bool is_null(const rules_t &value) { return value.empty(); }
+	static bool is_null(const access_rules_t &value) { return value.empty(); }
 
-	[[nodiscard]] static rules_t null() { return {}; }
+	[[nodiscard]] static access_rules_t null() { return {}; }
 };
 
-template <> struct string_traits<rules_t> {
-	static rules_t from_string(std::string_view text) { return {}; }
+template <> struct string_traits<access_rules_t> {
+	static access_rules_t from_string(std::string_view text) { return {}; }
 
-	static char *into_buf(char *begin, char *end, rules_t const &value) {
+	static char *into_buf(char *begin, char *end, access_rules_t const &value) {
 		const auto buffer = glz::write_json(value);
 		if (buffer.size() > (end - begin)) {
 			throw pqxx::conversion_overrun("Not enough buffer capacity");
@@ -114,7 +113,7 @@ template <> struct string_traits<rules_t> {
 		return (begin + buffer.size() + 1);
 	}
 
-	static std::size_t size_buffer(rules_t const &value) noexcept {
+	static std::size_t size_buffer(access_rules_t const &value) noexcept {
 		std::size_t size = 2; // `[]`
 		for (const auto &rule : value) {
 			size += 3;                             // `{}` + `,`
