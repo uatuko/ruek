@@ -267,7 +267,7 @@ grpc::ServerUnaryReactor *Grpc::ConsumeEvent(
 
 		for (const auto &id : payload.ids()) {
 			const auto policy = datastore::RetrieveAccessPolicy(id);
-			for (const auto &identity : policy.identities()) {
+			for (const auto &identity : policy.identities(true)) {
 				for (const auto &rule : policy.rules()) {
 					const datastore::AccessPolicy::Cache cache({
 						.identity = identity,
@@ -287,7 +287,22 @@ grpc::ServerUnaryReactor *Grpc::ConsumeEvent(
 		}
 
 		for (const auto &id : payload.ids()) {
-			// TODO:
+			const auto policy = datastore::RetrieveRbacPolicy(id);
+			for (const auto &identity : policy.identities(true)) {
+				for (const auto &rule : policy.rules()) {
+					const auto role = datastore::RetrieveRole(rule.roleId);
+					for (const auto &perm : role.permissions()) {
+						const datastore::RbacPolicy::Cache cache({
+							.identity   = identity,
+							.permission = perm,
+							.policy     = policy.id(),
+							.rule       = rule,
+						});
+
+						cache.store();
+					}
+				}
+			}
 		}
 	} else {
 		reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unknown event"));
