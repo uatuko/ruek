@@ -314,8 +314,8 @@ message UpdateIdentityRequest {
 
 // RBAC policies
 message RbacPolicy {
-	string id   = 1;
-	string name = 2;
+	string          id   = 1;
+	optional string name = 2;
 
 	repeated Principal      principals = 3;
 	repeated RbacPolicyRule rules      = 4;
@@ -341,7 +341,7 @@ message CheckRbacResponse {
 
 message CreateRbacPolicyRequest {
 	optional string id   = 1;
-	string          name = 2;
+	optional string name = 2;
 
 	repeated Principal      principals = 3;
 	repeated RbacPolicyRule rules      = 4;

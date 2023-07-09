@@ -5,22 +5,51 @@
 #include <vector>
 
 #include "pg.h"
+#include "policies.h"
 
 namespace datastore {
 class RbacPolicy {
 public:
-	struct Data {
-		std::string id;
-		std::string name;
-
-		bool operator==(const Data &) const noexcept = default;
-	};
+	using collection_t  = std::string;
+	using collections_t = std::set<collection_t>;
+	using identity_t    = std::string;
+	using identities_t  = std::set<identity_t>;
 
 	struct Rule {
-		std::string roleId;
-		std::string attrs;
+		using attrs_t = std::optional<std::string>;
 
+		const attrs_t     attrs;
+		const std::string roleId;
+
+		bool operator<(const Rule &rhs) const noexcept { return roleId < rhs.roleId; }
 		bool operator==(const Rule &) const noexcept = default;
+	};
+
+	struct Cache {
+		const std::string identity;
+		const std::string permission;
+		const std::string policy;
+		const Rule        rule;
+
+		static const Policies check(const std::string &identity, const std::string &permission);
+
+		static constexpr std::string key(
+			const std::string &identity, const std::string &permission) {
+			return "rbac:(" + identity + ")›[" + permission + "]";
+		}
+
+		constexpr std::string key() const noexcept { return key(identity, permission); };
+
+		void store() const;
+	};
+
+	struct Data {
+		using name_t = std::optional<std::string>;
+
+		std::string id;
+		name_t      name;
+
+		bool operator==(const Data &) const noexcept = default;
 	};
 
 	struct Principal {
@@ -28,19 +57,6 @@ public:
 		enum class Type { Unspecified, Collection, Identity } type;
 
 		bool operator==(const Principal &) const noexcept = default;
-	};
-
-	struct Record {
-		std::string identityId;
-		std::string permission;
-
-		const std::string key() const noexcept {
-			return "rbac:(" + identityId + ")›[" + permission + "]";
-		};
-
-		bool operator==(const Record &) const noexcept = default;
-
-		std::vector<RbacPolicy> check() const;
 	};
 
 	using Rules      = std::vector<Rule>;
@@ -54,16 +70,14 @@ public:
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
 
-	const std::string &name() const noexcept { return _data.name; }
-	void               name(const std::string &name) noexcept { _data.name = name; }
-	void               name(std::string &&name) noexcept { _data.name = std::move(name); }
+	const Data::name_t &name() const noexcept { return _data.name; }
+	void                name(const std::string &name) noexcept { _data.name = name; }
+	void                name(std::string &&name) noexcept { _data.name = std::move(name); }
 
 	const Principals principals() const;
 	void             addPrincipal(const Principal principal) const;
-	void             addCollection(const std::string collectionId) const;
-	void             addIdentity(const std::string IdentityId) const;
-
-	void add(const Record &record) const;
+	void             addCollection(const collection_t &id) const;
+	void             addIdentity(const identity_t &id) const;
 
 	const Rules rules() const;
 	void        addRule(const Rule &rule) const;

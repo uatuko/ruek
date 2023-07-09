@@ -116,9 +116,18 @@ void map(const datastore::Policies &from, gk::v1::CheckAccessResponse *to) {
 	}
 }
 
+void map(const datastore::Policies &from, gk::v1::CheckRbacResponse *to) {
+	for (const auto &policy : from) {
+		auto p = to->add_policies();
+		p->set_id(policy.id);
+	}
+}
+
 void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 	to->set_id(from.id());
-	to->set_name(from.name());
+	if (from.name()) {
+		to->set_name(*from.name());
+	}
 
 	// Set role ids from DB table
 	auto rules = from.rules();
@@ -137,13 +146,6 @@ void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
 			p->set_id(principal.id);
 			p->set_type(static_cast<gk::v1::PrincipalType>(principal.type));
 		}
-	}
-}
-
-void map(const datastore::RbacPolicies &from, gk::v1::CheckRbacResponse *to) {
-	for (const auto &policy : from) {
-		auto p = to->add_policies();
-		p->set_id(policy.id());
 	}
 }
 

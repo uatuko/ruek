@@ -19,6 +19,7 @@ protected:
 		datastore::pg::exec("truncate table \"access-policies\" cascade;");
 		datastore::pg::exec("truncate table collections cascade;");
 		datastore::pg::exec("truncate table identities cascade;");
+		datastore::redis::conn().cmd("flushall");
 	}
 
 	void SetUp() {
@@ -26,7 +27,7 @@ protected:
 		datastore::pg::exec("delete from \"access-policies\" cascade;");
 		datastore::pg::exec("delete from collections cascade;");
 		datastore::pg::exec("delete from identities cascade;");
-		datastore::redis::conn().cmd("FLUSHALL");
+		datastore::pg::exec("delete from \"rbac-policies\" cascade;");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
@@ -114,20 +115,22 @@ TEST_F(GrpcTest, CheckRbac) {
 
 		// create identity
 		const datastore::Identity identity({.sub = "sub:GrpcTest.CheckRbac"});
-		EXPECT_NO_THROW(identity.store());
+		ASSERT_NO_THROW(identity.store());
 
 		datastore::RbacPolicy policy({
 			.name = "name::GrpcTest.CheckRbac",
 		});
-		EXPECT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.store());
 
-		const auto                          permission = "permission:GrpcTest.CheckRbac";
-		const datastore::RbacPolicy::Record record({
-			.identityId = identity.id(),
+		const auto permission = "permission:GrpcTest.CheckRbac";
+
+		const datastore::RbacPolicy::Cache cache({
+			.identity   = identity.id(),
 			.permission = permission,
+			.policy     = policy.id(),
+			.rule       = {},
 		});
-
-		EXPECT_NO_THROW(policy.add(record));
+		ASSERT_NO_THROW(cache.store());
 
 		gk::v1::CheckRbacRequest request;
 		request.set_permission(permission);
@@ -981,12 +984,10 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY);
 
 		// expect no access before request
-		auto rbac     = datastore::RbacPolicy::Record({
-				.identityId = principal->id(),
-				.permission = permission,
-        });
-		auto policies = rbac.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(principal->id(), permission);
+			EXPECT_EQ(0, policies.size());
+		}
 
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -999,8 +1000,10 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		EXPECT_EQ(role.id(), response.rules(0).role_id());
 
 		// expect to find single policy when checking access
-		policies = rbac.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(principal->id(), permission);
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// Success: create an rbac policy for collection
@@ -1039,14 +1042,11 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		principal->set_id(collection.id());
 		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION);
 
-		auto rbac = datastore::RbacPolicy::Record({
-			.identityId = identity.id(),
-			.permission = permission,
-		});
-
 		// expect no access before request
-		auto policies = rbac.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			EXPECT_EQ(0, policies.size());
+		}
 
 		// create access policy
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
@@ -1055,8 +1055,10 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
-		policies = rbac.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// FIXME: nested collections

@@ -6,6 +6,7 @@
 
 #include "err/errors.h"
 
+#include "collections.h"
 #include "redis.h"
 #include "roles.h"
 
@@ -43,7 +44,7 @@ void RbacPolicy::addPrincipal(const Principal principal) const {
 	}
 }
 
-void RbacPolicy::addCollection(const std::string collectionId) const {
+void RbacPolicy::addCollection(const collection_t &id) const {
 	std::string_view qry = R"(
 		insert into "rbac-policies_collections" (
 			policy_id,
@@ -55,15 +56,32 @@ void RbacPolicy::addCollection(const std::string collectionId) const {
 	)";
 
 	try {
-		pg::exec(qry, id(), collectionId);
+		pg::exec(qry, _data.id, id);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
 	} catch (pg::unique_violation_t &) {
 		throw err::DatastoreDuplicateRbacPolicyPrincipal();
 	}
+
+	const auto members = RetrieveCollectionMembers(id);
+	for (const auto &mid : members) {
+		for (const auto &rule : rules()) {
+			const auto role = RetrieveRole(rule.roleId);
+			for (const auto &perm : role.permissions()) {
+				Cache cache({
+					.identity   = mid,
+					.permission = perm,
+					.policy     = _data.id,
+					.rule       = rule,
+				});
+
+				cache.store();
+			}
+		}
+	}
 }
 
-void RbacPolicy::addIdentity(const std::string identityId) const {
+void RbacPolicy::addIdentity(const identity_t &id) const {
 	std::string_view qry = R"(
 		insert into "rbac-policies_identities" (
 			policy_id,
@@ -75,32 +93,43 @@ void RbacPolicy::addIdentity(const std::string identityId) const {
 	)";
 
 	try {
-		pg::exec(qry, id(), identityId);
+		pg::exec(qry, _data.id, id);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
 	} catch (pg::unique_violation_t &) {
 		throw err::DatastoreDuplicateRbacPolicyPrincipal();
 	}
+
+	for (const auto &rule : rules()) {
+		const auto role = RetrieveRole(rule.roleId);
+		for (const auto &perm : role.permissions()) {
+			Cache cache({
+				.identity   = id,
+				.permission = perm,
+				.policy     = _data.id,
+				.rule       = rule,
+			});
+
+			cache.store();
+		}
+	}
 }
 
-void RbacPolicy::add(const RbacPolicy::Record &record) const {
-	auto conn = datastore::redis::conn();
-	conn.cmd("HSET " + record.key() + " " + _data.id + " \"\"");
-}
-
-void RbacPolicy::addRule(const Rule &r) const {
+void RbacPolicy::addRule(const Rule &rule) const {
 	std::string_view qry = R"(
 		insert into "rbac-policies_roles" (
 			policy_id,
-			role_id
+			role_id,
+			attrs
 		) values (
 			$1::text,
-			$2::text
+			$2::text,
+			$3::jsonb
 		);
 	)";
 
 	try {
-		pg::exec(qry, id(), r.roleId);
+		pg::exec(qry, _data.id, rule.roleId, rule.attrs);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidRbacPolicyOrRole();
 	} catch (pg::unique_violation_t &) {
@@ -132,13 +161,7 @@ void RbacPolicy::store() const {
 		returning _rev;
 	)";
 
-	pg::result_t res;
-	try {
-		res = pg::exec(qry, _data.id, _rev, _data.name);
-	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateRbacPolicy();
-	}
-
+	auto res = pg::exec(qry, _data.id, _rev, _data.name);
 	if (res.empty()) {
 		throw err::DatastoreRevisionMismatch();
 	}
@@ -199,18 +222,24 @@ const RbacPolicy::Rules RbacPolicy::rules() const {
 	return rules;
 }
 
-std::vector<RbacPolicy> RbacPolicy::Record::check() const {
+const Policies RbacPolicy::Cache::check(
+	const std::string &identity, const std::string &permission) {
 	auto conn  = datastore::redis::conn();
-	auto reply = conn.cmd("HGETALL " + key());
+	auto reply = conn.cmd("hgetall %s", key(identity, permission).c_str());
 
-	std::vector<RbacPolicy> policies;
+	Policies policies;
 	for (int i = 0; i < reply->elements; i += 2) {
-		policies.push_back(RbacPolicy({
+		policies.push_back({
 			.id = reply->element[i]->str,
-		}));
+		});
 	}
 
 	return policies;
+}
+
+void RbacPolicy::Cache::store() const {
+	auto conn = datastore::redis::conn();
+	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), rule.attrs->c_str());
 }
 
 RbacPolicy RetrieveRbacPolicy(const std::string &id) {
