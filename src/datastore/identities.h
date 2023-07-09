@@ -46,6 +46,6 @@ private:
 
 using Identities = std::vector<Identity>;
 
-Identity   RetrieveIdentity(const std::string &id);
 Identities LookupIdentities(const std::string &sub);
+Identity   RetrieveIdentity(const std::string &id);
 } // namespace datastore

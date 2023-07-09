@@ -28,42 +28,6 @@ AccessPolicy::AccessPolicy(const pg::row_t &r) :
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
-void AccessPolicy::store() const {
-	std::string_view qry = R"(
-		insert into "access-policies" as t (
-			_id,
-			_rev,
-			name,
-			rules
-		) values (
-			$1::text,
-			$2::integer,
-			$3::text,
-			$4::jsonb
-		)
-		on conflict (_id)
-		do update
-			set (
-				_rev,
-				name,
-				rules
-			) = (
-				excluded._rev + 1,
-				$3::text,
-				$4::jsonb
-			)
-			where t._rev = $2::integer
-		returning _rev;
-	)";
-
-	auto res = pg::exec(qry, _data.id, _rev, _data.name, _data.rules);
-	if (res.empty()) {
-		throw err::DatastoreRevisionMismatch();
-	}
-
-	_rev = res.at(0, 0).as<int>();
-}
-
 void AccessPolicy::addCollection(const AccessPolicy::collection_t &id) const {
 	std::string_view qry = R"(
 		insert into "access-policies_collections" (
@@ -94,6 +58,36 @@ void AccessPolicy::addCollection(const AccessPolicy::collection_t &id) const {
 
 			cache.store();
 		}
+	}
+}
+
+void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
+	std::string_view qry = R"(
+		insert into "access-policies_identities" (
+			policy_id,
+			identity_id
+		) values (
+			$1::text,
+			$2::text
+		);
+	)";
+
+	try {
+		pg::exec(qry, _data.id, id);
+	} catch (pg::fkey_violation_t &) {
+		throw err::DatastoreInvalidAccessPolicyOrIdentity();
+	} catch (pg::unique_violation_t &) {
+		throw err::DatastoreDuplicateAccessPolicyIdentity();
+	}
+
+	for (const auto &rule : _data.rules) {
+		Cache cache({
+			.identity = id,
+			.policy   = _data.id,
+			.rule     = rule,
+		});
+
+		cache.store();
 	}
 }
 
@@ -129,34 +123,40 @@ const AccessPolicy::identities_t AccessPolicy::identities(bool expand) const {
 	return identities;
 }
 
-void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
+void AccessPolicy::store() const {
 	std::string_view qry = R"(
-		insert into "access-policies_identities" (
-			policy_id,
-			identity_id
+		insert into "access-policies" as t (
+			_id,
+			_rev,
+			name,
+			rules
 		) values (
 			$1::text,
-			$2::text
-		);
+			$2::integer,
+			$3::text,
+			$4::jsonb
+		)
+		on conflict (_id)
+		do update
+			set (
+				_rev,
+				name,
+				rules
+			) = (
+				excluded._rev + 1,
+				$3::text,
+				$4::jsonb
+			)
+			where t._rev = $2::integer
+		returning _rev;
 	)";
 
-	try {
-		pg::exec(qry, _data.id, id);
-	} catch (pg::fkey_violation_t &) {
-		throw err::DatastoreInvalidAccessPolicyOrIdentity();
-	} catch (pg::unique_violation_t &) {
-		throw err::DatastoreDuplicateAccessPolicyIdentity();
+	auto res = pg::exec(qry, _data.id, _rev, _data.name, _data.rules);
+	if (res.empty()) {
+		throw err::DatastoreRevisionMismatch();
 	}
 
-	for (const auto &rule : _data.rules) {
-		Cache cache({
-			.identity = id,
-			.policy   = _data.id,
-			.rule     = rule,
-		});
-
-		cache.store();
-	}
+	_rev = res.at(0, 0).as<int>();
 }
 
 const Policies AccessPolicy::Cache::check(

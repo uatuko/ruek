@@ -30,20 +30,6 @@ RbacPolicy::RbacPolicy(const pg::row_t &r) :
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
-void RbacPolicy::addPrincipal(const Principal principal) const {
-	switch (principal.type) {
-	case Principal::Type::Collection:
-		addCollection(principal.id);
-		break;
-	case Principal::Type::Identity:
-		addIdentity(principal.id);
-		break;
-
-	default:
-		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
-	}
-}
-
 void RbacPolicy::addCollection(const collection_t &id) const {
 	std::string_view qry = R"(
 		insert into "rbac-policies_collections" (
@@ -137,36 +123,18 @@ void RbacPolicy::addRule(const Rule &rule) const {
 	}
 }
 
-void RbacPolicy::store() const {
-	std::string_view qry = R"(
-		insert into "rbac-policies" as t (
-			_id,
-			_rev,
-			name
-		) values (
-			$1::text,
-			$2::integer,
-			$3::text
-		)
-		on conflict (_id)
-		do update
-			set (
-				_rev,
-				name
-			) = (
-				excluded._rev + 1,
-				$3::text
-			)
-			where t._rev = $2::integer
-		returning _rev;
-	)";
+void RbacPolicy::addPrincipal(const Principal principal) const {
+	switch (principal.type) {
+	case Principal::Type::Collection:
+		addCollection(principal.id);
+		break;
+	case Principal::Type::Identity:
+		addIdentity(principal.id);
+		break;
 
-	auto res = pg::exec(qry, _data.id, _rev, _data.name);
-	if (res.empty()) {
-		throw err::DatastoreRevisionMismatch();
+	default:
+		throw err::DatastoreInvalidRbacPolicyOrPrincipal();
 	}
-
-	_rev = res.at(0, 0).as<int>();
 }
 
 const RbacPolicy::Principals RbacPolicy::principals() const {
@@ -220,6 +188,38 @@ const RbacPolicy::Rules RbacPolicy::rules() const {
 	}
 
 	return rules;
+}
+
+void RbacPolicy::store() const {
+	std::string_view qry = R"(
+		insert into "rbac-policies" as t (
+			_id,
+			_rev,
+			name
+		) values (
+			$1::text,
+			$2::integer,
+			$3::text
+		)
+		on conflict (_id)
+		do update
+			set (
+				_rev,
+				name
+			) = (
+				excluded._rev + 1,
+				$3::text
+			)
+			where t._rev = $2::integer
+		returning _rev;
+	)";
+
+	auto res = pg::exec(qry, _data.id, _rev, _data.name);
+	if (res.empty()) {
+		throw err::DatastoreRevisionMismatch();
+	}
+
+	_rev = res.at(0, 0).as<int>();
 }
 
 const Policies RbacPolicy::Cache::check(

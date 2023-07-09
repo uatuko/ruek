@@ -46,6 +46,37 @@ void Collection::add(const member_t &mid) const {
 	}
 }
 
+const Collection::members_t Collection::members() const {
+	std::string_view qry = R"(
+		select
+			identity_id
+		from
+			collections_identities
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, _data.id);
+
+	members_t members;
+	for (const auto &r : res) {
+		members.insert(r["identity_id"].as<member_t>());
+	}
+
+	return members;
+}
+
+void Collection::remove(const member_t &mid) const {
+	std::string_view qry = R"(
+		delete from collections_identities
+		where
+			collection_id = $1::text and
+			identity_id = $2::text;
+	)";
+
+	pg::exec(qry, _data.id, mid);
+}
+
 void Collection::store() const {
 	std::string_view qry = R"(
 		insert into collections as t (
@@ -76,37 +107,6 @@ void Collection::store() const {
 	}
 
 	_rev = res.at(0, 0).as<int>();
-}
-
-const Collection::members_t Collection::members() const {
-	std::string_view qry = R"(
-		select
-			identity_id
-		from
-			collections_identities
-		where
-			collection_id = $1::text;
-	)";
-
-	auto res = pg::exec(qry, _data.id);
-
-	members_t members;
-	for (const auto &r : res) {
-		members.insert(r["identity_id"].as<member_t>());
-	}
-
-	return members;
-}
-
-void Collection::remove(const member_t &mid) const {
-	std::string_view qry = R"(
-		delete from collections_identities
-		where
-			collection_id = $1::text and
-			identity_id = $2::text;
-	)";
-
-	pg::exec(qry, _data.id, mid);
 }
 
 Collection RetrieveCollection(const std::string &id) {
