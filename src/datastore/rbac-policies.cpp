@@ -203,9 +203,9 @@ const RbacPolicy::Principals RbacPolicy::principals() const {
 const RbacPolicy::Rules RbacPolicy::rules() const {
 	std::string_view qry = R"(
 		select
+			attrs,
 			role_id
-		from
-			"rbac-policies_roles"
+		from "rbac-policies_roles"
 		where
 			policy_id = $1::text;
 	)";
@@ -215,6 +215,7 @@ const RbacPolicy::Rules RbacPolicy::rules() const {
 	Rules rules;
 	for (const auto &r : res) {
 		rules.push_back(Rule({
+			.attrs  = r["attrs"].as<Rule::attrs_t>(),
 			.roleId = r["role_id"].as<std::string>(),
 		}));
 	}
@@ -262,7 +263,8 @@ const Policies RbacPolicy::Cache::check(
 	Policies policies;
 	for (int i = 0; i < reply->elements; i += 2) {
 		policies.push_back({
-			.id = reply->element[i]->str,
+			.attrs = reply->element[i + 1]->str,
+			.id    = reply->element[i]->str,
 		});
 	}
 
