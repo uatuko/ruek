@@ -271,7 +271,7 @@ const Policies RbacPolicy::Cache::check(
 
 void RbacPolicy::Cache::store() const {
 	auto conn = datastore::redis::conn();
-	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), rule.attrs->c_str());
+	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), rule.attrs.value_or("").c_str());
 }
 
 RbacPolicy RetrieveRbacPolicy(const std::string &id) {
