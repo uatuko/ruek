@@ -557,6 +557,172 @@ TEST_F(GrpcTest, RemoveCollectionMember) {
 	}
 }
 
+// Events
+TEST_F(GrpcTest, ConsumeEvent_cache_rebuild) {
+	service::Grpc service;
+
+	// Success: request/cache.rebuild:access
+	{
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		const datastore::Collection collection({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		const datastore::AccessPolicy policy({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+			.rules =
+				{
+					{
+						.attrs    = "attrs(request/cache.rebuild:access)",
+						.resource = "resource(request/cache.rebuild:access)",
+					},
+				},
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		const auto identityIds = policy.identities(true);
+		EXPECT_EQ(1, identityIds.size());
+
+		// Ensure cache is clear
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &rule : policy.rules()) {
+					const datastore::AccessPolicy::Cache cache({
+						.identity = id,
+						.policy   = policy.id(),
+						.rule     = rule,
+					});
+
+					ASSERT_NO_THROW(cache.discard());
+				}
+			}
+		}
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::ConsumeEventResponse          response;
+
+		gk::v1::RebuildAccessCacheEventPayload payload;
+		payload.add_ids(policy.id());
+
+		gk::v1::Event request;
+		request.set_name("request/cache.rebuild:access");
+
+		auto any = request.mutable_payload();
+		any->PackFrom(payload);
+
+		auto reactor = service.ConsumeEvent(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// Expect cache to be rebuilt
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &rule : policy.rules()) {
+					const auto policies = datastore::AccessPolicy::Cache::check(id, rule.resource);
+
+					ASSERT_EQ(1, policies.size());
+					EXPECT_EQ(policy.id(), policies[0].id);
+					EXPECT_EQ(rule.attrs, policies[0].attrs);
+				}
+			}
+		}
+	}
+
+	// Success: request/cache.rebuild:rbac
+	{
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		const datastore::Collection collection({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		const datastore::Role role({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.permissions =
+				{
+					{"permissions[0]:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)"},
+				},
+		});
+		ASSERT_NO_THROW(role.store());
+
+		const datastore::RbacPolicy policy({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+		});
+		ASSERT_NO_THROW(policy.store());
+
+		const datastore::RbacPolicy::Rule rule({
+			.attrs  = R"({"key": "value"})",
+			.roleId = role.id(),
+		});
+		ASSERT_NO_THROW(policy.addRule(rule));
+
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		const auto identityIds = policy.identities(true);
+		EXPECT_EQ(1, identityIds.size());
+
+		// Ensure cache is clear
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &perm : role.permissions()) {
+					const datastore::RbacPolicy::Cache cache({
+						.identity   = id,
+						.permission = perm,
+						.policy     = policy.id(),
+						.rule       = rule,
+					});
+
+					ASSERT_NO_THROW(cache.discard());
+				}
+			}
+		}
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::ConsumeEventResponse          response;
+
+		gk::v1::RebuildRbacCacheEventPayload payload;
+		payload.add_ids(policy.id());
+
+		gk::v1::Event request;
+		request.set_name("request/cache.rebuild:rbac");
+
+		auto any = request.mutable_payload();
+		any->PackFrom(payload);
+
+		auto reactor = service.ConsumeEvent(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// Expect cache to be rebuilt
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &perm : role.permissions()) {
+					const auto policies = datastore::RbacPolicy::Cache::check(id, perm);
+					ASSERT_EQ(1, policies.size());
+					EXPECT_EQ(policy.id(), policies[0].id);
+					EXPECT_EQ(*rule.attrs, policies[0].attrs);
+				}
+			}
+		}
+	}
+}
+
 // Identities
 TEST_F(GrpcTest, CreateIdentity) {
 	service::Grpc service;

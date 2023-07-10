@@ -271,6 +271,10 @@ const Policies RbacPolicy::Cache::check(
 	return policies;
 }
 
+void RbacPolicy::Cache::discard() const {
+	datastore::redis::conn().cmd("del %s", key().c_str());
+}
+
 void RbacPolicy::Cache::store() const {
 	auto conn = datastore::redis::conn();
 	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), rule.attrs.value_or("").c_str());

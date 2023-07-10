@@ -39,6 +39,7 @@ public:
 
 		const std::string key() const noexcept { return key(identity, permission); };
 
+		void discard() const;
 		void store() const;
 	};
 
