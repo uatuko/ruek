@@ -71,6 +71,44 @@ TEST_F(AccessPoliciesTest, identities) {
 	}
 }
 
+TEST_F(AccessPoliciesTest, retrieve) {
+	// Success: retrieve data
+	{
+		std::string_view qry = R"(
+			insert into "access-policies" (
+				_id,
+				_rev,
+				rules
+			) values (
+				$1::text,
+				$2::integer,
+				$3::jsonb
+			);
+		)";
+
+		try {
+			datastore::pg::exec(
+				qry,
+				"_id:AccessPoliciesTest.retrieve",
+				1328,
+				R"([{"attrs": "attrs:AccessPoliciesTest.retrieve", "resource":"resource:AccessPoliciesTest.retrieve"}])");
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		auto policy = datastore::RetrieveAccessPolicy("_id:AccessPoliciesTest.retrieve");
+		EXPECT_EQ(1328, policy.rev());
+		EXPECT_FALSE(policy.name());
+
+		const auto &rules = policy.rules();
+		ASSERT_EQ(1, rules.size());
+
+		const auto rule = rules.cbegin();
+		EXPECT_EQ("attrs:AccessPoliciesTest.retrieve", rule->attrs);
+		EXPECT_EQ("resource:AccessPoliciesTest.retrieve", rule->resource);
+	}
+}
+
 TEST_F(AccessPoliciesTest, rev) {
 	// Success: revision increment
 	{

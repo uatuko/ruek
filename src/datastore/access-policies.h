@@ -18,8 +18,8 @@ public:
 	using identities_t  = std::set<identity_t>;
 
 	struct Rule {
-		const std::string attrs;
-		const std::string resource;
+		std::string attrs;
+		std::string resource;
 
 		bool operator<(const Rule &rhs) const noexcept { return resource < rhs.resource; }
 	};
@@ -101,7 +101,14 @@ template <> struct nullness<access_rules_t> {
 };
 
 template <> struct string_traits<access_rules_t> {
-	static access_rules_t from_string(std::string_view text) { return {}; }
+	static access_rules_t from_string(std::string_view text) {
+		access_rules_t result;
+		if (glz::read_json(result, text)) {
+			throw pqxx::conversion_error("Failed to read json");
+		}
+
+		return result;
+	}
 
 	static char *into_buf(char *begin, char *end, access_rules_t const &value) {
 		const auto buffer = glz::write_json(value);

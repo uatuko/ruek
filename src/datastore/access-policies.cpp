@@ -24,7 +24,9 @@ AccessPolicy::AccessPolicy(Data &&data) noexcept : _data(std::move(data)), _rev(
 
 AccessPolicy::AccessPolicy(const pg::row_t &r) :
 	_data({
-		.id = r["_id"].as<std::string>(),
+		.id    = r["_id"].as<std::string>(),
+		.name  = r["name"].as<Data::name_t>(),
+		.rules = r["rules"].as<Data::rules_t>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
@@ -167,7 +169,8 @@ const Policies AccessPolicy::Cache::check(
 	Policies policies;
 	for (int i = 0; i < reply->elements; i += 2) {
 		policies.push_back({
-			.id = reply->element[i]->str,
+			.attrs = reply->element[i + 1]->str,
+			.id    = reply->element[i]->str,
 		});
 	}
 
@@ -187,7 +190,9 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 	std::string_view qry = R"(
 		select
 			_id,
-			_rev
+			_rev,
+			name,
+			rules
 		from "access-policies"
 		where
 			_id = $1::text;
