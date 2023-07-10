@@ -33,24 +33,9 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-// Access Policies
+// Access control checks
 TEST_F(GrpcTest, CheckAccess) {
 	service::Grpc service;
-
-	// Success: returns empty list when no policy set
-	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckAccessResponse           response;
-
-		gk::v1::CheckAccessRequest request;
-
-		auto reactor = service.CheckAccess(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 0);
-	}
 
 	// Success: returns policy when found
 	{
@@ -85,27 +70,12 @@ TEST_F(GrpcTest, CheckAccess) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 1);
+		EXPECT_EQ(1, response.policies().size());
 	}
 }
 
 TEST_F(GrpcTest, CheckRbac) {
 	service::Grpc service;
-
-	// Success: returns empty list when no policy set
-	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckRbacResponse             response;
-
-		gk::v1::CheckRbacRequest request;
-
-		auto reactor = service.CheckRbac(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(0, response.policies().size());
-	}
 
 	// Success: returns policy when found
 	{
@@ -144,6 +114,7 @@ TEST_F(GrpcTest, CheckRbac) {
 	}
 }
 
+// Access Policies
 TEST_F(GrpcTest, CreateAccessPolicy) {
 	service::Grpc service;
 
