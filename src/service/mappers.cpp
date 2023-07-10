@@ -47,12 +47,15 @@ datastore::Identity map(const gk::v1::CreateIdentityRequest *from) {
 }
 
 datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
-	datastore::RbacPolicy rbacPolicy({
-		.id   = from->id(),
-		.name = from->name(),
+	datastore::RbacPolicy policy({
+		.id = from->id(),
 	});
 
-	return rbacPolicy;
+	if (from->has_name()) {
+		policy.name(from->name());
+	}
+
+	return policy;
 }
 
 datastore::Role map(const gk::v1::CreateRoleRequest *from) {
