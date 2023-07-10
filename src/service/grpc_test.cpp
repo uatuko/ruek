@@ -104,7 +104,7 @@ TEST_F(GrpcTest, CheckRbac) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 0);
+		EXPECT_EQ(0, response.policies().size());
 	}
 
 	// Success: returns policy when found
@@ -140,7 +140,7 @@ TEST_F(GrpcTest, CheckRbac) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 1);
+		EXPECT_EQ(1, response.policies().size());
 	}
 }
 
