@@ -19,6 +19,7 @@ protected:
 		datastore::pg::exec("truncate table \"access-policies\" cascade;");
 		datastore::pg::exec("truncate table collections cascade;");
 		datastore::pg::exec("truncate table identities cascade;");
+		datastore::redis::conn().cmd("flushall");
 	}
 
 	void SetUp() {
@@ -26,30 +27,15 @@ protected:
 		datastore::pg::exec("delete from \"access-policies\" cascade;");
 		datastore::pg::exec("delete from collections cascade;");
 		datastore::pg::exec("delete from identities cascade;");
-		datastore::redis::conn().cmd("FLUSHALL");
+		datastore::pg::exec("delete from \"rbac-policies\" cascade;");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-// Access Policies
+// Access control checks
 TEST_F(GrpcTest, CheckAccess) {
 	service::Grpc service;
-
-	// Success: returns empty list when no policy set
-	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckAccessResponse           response;
-
-		gk::v1::CheckAccessRequest request;
-
-		auto reactor = service.CheckAccess(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 0);
-	}
 
 	// Success: returns policy when found
 	{
@@ -57,22 +43,24 @@ TEST_F(GrpcTest, CheckAccess) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::CheckAccessResponse           response;
 
-		// create identity
-		const datastore::Identity identity({.sub = "identity:GrpcTest.CheckAccess"});
-		try {
-			identity.store();
-		} catch (const std::exception &e) {
-			FAIL() << e.what();
-		}
-
-		datastore::AccessPolicy policy({
-			.name = "policy::GrpcTest.CheckAccess",
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.CheckAccess",
 		});
-		EXPECT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(identity.store());
 
-		const auto                            resource = "resource:GrpcTest.CheckAccess";
-		const datastore::AccessPolicy::Record access(identity.id(), resource);
-		EXPECT_NO_THROW(policy.add(access));
+		const datastore::AccessPolicy policy({
+			.name = "name:GrpcTest.CheckAccess",
+		});
+		ASSERT_NO_THROW(policy.store());
+
+		const std::string resource = "resource/GrpcTest.CheckAccess";
+
+		const datastore::AccessPolicy::Cache cache({
+			.identity = identity.id(),
+			.policy   = policy.id(),
+			.rule     = {.resource = resource},
+		});
+		ASSERT_NO_THROW(cache.store());
 
 		gk::v1::CheckAccessRequest request;
 		request.set_resource(resource);
@@ -82,27 +70,12 @@ TEST_F(GrpcTest, CheckAccess) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 1);
+		EXPECT_EQ(1, response.policies().size());
 	}
 }
 
 TEST_F(GrpcTest, CheckRbac) {
 	service::Grpc service;
-
-	// Success: returns empty list when no policy set
-	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckRbacResponse             response;
-
-		gk::v1::CheckRbacRequest request;
-
-		auto reactor = service.CheckRbac(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 0);
-	}
 
 	// Success: returns policy when found
 	{
@@ -112,20 +85,22 @@ TEST_F(GrpcTest, CheckRbac) {
 
 		// create identity
 		const datastore::Identity identity({.sub = "sub:GrpcTest.CheckRbac"});
-		EXPECT_NO_THROW(identity.store());
+		ASSERT_NO_THROW(identity.store());
 
 		datastore::RbacPolicy policy({
 			.name = "name::GrpcTest.CheckRbac",
 		});
-		EXPECT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.store());
 
-		const auto                          permission = "permission:GrpcTest.CheckRbac";
-		const datastore::RbacPolicy::Record record({
-			.identityId = identity.id(),
+		const auto permission = "permission:GrpcTest.CheckRbac";
+
+		const datastore::RbacPolicy::Cache cache({
+			.identity   = identity.id(),
 			.permission = permission,
+			.policy     = policy.id(),
+			.rule       = {},
 		});
-
-		EXPECT_NO_THROW(policy.add(record));
+		ASSERT_NO_THROW(cache.store());
 
 		gk::v1::CheckRbacRequest request;
 		request.set_permission(permission);
@@ -135,10 +110,11 @@ TEST_F(GrpcTest, CheckRbac) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.policies().size(), 1);
+		EXPECT_EQ(1, response.policies().size());
 	}
 }
 
+// Access Policies
 TEST_F(GrpcTest, CreateAccessPolicy) {
 	service::Grpc service;
 
@@ -198,22 +174,17 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 
 	// Success: create access policy with a principal and resource
 	{
+		const datastore::Identity identity({
+			.sub = "principal_sub:GrpcTest.CreateAccessPolicy",
+		});
+		ASSERT_NO_THROW(identity.store());
+
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
 		request.set_name("name:GrpcTest.CreateAccessPolicy");
-
-		const datastore::Identity identity({
-			.sub = "principal_sub:GrpcTest.CreateAccessPolicy",
-		});
-
-		try {
-			identity.store();
-		} catch (const std::exception &e) {
-			FAIL() << e.what();
-		}
 
 		auto principal = request.add_principals();
 		principal->set_id(identity.id());
@@ -222,10 +193,12 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		auto rule = request.add_rules();
 		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
 
-		auto access = datastore::AccessPolicy::Record(principal->id(), rule->resource());
 		// expect no access before request
-		auto policies = access.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(0, policies.size());
+		}
 
 		// create access policy
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
@@ -234,8 +207,11 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
-		policies = access.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// Success: create an access policy for collection
@@ -272,11 +248,12 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		auto rule = request.add_rules();
 		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
 
-		const auto access = datastore::AccessPolicy::Record(identity.id(), rule->resource());
-
 		// expect no access before request
-		auto policies = access.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(0, policies.size());
+		}
 
 		// create access policy
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
@@ -285,8 +262,11 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
-		policies = access.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule->resource());
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// FIXME: nested collections
@@ -573,6 +553,172 @@ TEST_F(GrpcTest, RemoveCollectionMember) {
 
 			auto [count] = res[0].as<int>();
 			EXPECT_EQ(0, count);
+		}
+	}
+}
+
+// Events
+TEST_F(GrpcTest, ConsumeEvent_cache_rebuild) {
+	service::Grpc service;
+
+	// Success: request/cache.rebuild:access
+	{
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		const datastore::Collection collection({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		const datastore::AccessPolicy policy({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+			.rules =
+				{
+					{
+						.attrs    = "attrs(request/cache.rebuild:access)",
+						.resource = "resource(request/cache.rebuild:access)",
+					},
+				},
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		const auto identityIds = policy.identities(true);
+		EXPECT_EQ(1, identityIds.size());
+
+		// Ensure cache is clear
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &rule : policy.rules()) {
+					const datastore::AccessPolicy::Cache cache({
+						.identity = id,
+						.policy   = policy.id(),
+						.rule     = rule,
+					});
+
+					ASSERT_NO_THROW(cache.discard());
+				}
+			}
+		}
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::ConsumeEventResponse          response;
+
+		gk::v1::RebuildAccessCacheEventPayload payload;
+		payload.add_ids(policy.id());
+
+		gk::v1::Event request;
+		request.set_name("request/cache.rebuild:access");
+
+		auto any = request.mutable_payload();
+		any->PackFrom(payload);
+
+		auto reactor = service.ConsumeEvent(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// Expect cache to be rebuilt
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &rule : policy.rules()) {
+					const auto policies = datastore::AccessPolicy::Cache::check(id, rule.resource);
+
+					ASSERT_EQ(1, policies.size());
+					EXPECT_EQ(policy.id(), policies[0].id);
+					EXPECT_EQ(rule.attrs, policies[0].attrs);
+				}
+			}
+		}
+	}
+
+	// Success: request/cache.rebuild:rbac
+	{
+		const datastore::Identity identity({
+			.sub = "sub:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		const datastore::Collection collection({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		const datastore::Role role({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.permissions =
+				{
+					{"permissions[0]:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)"},
+				},
+		});
+		ASSERT_NO_THROW(role.store());
+
+		const datastore::RbacPolicy policy({
+			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+		});
+		ASSERT_NO_THROW(policy.store());
+
+		const datastore::RbacPolicy::Rule rule({
+			.attrs  = R"({"key": "value"})",
+			.roleId = role.id(),
+		});
+		ASSERT_NO_THROW(policy.addRule(rule));
+
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		const auto identityIds = policy.identities(true);
+		EXPECT_EQ(1, identityIds.size());
+
+		// Ensure cache is clear
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &perm : role.permissions()) {
+					const datastore::RbacPolicy::Cache cache({
+						.identity   = id,
+						.permission = perm,
+						.policy     = policy.id(),
+						.rule       = rule,
+					});
+
+					ASSERT_NO_THROW(cache.discard());
+				}
+			}
+		}
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::ConsumeEventResponse          response;
+
+		gk::v1::RebuildRbacCacheEventPayload payload;
+		payload.add_ids(policy.id());
+
+		gk::v1::Event request;
+		request.set_name("request/cache.rebuild:rbac");
+
+		auto any = request.mutable_payload();
+		any->PackFrom(payload);
+
+		auto reactor = service.ConsumeEvent(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// Expect cache to be rebuilt
+		{
+			for (const auto &id : identityIds) {
+				for (const auto &perm : role.permissions()) {
+					const auto policies = datastore::RbacPolicy::Cache::check(id, perm);
+					ASSERT_EQ(1, policies.size());
+					EXPECT_EQ(policy.id(), policies[0].id);
+					EXPECT_EQ(*rule.attrs, policies[0].attrs);
+				}
+			}
 		}
 	}
 }
@@ -975,12 +1121,10 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY);
 
 		// expect no access before request
-		auto rbac     = datastore::RbacPolicy::Record({
-				.identityId = principal->id(),
-				.permission = permission,
-        });
-		auto policies = rbac.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(principal->id(), permission);
+			EXPECT_EQ(0, policies.size());
+		}
 
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -993,8 +1137,10 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		EXPECT_EQ(role.id(), response.rules(0).role_id());
 
 		// expect to find single policy when checking access
-		policies = rbac.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(principal->id(), permission);
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// Success: create an rbac policy for collection
@@ -1033,14 +1179,11 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		principal->set_id(collection.id());
 		principal->set_type(gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION);
 
-		auto rbac = datastore::RbacPolicy::Record({
-			.identityId = identity.id(),
-			.permission = permission,
-		});
-
 		// expect no access before request
-		auto policies = rbac.check();
-		EXPECT_EQ(policies.size(), 0);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			EXPECT_EQ(0, policies.size());
+		}
 
 		// create access policy
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
@@ -1049,8 +1192,10 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		EXPECT_EQ(peer.reactor(), reactor);
 
 		// expect to find single policy when checking access
-		policies = rbac.check();
-		EXPECT_EQ(policies.size(), 1);
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 
 	// FIXME: nested collections

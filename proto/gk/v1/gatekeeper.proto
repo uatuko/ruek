@@ -177,8 +177,8 @@ message Principal {
 
 // Access policies
 message AccessPolicy {
-	string id   = 1;
-	string name = 2;
+	string          id   = 1;
+	optional string name = 2;
 
 	repeated Principal        principals = 3;
 	repeated AccessPolicyRule rules      = 4;
@@ -204,7 +204,7 @@ message CheckAccessResponse {
 
 message CreateAccessPolicyRequest {
 	optional string id   = 1;
-	string          name = 2;
+	optional string name = 2;
 
 	repeated Principal        principals = 3;
 	repeated AccessPolicyRule rules      = 4;
@@ -258,12 +258,24 @@ message RemoveCollectionMemberResponse {}
 
 // Events
 message Event {
+	// A name that uniquely identify the event.
+	// Supported names are,
+	//   - "request/cache.rebuild:access"
+	//   - "request/cache.rebuild:rbac"
 	string                    name      = 1;
 	google.protobuf.Any       payload   = 3;
 	google.protobuf.Timestamp timestamp = 2;
 }
 
 message ConsumeEventResponse {}
+
+message RebuildAccessCacheEventPayload {
+	repeated string ids = 1;
+}
+
+message RebuildRbacCacheEventPayload {
+	repeated string ids = 1;
+}
 
 // Identities
 message Identity {
@@ -302,8 +314,8 @@ message UpdateIdentityRequest {
 
 // RBAC policies
 message RbacPolicy {
-	string id   = 1;
-	string name = 2;
+	string          id   = 1;
+	optional string name = 2;
 
 	repeated Principal      principals = 3;
 	repeated RbacPolicyRule rules      = 4;
@@ -329,7 +341,7 @@ message CheckRbacResponse {
 
 message CreateRbacPolicyRequest {
 	optional string id   = 1;
-	string          name = 2;
+	optional string name = 2;
 
 	repeated Principal      principals = 3;
 	repeated RbacPolicyRule rules      = 4;

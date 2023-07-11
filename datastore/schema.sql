@@ -1,9 +1,12 @@
 create table if not exists "access-policies" (
 	_id   text    not null,
 	_rev  integer not null,
+	name  text,
 	rules jsonb,
 
-	constraint "access-policies.pkey" primary key (_id)
+	constraint "access-policies.pkey" primary key (_id),
+	constraint "access-policies.check-name" check (name <> ''),
+	constraint "access-policies.check-rules" check(jsonb_typeof(rules) = 'array')
 );
 
 create table if not exists collections (
@@ -30,10 +33,10 @@ create table if not exists identities (
 create table if not exists "rbac-policies" (
 	_id   text    not null,
 	_rev  integer not null,
-	name  text    not null,
-	rules jsonb,
+	name  text,
 
-	constraint "rbac-policies.pkey" primary key (_id)
+	constraint "rbac-policies.pkey" primary key (_id),
+	constraint "rbac-policies.check-name" check (name <> '')
 );
 
 create table if not exists roles (
@@ -113,8 +116,9 @@ create table if not exists "rbac-policies_identities" (
 );
 
 create table if not exists "rbac-policies_roles" (
-	policy_id text not null,
-	role_id   text not null,
+	policy_id text  not null,
+	role_id   text  not null,
+	attrs     jsonb,
 
 	constraint "rbac-policies_roles.pkey" primary key (policy_id, role_id),
 	constraint "rbac-policies_roles.fkey-policy_id" foreign key (policy_id)
@@ -122,5 +126,6 @@ create table if not exists "rbac-policies_roles" (
 		on delete cascade,
 	constraint "rbac-policies_roles.fkey-role_id" foreign key (role_id)
 		references roles(_id)
-		on delete cascade
+		on delete cascade,
+	constraint "rbac-policies_roles.check-attrs" check(jsonb_typeof(attrs) = 'object')
 );

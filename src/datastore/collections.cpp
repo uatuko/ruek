@@ -38,12 +38,43 @@ void Collection::add(const member_t &mid) const {
 	)";
 
 	try {
-		pg::exec(qry, id(), mid);
+		pg::exec(qry, _data.id, mid);
 	} catch (pg::fkey_violation_t &) {
 		throw err::DatastoreInvalidCollectionOrMember();
 	} catch (pg::unique_violation_t &) {
 		throw err::DatastoreDuplicateCollectionMember();
 	}
+}
+
+const Collection::members_t Collection::members() const {
+	std::string_view qry = R"(
+		select
+			identity_id
+		from
+			collections_identities
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, _data.id);
+
+	members_t members;
+	for (const auto &r : res) {
+		members.insert(r["identity_id"].as<member_t>());
+	}
+
+	return members;
+}
+
+void Collection::remove(const member_t &mid) const {
+	std::string_view qry = R"(
+		delete from collections_identities
+		where
+			collection_id = $1::text and
+			identity_id = $2::text;
+	)";
+
+	pg::exec(qry, _data.id, mid);
 }
 
 void Collection::store() const {
@@ -78,37 +109,6 @@ void Collection::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-const Collection::members_t Collection::members() const {
-	std::string_view qry = R"(
-		select
-			identity_id
-		from
-			collections_identities
-		where
-			collection_id = $1::text;
-	)";
-
-	auto res = pg::exec(qry, id());
-
-	members_t members;
-	for (const auto &r : res) {
-		members.insert(r["identity_id"].as<member_t>());
-	}
-
-	return members;
-}
-
-void Collection::remove(const member_t &mid) const {
-	std::string_view qry = R"(
-		delete from collections_identities
-		where
-			collection_id = $1::text and
-			identity_id = $2::text;
-	)";
-
-	pg::exec(qry, id(), mid);
-}
-
 Collection RetrieveCollection(const std::string &id) {
 	std::string_view qry = R"(
 		select
@@ -126,5 +126,24 @@ Collection RetrieveCollection(const std::string &id) {
 	}
 
 	return Collection(res[0]);
+}
+
+const Collection::members_t RetrieveCollectionMembers(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			identity_id
+		from collections_identities
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+
+	Collection::members_t members;
+	for (const auto &r : res) {
+		members.insert(r["identity_id"].as<Collection::member_t>());
+	}
+
+	return members;
 }
 } // namespace datastore

@@ -5,6 +5,7 @@ add_library(datastore
 	datastore.h
 	identities.cpp identities.h
 	pg.cpp pg.h
+	policies.h
 	rbac-policies.cpp rbac-policies.h
 	redis.cpp redis.h
 	roles.cpp roles.h
@@ -13,6 +14,7 @@ add_library(datastore
 target_link_libraries(datastore
 	PUBLIC
 		${PROJECT_NAME}::err
+		glaze::glaze
 		hiredis::hiredis_static
 		pqxx
 	PRIVATE

@@ -196,6 +196,33 @@ TEST_F(CollectionsTest, retrieve) {
 		EXPECT_EQ("name:CollectionsTest.retrieve", collection.name());
 	}
 
+	// Success: retrieve members
+	{
+		const datastore::Collection collection({
+			.name = "name:CollectionsTest.retrieve-members",
+		});
+		ASSERT_NO_THROW(collection.store());
+
+		const datastore::Identity identity({
+			.sub = "sub:CollectionsTest.retrieve-members",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		// expect no entries before adding to collection
+		{
+			const auto members = datastore::RetrieveCollectionMembers(collection.id());
+			EXPECT_EQ(0, members.size());
+		}
+
+		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		// expect single entry after adding one member
+		{
+			const auto members = datastore::RetrieveCollectionMembers(collection.id());
+			EXPECT_EQ(1, members.size());
+		}
+	}
+
 	// Error: not found
 	{ EXPECT_THROW(datastore::RetrieveCollection("_id:dummy"), err::DatastoreCollectionNotFound); }
 }

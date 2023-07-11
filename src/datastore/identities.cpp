@@ -81,21 +81,23 @@ void Identity::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-std::vector<std::string> ListIdentitiesInCollection(const std::string &id) {
-	// FIXME: make this query recursive when collections can have parents
+Identities LookupIdentities(const std::string &sub) {
 	std::string_view qry = R"(
 		select
-			identity_id
-		from collections_identities
+			_id,
+			_rev,
+			sub,
+			attrs
+		from identities
 		where
-			collection_id = $1::text;
+			sub = $1::text;
 	)";
 
-	auto res = pg::exec(qry, id);
+	auto res = pg::exec(qry, sub);
 
-	std::vector<std::string> identities;
-	for (auto row : res) {
-		identities.push_back(row["identity_id"].as<std::string>());
+	Identities identities;
+	for (const auto &row : res) {
+		identities.push_back(Identity(row));
 	}
 
 	return identities;
@@ -119,27 +121,5 @@ Identity RetrieveIdentity(const std::string &id) {
 	}
 
 	return Identity(res[0]);
-}
-
-Identities LookupIdentities(const std::string &sub) {
-	std::string_view qry = R"(
-		select
-			_id,
-			_rev,
-			sub,
-			attrs
-		from identities
-		where
-			sub = $1::text;
-	)";
-
-	auto res = pg::exec(qry, sub);
-
-	Identities identities;
-	for (const auto &row : res) {
-		identities.push_back(Identity(row));
-	}
-
-	return identities;
 }
 } // namespace datastore

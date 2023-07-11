@@ -18,9 +18,8 @@ grpc::ServerUnaryReactor *Grpc::CheckAccess(
 	}
 
 	try {
-		const auto access =
-			datastore::AccessPolicy::Record(request->identity_id(), request->resource());
-		const auto policies = access.check();
+		const auto policies =
+			datastore::AccessPolicy::Cache::check(request->identity_id(), request->resource());
 		map(policies, response);
 	} catch (...) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to check access"));
@@ -43,15 +42,14 @@ grpc::ServerUnaryReactor *Grpc::CheckRbac(
 	}
 
 	try {
-		const auto rbac = datastore::RbacPolicy::Record(
-			{.identityId = request->identity_id(), .permission = request->permission()});
-
-		const auto policies = rbac.check();
+		const auto policies =
+			datastore::RbacPolicy::Cache::check(request->identity_id(), request->permission());
 		map(policies, response);
 	} catch (...) {
-		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to check access"));
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to check rbac"));
 		return reactor;
 	}
+
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
@@ -85,28 +83,17 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 
 	for (const auto &principal : request->principals()) {
 		try {
-			std::vector<std::string> identities;
-
 			switch (principal.type()) {
 			case gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION:
-				policy.addCollectionPrincipal(principal.id());
-				identities = datastore::ListIdentitiesInCollection(principal.id());
+				policy.addCollection(principal.id());
 				break;
 			case gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY:
-				policy.addIdentityPrincipal(principal.id());
-				identities.push_back(principal.id());
+				policy.addIdentity(principal.id());
 				break;
 			default:
 				reactor->Finish(
 					grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unhandled principal"));
 				return reactor;
-			}
-
-			for (const auto &identity : identities) {
-				for (const auto &rule : request->rules()) {
-					datastore::AccessPolicy::Record record(identity, rule.resource());
-					policy.add(record);
-				}
 			}
 		} catch (...) {
 			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add principal"));
@@ -265,6 +252,67 @@ grpc::ServerUnaryReactor *Grpc::RemoveCollectionMember(
 	return reactor;
 }
 
+// Events
+grpc::ServerUnaryReactor *Grpc::ConsumeEvent(
+	grpc::CallbackServerContext *context, const gk::v1::Event *request,
+	gk::v1::ConsumeEventResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	if (request->name() == "request/cache.rebuild:access") {
+		gk::v1::RebuildAccessCacheEventPayload payload;
+		if (!request->payload().UnpackTo(&payload)) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Invalid payload"));
+			return reactor;
+		}
+
+		for (const auto &id : payload.ids()) {
+			const auto policy = datastore::RetrieveAccessPolicy(id);
+			for (const auto &identity : policy.identities(true)) {
+				for (const auto &rule : policy.rules()) {
+					const datastore::AccessPolicy::Cache cache({
+						.identity = identity,
+						.policy   = policy.id(),
+						.rule     = rule,
+					});
+
+					cache.store();
+				}
+			}
+		}
+	} else if (request->name() == "request/cache.rebuild:rbac") {
+		gk::v1::RebuildRbacCacheEventPayload payload;
+		if (!request->payload().UnpackTo(&payload)) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Invalid payload"));
+			return reactor;
+		}
+
+		for (const auto &id : payload.ids()) {
+			const auto policy = datastore::RetrieveRbacPolicy(id);
+			for (const auto &identity : policy.identities(true)) {
+				for (const auto &rule : policy.rules()) {
+					const auto role = datastore::RetrieveRole(rule.roleId);
+					for (const auto &perm : role.permissions()) {
+						const datastore::RbacPolicy::Cache cache({
+							.identity   = identity,
+							.permission = perm,
+							.policy     = policy.id(),
+							.rule       = rule,
+						});
+
+						cache.store();
+					}
+				}
+			}
+		}
+	} else {
+		reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unknown event"));
+		return reactor;
+	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 // Identities
 grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
@@ -398,7 +446,6 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 			// Policy with an `id` matching the request `id` doesn't exist, we can continue with
 			// creating a new one.
 		} catch (const std::exception &e) {
-			std::cout << "Y " << e.what() << std::endl;
 			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
 			return reactor;
 		}
@@ -409,54 +456,20 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 		// Store the policy
 		policy.store();
 
-		// Add rules to junction table
+		// Add rules
 		if (request->rules().size() > 0) {
 			for (const auto &rule : request->rules()) {
-				policy.addRule(datastore::RbacPolicy::Rule({.roleId = rule.role_id()}));
+				policy.addRule({.roleId = rule.role_id()});
 			}
 		}
 
-		// Add principals to junction table
+		// Add principals
 		if (request->principals().size() > 0) {
 			for (const auto &principal : request->principals()) {
 				policy.addPrincipal(datastore::RbacPolicy::Principal({
 					.id   = principal.id(),
 					.type = static_cast<datastore::RbacPolicy::Principal::Type>(principal.type()),
 				}));
-			}
-		}
-
-		// Get all related identities
-		std::vector<std::string> identities;
-		for (const auto &principal : request->principals()) {
-			switch (principal.type()) {
-			case gk::v1::PrincipalType::PRINCIPAL_TYPE_COLLECTION:
-				for (const auto id : datastore::ListIdentitiesInCollection(principal.id())) {
-					identities.push_back(id);
-				}
-				break;
-			case gk::v1::PrincipalType::PRINCIPAL_TYPE_IDENTITY:
-				identities.push_back(principal.id());
-				break;
-			default:
-				reactor->Finish(
-					grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Unhandled principal"));
-				return reactor;
-			}
-		}
-
-		// Add records to redis
-		if (request->principals().size() > 0 && request->rules().size() > 0) {
-			for (const auto &rule : request->rules()) {
-				auto role = datastore::RetrieveRole(rule.role_id());
-				for (const auto &permission : role.permissions()) {
-					for (const auto &identity : identities) {
-						policy.add(datastore::RbacPolicy::Record({
-							.identityId = identity,
-							.permission = permission,
-						}));
-					}
-				}
 			}
 		}
 	} catch (std::exception &e) {
