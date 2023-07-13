@@ -834,9 +834,11 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 
 	// Success: retrieve identity by id
 	{
-		const datastore::Identity identity(
-			{.id = "id:GrpcTest.RetrieveIdentity", .sub = "sub:GrpcTest.RetrieveIdentity"});
-		EXPECT_NO_THROW(identity.store());
+		const datastore::Identity identity({
+			.id  = "id:GrpcTest.RetrieveIdentity",
+			.sub = "sub:GrpcTest.RetrieveIdentity",
+		});
+		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
@@ -913,7 +915,7 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::RetrieveIdentityRequest request;
-		request.set_id("id:GrpcTest.RetrieveIdentity-not-found");
+		request.set_id("id:GrpcTest.RetrieveIdentity-not_found");
 
 		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
