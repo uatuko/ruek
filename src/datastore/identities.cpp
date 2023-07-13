@@ -81,28 +81,6 @@ void Identity::store() const {
 	_rev = res.at(0, 0).as<int>();
 }
 
-Identities LookupIdentities(const std::string &sub) {
-	std::string_view qry = R"(
-		select
-			_id,
-			_rev,
-			sub,
-			attrs
-		from identities
-		where
-			sub = $1::text;
-	)";
-
-	auto res = pg::exec(qry, sub);
-
-	Identities identities;
-	for (const auto &row : res) {
-		identities.push_back(Identity(row));
-	}
-
-	return identities;
-}
-
 Identity RetrieveIdentity(const std::string &id) {
 	std::string_view qry = R"(
 		select
@@ -116,6 +94,26 @@ Identity RetrieveIdentity(const std::string &id) {
 	)";
 
 	auto res = pg::exec(qry, id);
+	if (res.empty()) {
+		throw err::DatastoreIdentityNotFound();
+	}
+
+	return Identity(res[0]);
+}
+
+Identity RetrieveIdentityBySub(const std::string &sub) {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			sub,
+			attrs
+		from identities
+		where
+			sub = $1::text;
+	)";
+
+	auto res = pg::exec(qry, sub);
 	if (res.empty()) {
 		throw err::DatastoreIdentityNotFound();
 	}

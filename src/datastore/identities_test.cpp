@@ -45,25 +45,6 @@ TEST_F(IdentitiesTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
-TEST_F(IdentitiesTest, lookup) {
-	// Success:
-	{
-		const datastore::Identity identity({
-			.sub = "sub:IdentitiesTest.lookup",
-		});
-
-		// expect no entries before adding to collection
-		auto identities = datastore::LookupIdentities(identity.sub());
-		EXPECT_EQ(0, identities.size());
-
-		ASSERT_NO_THROW(identity.store());
-
-		// expect single entry
-		identities = datastore::LookupIdentities(identity.sub());
-		EXPECT_EQ(1, identities.size());
-	}
-}
-
 TEST_F(IdentitiesTest, retrieve) {
 	// Success: retrieve data
 	{
@@ -124,8 +105,44 @@ TEST_F(IdentitiesTest, retrieve) {
 		EXPECT_EQ(R"({"foo": "bar"})", identity.attrs());
 	}
 
+	// Success: retrieve by sub
+	{
+		std::string_view qry = R"(
+			insert into identities (
+				_id,
+				_rev,
+				sub,
+				attrs
+			) values (
+				$1::text,
+				$2::integer,
+				$3::text,
+				$4::jsonb
+			);
+		)";
+
+		try {
+			datastore::pg::exec(
+				qry,
+				"_id:IdentitiesTest.retrieve-sub",
+				2205,
+				"sub:IdentitiesTest.retrieve-sub",
+				R"({"key": "value"})");
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		auto identity = datastore::RetrieveIdentityBySub("sub:IdentitiesTest.retrieve-sub");
+		EXPECT_EQ("_id:IdentitiesTest.retrieve-sub", identity.id());
+		EXPECT_EQ(2205, identity.rev());
+		EXPECT_EQ(R"({"key": "value"})", identity.attrs());
+	}
+
 	// Error: not found
 	{ EXPECT_THROW(datastore::RetrieveIdentity("_id:dummy"), err::DatastoreIdentityNotFound); }
+
+	// Error: not found (by sub)
+	{ EXPECT_THROW(datastore::RetrieveIdentityBySub("sub:dummy"), err::DatastoreIdentityNotFound); }
 }
 
 TEST_F(IdentitiesTest, rev) {
