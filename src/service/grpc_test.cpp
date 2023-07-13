@@ -854,6 +854,30 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 		EXPECT_FALSE(response.has_attrs());
 	}
 
+	// Success: retrieve identity by sub
+	{
+		const datastore::Identity identity({
+			.id  = "id:GrpcTest.RetrieveIdentity-by_sub",
+			.sub = "sub:GrpcTest.RetrieveIdentity-by_sub",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Identity                      response;
+
+		gk::v1::RetrieveIdentityRequest request;
+		request.set_sub(identity.sub());
+
+		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(identity.id(), response.id());
+		EXPECT_EQ(identity.sub(), response.sub());
+		EXPECT_FALSE(response.has_attrs());
+	}
+
 	// Success: retrieve identity by id with attrs
 	{
 		const datastore::Identity identity({
@@ -895,31 +919,6 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
 		EXPECT_EQ("Document not found", peer.test_status().error_message());
-	}
-}
-
-TEST_F(GrpcTest, LookupIdentities) {
-	service::Grpc service;
-
-	// Success: lookup identities by sub
-	{
-		const datastore::Identity identity(
-			{.id = "id:GrpcTest.LookupIdentities", .sub = "sub:GrpcTest.LookupIdentities"});
-		EXPECT_NO_THROW(identity.store());
-
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::LookupIdentitiesResponse      response;
-
-		gk::v1::LookupIdentitiesRequest request;
-		request.set_sub(identity.sub());
-
-		auto reactor = service.LookupIdentities(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(response.data().size(), 1);
-		EXPECT_EQ(response.data()[0].id(), identity.id());
 	}
 }
 

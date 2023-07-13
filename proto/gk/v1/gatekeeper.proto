@@ -88,12 +88,6 @@ service Gatekeeper {
 		};
 	}
 
-	rpc LookupIdentities(LookupIdentitiesRequest) returns (LookupIdentitiesResponse) {
-		option (google.api.http) = {
-			get : "/v1/identities"
-		};
-	}
-
 	rpc RetrieveIdentity(RetrieveIdentityRequest) returns (Identity) {
 		option (google.api.http) = {
 			get : "/v1/identities/{id}"
@@ -283,17 +277,11 @@ message CreateIdentityRequest {
 	optional google.protobuf.Struct attrs = 3;
 }
 
-message LookupIdentitiesRequest {
-	optional string sub = 1;
-}
-
-message LookupIdentitiesResponse {
-	repeated Identity data = 1;
-	Meta              meta = 2;
-}
-
 message RetrieveIdentityRequest {
-	string id = 1;
+	oneof identity {
+		string id  = 1;
+		string sub = 2;
+	}
 }
 
 message UpdateIdentityRequest {
