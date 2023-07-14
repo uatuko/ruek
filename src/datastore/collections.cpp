@@ -1,5 +1,6 @@
 #include "collections.h"
 
+#include <iostream>
 #include <utility>
 
 #include <xid/xid.h>
@@ -46,6 +47,31 @@ void Collection::add(const member_t &mid) const {
 	}
 }
 
+const AccessPolicies Collection::accessPolicies() const {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			name,
+			rules
+		from
+			"access-policies_collections"
+		inner join "access-policies" on _id = policy_id
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, _data.id);
+
+	AccessPolicies policies;
+	for (const auto &r : res) {
+		auto policy = AccessPolicy(r);
+		policies.push_back(policy);
+	}
+
+	return policies;
+}
+
 const Collection::members_t Collection::members() const {
 	std::string_view qry = R"(
 		select
@@ -64,6 +90,30 @@ const Collection::members_t Collection::members() const {
 	}
 
 	return members;
+}
+
+const RbacPolicies Collection::rbacPolicies() const {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			name
+		from
+			"rbac-policies_collections"
+		inner join "rbac-policies" on _id = policy_id
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, _data.id);
+
+	RbacPolicies policies;
+	for (const auto &r : res) {
+		auto policy = RbacPolicy(r);
+		policies.push_back(policy);
+	}
+
+	return policies;
 }
 
 void Collection::remove(const member_t &mid) const {

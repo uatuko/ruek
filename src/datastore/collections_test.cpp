@@ -2,6 +2,7 @@
 
 #include "err/errors.h"
 
+#include "access-policies.h"
 #include "collections.h"
 #include "identities.h"
 #include "testing.h"
@@ -22,6 +23,21 @@ protected:
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
+
+TEST_F(CollectionsTest, accessPolicies) {
+	const datastore::Collection   collection({
+		  .name = "name:CollectionsTest.accessPolicies",
+    });
+	const datastore::AccessPolicy access({
+		.name = "access_policy_id:CollectionsTest.accessPolicies",
+	});
+
+	EXPECT_NO_THROW(collection.store());
+	EXPECT_NO_THROW(access.store());
+	EXPECT_NO_THROW(access.addCollection(collection.id()));
+
+	EXPECT_EQ(1, collection.accessPolicies().size());
+}
 
 TEST_F(CollectionsTest, members) {
 	// Success: add member
@@ -167,6 +183,21 @@ TEST_F(CollectionsTest, members) {
 
 		EXPECT_NO_THROW(collection.remove("invalid-member"));
 	}
+}
+
+TEST_F(CollectionsTest, rbacPolicies) {
+	const datastore::Collection collection({
+		.name = "name:CollectionsTest.rbacPolicies",
+	});
+	const datastore::RbacPolicy rbac({
+		.name = "rbac_policy_id:CollectionsTest.rbacPolicies",
+	});
+
+	EXPECT_NO_THROW(collection.store());
+	EXPECT_NO_THROW(rbac.store());
+	EXPECT_NO_THROW(rbac.addCollection(collection.id()));
+
+	EXPECT_EQ(1, collection.rbacPolicies().size());
 }
 
 TEST_F(CollectionsTest, retrieve) {
