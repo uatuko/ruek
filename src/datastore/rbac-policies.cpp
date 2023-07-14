@@ -271,4 +271,28 @@ RbacPolicy RetrieveRbacPolicy(const std::string &id) {
 
 	return RbacPolicy(res[0]);
 }
+
+RbacPolicies RetrieveRbacPoliciesByCollection(const std::string &cid) {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			name
+		from
+			"rbac-policies_collections"
+		inner join "rbac-policies" on _id = policy_id
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, cid);
+
+	RbacPolicies policies;
+	for (const auto &r : res) {
+		auto policy = RbacPolicy(r);
+		policies.push_back(policy);
+	}
+
+	return policies;
+}
 } // namespace datastore

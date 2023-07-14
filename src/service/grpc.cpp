@@ -203,7 +203,7 @@ grpc::ServerUnaryReactor *Grpc::AddCollectionMember(
 	collection.add(request->identity_id());
 
 	// Update access policies
-	auto access = collection.accessPolicies();
+	auto access = datastore::RetrieveAccessPoliciesByCollection(collection.id());
 	for (const auto &policy : access) {
 		for (const auto &rule : policy.rules()) {
 			datastore::AccessPolicy::Cache cache({
@@ -217,7 +217,7 @@ grpc::ServerUnaryReactor *Grpc::AddCollectionMember(
 	}
 
 	// Update rbac rules
-	auto rbac = collection.rbacPolicies();
+	auto rbac = datastore::RetrieveRbacPoliciesByCollection(collection.id());
 	for (const auto &policy : rbac) {
 		for (const auto &rule : policy.rules()) {
 			datastore::RbacPolicy::Cache cache({

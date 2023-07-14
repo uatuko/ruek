@@ -4,9 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "access-policies.h"
 #include "pg.h"
-#include "rbac-policies.h"
 
 namespace datastore {
 class Collection {
@@ -33,11 +31,9 @@ public:
 	void               name(const std::string &name) noexcept { _data.name = name; }
 	void               name(std::string &&name) noexcept { _data.name = std::move(name); }
 
-	const AccessPolicies accessPolicies() const;
-	void                 add(const member_t &id) const;
-	const members_t      members() const;
-	const RbacPolicies   rbacPolicies() const;
-	void                 remove(const member_t &id) const;
+	void            add(const member_t &id) const;
+	const members_t members() const;
+	void            remove(const member_t &id) const;
 
 	void store() const;
 
