@@ -1,6 +1,5 @@
 #include "collections.h"
 
-#include <iostream>
 #include <utility>
 
 #include <xid/xid.h>
