@@ -346,8 +346,13 @@ grpc::ServerUnaryReactor *Grpc::RetrieveIdentity(
 	auto *reactor = context->DefaultReactor();
 
 	try {
-		auto identity = datastore::RetrieveIdentity(request->id());
-		map(identity, response);
+		if (request->has_sub()) {
+			auto identity = datastore::RetrieveIdentityBySub(request->sub());
+			map(identity, response);
+		} else {
+			auto identity = datastore::RetrieveIdentity(request->id());
+			map(identity, response);
+		}
 	} catch (const err::DatastoreIdentityNotFound &) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Document not found"));
 		return reactor;
@@ -356,18 +361,6 @@ grpc::ServerUnaryReactor *Grpc::RetrieveIdentity(
 		return reactor;
 	}
 
-	reactor->Finish(grpc::Status::OK);
-	return reactor;
-}
-
-grpc::ServerUnaryReactor *Grpc::LookupIdentities(
-	grpc::CallbackServerContext *context, const gk::v1::LookupIdentitiesRequest *request,
-	gk::v1::LookupIdentitiesResponse *response) {
-	auto *reactor = context->DefaultReactor();
-
-	const auto identities = datastore::LookupIdentities(request->sub());
-
-	map(identities, response);
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
