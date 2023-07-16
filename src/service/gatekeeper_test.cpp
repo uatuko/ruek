@@ -8,9 +8,9 @@
 #include "datastore/roles.h"
 #include "datastore/testing.h"
 
-#include "grpc.h"
+#include "gatekeeper.h"
 
-class GrpcTest : public ::testing::Test {
+class GatekeeperTest : public ::testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		datastore::testing::setup();
@@ -34,8 +34,8 @@ protected:
 };
 
 // Access control checks
-TEST_F(GrpcTest, CheckAccess) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, CheckAccess) {
+	service::Gatekeeper service;
 
 	// Success: returns policy when found
 	{
@@ -44,16 +44,16 @@ TEST_F(GrpcTest, CheckAccess) {
 		gk::v1::CheckAccessResponse           response;
 
 		const datastore::Identity identity({
-			.sub = "sub:GrpcTest.CheckAccess",
+			.sub = "sub:GatekeeperTest.CheckAccess",
 		});
 		ASSERT_NO_THROW(identity.store());
 
 		const datastore::AccessPolicy policy({
-			.name = "name:GrpcTest.CheckAccess",
+			.name = "name:GatekeeperTest.CheckAccess",
 		});
 		ASSERT_NO_THROW(policy.store());
 
-		const std::string resource = "resource/GrpcTest.CheckAccess";
+		const std::string resource = "resource/GatekeeperTest.CheckAccess";
 
 		const datastore::AccessPolicy::Cache cache({
 			.identity = identity.id(),
@@ -74,8 +74,8 @@ TEST_F(GrpcTest, CheckAccess) {
 	}
 }
 
-TEST_F(GrpcTest, CheckRbac) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, CheckRbac) {
+	service::Gatekeeper service;
 
 	// Success: returns policy when found
 	{
@@ -84,15 +84,15 @@ TEST_F(GrpcTest, CheckRbac) {
 		gk::v1::CheckRbacResponse             response;
 
 		// create identity
-		const datastore::Identity identity({.sub = "sub:GrpcTest.CheckRbac"});
+		const datastore::Identity identity({.sub = "sub:GatekeeperTest.CheckRbac"});
 		ASSERT_NO_THROW(identity.store());
 
 		datastore::RbacPolicy policy({
-			.name = "name::GrpcTest.CheckRbac",
+			.name = "name::GatekeeperTest.CheckRbac",
 		});
 		ASSERT_NO_THROW(policy.store());
 
-		const auto permission = "permission:GrpcTest.CheckRbac";
+		const auto permission = "permission:GatekeeperTest.CheckRbac";
 
 		const datastore::RbacPolicy::Cache cache({
 			.identity   = identity.id(),
@@ -115,8 +115,8 @@ TEST_F(GrpcTest, CheckRbac) {
 }
 
 // Access Policies
-TEST_F(GrpcTest, CreateAccessPolicy) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, CreateAccessPolicy) {
+	service::Gatekeeper service;
 
 	// Success: create access policy
 	{
@@ -125,7 +125,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
-		request.set_name("name:GrpcTest.CreateAccessPolicy");
+		request.set_name("name:GatekeeperTest.CreateAccessPolicy");
 
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -142,8 +142,8 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
-		request.set_id("id:GrpcTest.CreateAccessPolicy");
-		request.set_name("name:GrpcTest.CreateAccessPolicy");
+		request.set_id("id:GatekeeperTest.CreateAccessPolicy");
+		request.set_name("name:GatekeeperTest.CreateAccessPolicy");
 
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -155,7 +155,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 
 	// Error: duplicate `id`
 	{
-		const datastore::AccessPolicy policy({.name = "name:GrpcTest.CreateAccessPolicy"});
+		const datastore::AccessPolicy policy({.name = "name:GatekeeperTest.CreateAccessPolicy"});
 		EXPECT_NO_THROW(policy.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -164,7 +164,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 
 		gk::v1::CreateAccessPolicyRequest request;
 		request.set_id(policy.id());
-		request.set_name("name:GrpcTest.CreateAccessPolicy-duplicate");
+		request.set_name("name:GatekeeperTest.CreateAccessPolicy-duplicate");
 
 		auto reactor = service.CreateAccessPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -175,7 +175,7 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 	// Success: create access policy with an identity and resource
 	{
 		const datastore::Identity identity({
-			.sub = "principal_sub:GrpcTest.CreateAccessPolicy",
+			.sub = "principal_sub:GatekeeperTest.CreateAccessPolicy",
 		});
 		ASSERT_NO_THROW(identity.store());
 
@@ -184,11 +184,11 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
-		request.set_name("name:GrpcTest.CreateAccessPolicy");
+		request.set_name("name:GatekeeperTest.CreateAccessPolicy");
 		request.add_identity_ids(identity.id());
 
 		auto rule = request.add_rules();
-		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
+		rule->set_resource("resource_id:GatekeeperTest.CreateAccessPolicy");
 
 		// expect no access before request
 		{
@@ -219,12 +219,12 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		gk::v1::AccessPolicy                  response;
 
 		const datastore::Identity   identity({
-			  .id  = "identity_id:GrpcTest.CreateAccessPolicy",
-			  .sub = "identity_sub:GrpcTest.CreateAccessPolicy",
+			  .id  = "identity_id:GatekeeperTest.CreateAccessPolicy",
+			  .sub = "identity_sub:GatekeeperTest.CreateAccessPolicy",
         });
 		const datastore::Collection collection({
-			.id   = "collection_id:GrpcTest.CreateAccessPolicy",
-			.name = "collection_name:GrpcTest.CreateAccessPolicy",
+			.id   = "collection_id:GatekeeperTest.CreateAccessPolicy",
+			.name = "collection_name:GatekeeperTest.CreateAccessPolicy",
 		});
 
 		try {
@@ -236,11 +236,11 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 		}
 
 		gk::v1::CreateAccessPolicyRequest request;
-		request.set_name("name:GrpcTest.CreateAccessPolicy");
+		request.set_name("name:GatekeeperTest.CreateAccessPolicy");
 		request.add_collection_ids(collection.id());
 
 		auto rule = request.add_rules();
-		rule->set_resource("resource_id:GrpcTest.CreateAccessPolicy");
+		rule->set_resource("resource_id:GatekeeperTest.CreateAccessPolicy");
 
 		// expect no access before request
 		{
@@ -267,8 +267,8 @@ TEST_F(GrpcTest, CreateAccessPolicy) {
 }
 
 // Collections
-TEST_F(GrpcTest, CreateCollection) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, CreateCollection) {
+	service::Gatekeeper service;
 
 	// Success: create collection
 	{
@@ -277,7 +277,7 @@ TEST_F(GrpcTest, CreateCollection) {
 		gk::v1::Collection                    response;
 
 		gk::v1::CreateCollectionRequest request;
-		request.set_name("name:GrpcTest.CreateCollection");
+		request.set_name("name:GatekeeperTest.CreateCollection");
 
 		auto reactor = service.CreateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -294,8 +294,8 @@ TEST_F(GrpcTest, CreateCollection) {
 		gk::v1::Collection                    response;
 
 		gk::v1::CreateCollectionRequest request;
-		request.set_id("id:GrpcTest.CreateCollection");
-		request.set_name("name:GrpcTest.CreateCollection");
+		request.set_id("id:GatekeeperTest.CreateCollection");
+		request.set_name("name:GatekeeperTest.CreateCollection");
 
 		auto reactor = service.CreateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -307,7 +307,7 @@ TEST_F(GrpcTest, CreateCollection) {
 
 	// Error: duplicate `id`
 	{
-		const datastore::Collection collection({.name = "name:GrpcTest.CreateCollection"});
+		const datastore::Collection collection({.name = "name:GatekeeperTest.CreateCollection"});
 		EXPECT_NO_THROW(collection.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -316,7 +316,7 @@ TEST_F(GrpcTest, CreateCollection) {
 
 		gk::v1::CreateCollectionRequest request;
 		request.set_id(collection.id());
-		request.set_name("name:GrpcTest.CreateCollection-duplicate");
+		request.set_name("name:GatekeeperTest.CreateCollection-duplicate");
 
 		auto reactor = service.CreateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -325,13 +325,14 @@ TEST_F(GrpcTest, CreateCollection) {
 	}
 }
 
-TEST_F(GrpcTest, RetrieveCollection) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, RetrieveCollection) {
+	service::Gatekeeper service;
 
 	// Success: retrieve collection by id
 	{
 		const datastore::Collection collection(
-			{.id = "id:GrpcTest.RetrieveCollection", .name = "name:GrpcTest.RetrieveCollection"});
+			{.id   = "id:GatekeeperTest.RetrieveCollection",
+			 .name = "name:GatekeeperTest.RetrieveCollection"});
 		EXPECT_NO_THROW(collection.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -356,7 +357,7 @@ TEST_F(GrpcTest, RetrieveCollection) {
 		gk::v1::Collection                    response;
 
 		gk::v1::RetrieveCollectionRequest request;
-		request.set_id("id:GrpcTest.RetrieveCollection-not-found");
+		request.set_id("id:GatekeeperTest.RetrieveCollection-not-found");
 
 		auto reactor = service.RetrieveCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -365,13 +366,14 @@ TEST_F(GrpcTest, RetrieveCollection) {
 	}
 }
 
-TEST_F(GrpcTest, UpdateCollection) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, UpdateCollection) {
+	service::Gatekeeper service;
 
 	// Success: update collection name
 	{
 		const datastore::Collection collection(
-			{.id = "id:GrpcTest.UpdateCollection-name", .name = "name:GrpcTest.UpdateCollection"});
+			{.id   = "id:GatekeeperTest.UpdateCollection-name",
+			 .name = "name:GatekeeperTest.UpdateCollection"});
 		EXPECT_NO_THROW(collection.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -380,7 +382,7 @@ TEST_F(GrpcTest, UpdateCollection) {
 
 		gk::v1::UpdateCollectionRequest request;
 		request.set_id(collection.id());
-		request.set_name("name:GrpcTest.UpdateCollection-new");
+		request.set_name("name:GatekeeperTest.UpdateCollection-new");
 
 		auto reactor = service.UpdateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -402,7 +404,7 @@ TEST_F(GrpcTest, UpdateCollection) {
 		gk::v1::Collection                    response;
 
 		gk::v1::UpdateCollectionRequest request;
-		request.set_id("id:GrpcTest.UpdateCollection-no-updates");
+		request.set_id("id:GatekeeperTest.UpdateCollection-no-updates");
 
 		auto reactor = service.UpdateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -417,8 +419,8 @@ TEST_F(GrpcTest, UpdateCollection) {
 		gk::v1::Collection                    response;
 
 		gk::v1::UpdateCollectionRequest request;
-		request.set_id("id:GrpcTest.UpdateCollection-not-found");
-		request.set_name("name:GrpcTest.UpdateCollection-not-found");
+		request.set_id("id:GatekeeperTest.UpdateCollection-not-found");
+		request.set_name("name:GatekeeperTest.UpdateCollection-not-found");
 
 		auto reactor = service.UpdateCollection(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -428,15 +430,15 @@ TEST_F(GrpcTest, UpdateCollection) {
 }
 
 // Collections - members
-TEST_F(GrpcTest, AddCollectionMember) {
-	datastore::Collection collection({.name = "name:GrpcTest.AddCollectionMember"});
+TEST_F(GatekeeperTest, AddCollectionMember) {
+	datastore::Collection collection({.name = "name:GatekeeperTest.AddCollectionMember"});
 	ASSERT_NO_THROW(collection.store());
 
-	service::Grpc service;
+	service::Gatekeeper service;
 
 	// Success: add collection member
 	{
-		datastore::Identity identity({.sub = "sub:GrpcTest.AddCollectionMember"});
+		datastore::Identity identity({.sub = "sub:GatekeeperTest.AddCollectionMember"});
 		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -470,17 +472,17 @@ TEST_F(GrpcTest, AddCollectionMember) {
 	}
 }
 
-TEST_F(GrpcTest, ListCollectionMembers) {
-	datastore::Collection collection({.name = "name:GrpcTest.ListCollectionMembers"});
+TEST_F(GatekeeperTest, ListCollectionMembers) {
+	datastore::Collection collection({.name = "name:GatekeeperTest.ListCollectionMembers"});
 	ASSERT_NO_THROW(collection.store());
 
-	service::Grpc service;
+	service::Gatekeeper service;
 
 	// Success: list collection members
 	{
 		std::array<datastore::Identity, 2> identities = {
-			datastore::Identity({.sub = "sub:GrpcTest.ListCollectionMembers-1"}),
-			datastore::Identity({.sub = "sub:GrpcTest.ListCollectionMembers-2"}),
+			datastore::Identity({.sub = "sub:GatekeeperTest.ListCollectionMembers-1"}),
+			datastore::Identity({.sub = "sub:GatekeeperTest.ListCollectionMembers-2"}),
 		};
 
 		for (const auto &idn : identities) {
@@ -508,15 +510,15 @@ TEST_F(GrpcTest, ListCollectionMembers) {
 	}
 }
 
-TEST_F(GrpcTest, RemoveCollectionMember) {
-	datastore::Collection collection({.name = "name:GrpcTest.RemoveCollectionMember"});
+TEST_F(GatekeeperTest, RemoveCollectionMember) {
+	datastore::Collection collection({.name = "name:GatekeeperTest.RemoveCollectionMember"});
 	ASSERT_NO_THROW(collection.store());
 
-	service::Grpc service;
+	service::Gatekeeper service;
 
 	// Success: remove collection member
 	{
-		datastore::Identity identity({.sub = "sub:GrpcTest.RemoveCollectionMember"});
+		datastore::Identity identity({.sub = "sub:GatekeeperTest.RemoveCollectionMember"});
 		ASSERT_NO_THROW(identity.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
@@ -552,24 +554,24 @@ TEST_F(GrpcTest, RemoveCollectionMember) {
 }
 
 // Events
-TEST_F(GrpcTest, ConsumeEvent_cache_rebuild) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, ConsumeEvent_cache_rebuild) {
+	service::Gatekeeper service;
 
 	// Success: request/cache.rebuild:access
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+			.sub = "sub:GatekeeperTest.ConsumeEvent(request/cache.rebuild:access)",
 		});
 		ASSERT_NO_THROW(identity.store());
 
 		const datastore::Collection collection({
-			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:access)",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
 		const datastore::AccessPolicy policy({
-			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:access)",
+			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:access)",
 			.rules =
 				{
 					{
@@ -634,27 +636,27 @@ TEST_F(GrpcTest, ConsumeEvent_cache_rebuild) {
 	// Success: request/cache.rebuild:rbac
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.sub = "sub:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(identity.store());
 
 		const datastore::Collection collection({
-			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
 		const datastore::Role role({
-			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
 			.permissions =
 				{
-					{"permissions[0]:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)"},
+					{"permissions[0]:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)"},
 				},
 		});
 		ASSERT_NO_THROW(role.store());
 
 		const datastore::RbacPolicy policy({
-			.name = "name:GrpcTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(policy.store());
 
@@ -718,8 +720,8 @@ TEST_F(GrpcTest, ConsumeEvent_cache_rebuild) {
 }
 
 // Identities
-TEST_F(GrpcTest, CreateIdentity) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, CreateIdentity) {
+	service::Gatekeeper service;
 
 	// Success: create identity
 	{
@@ -728,7 +730,7 @@ TEST_F(GrpcTest, CreateIdentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::CreateIdentityRequest request;
-		request.set_sub("sub:GrpcTest.CreateIdentity");
+		request.set_sub("sub:GatekeeperTest.CreateIdentity");
 
 		auto reactor = service.CreateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -746,8 +748,8 @@ TEST_F(GrpcTest, CreateIdentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::CreateIdentityRequest request;
-		request.set_id("id:GrpcTest.CreateIdentity-with_id");
-		request.set_sub("sub:GrpcTest.CreateIdentity-with_id");
+		request.set_id("id:GatekeeperTest.CreateIdentity-with_id");
+		request.set_sub("sub:GatekeeperTest.CreateIdentity-with_id");
 
 		auto reactor = service.CreateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -765,7 +767,7 @@ TEST_F(GrpcTest, CreateIdentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::CreateIdentityRequest request;
-		request.set_sub("sub:GrpcTest.CreateIdentity-with_attrs");
+		request.set_sub("sub:GatekeeperTest.CreateIdentity-with_attrs");
 
 		const std::string attrs(R"({"foo":"bar"})");
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
@@ -785,7 +787,7 @@ TEST_F(GrpcTest, CreateIdentity) {
 	// Error: duplicate `id`
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GrpcTest.CreateIdentity-duplicate_id",
+			.sub = "sub:GatekeeperTest.CreateIdentity-duplicate_id",
 		});
 
 		try {
@@ -800,7 +802,7 @@ TEST_F(GrpcTest, CreateIdentity) {
 
 		gk::v1::CreateIdentityRequest request;
 		request.set_id(identity.id());
-		request.set_sub("sub:GrpcTest.CreateIdentity-duplicate_id");
+		request.set_sub("sub:GatekeeperTest.CreateIdentity-duplicate_id");
 
 		auto reactor = service.CreateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -811,7 +813,7 @@ TEST_F(GrpcTest, CreateIdentity) {
 	// Error: duplicate `sub`
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GrpcTest.CreateIdentity-duplicate",
+			.sub = "sub:GatekeeperTest.CreateIdentity-duplicate",
 		});
 		EXPECT_NO_THROW(identity.store());
 
@@ -829,14 +831,14 @@ TEST_F(GrpcTest, CreateIdentity) {
 	}
 }
 
-TEST_F(GrpcTest, RetrieveIdentity) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, RetrieveIdentity) {
+	service::Gatekeeper service;
 
 	// Success: retrieve identity by id
 	{
 		const datastore::Identity identity({
-			.id  = "id:GrpcTest.RetrieveIdentity",
-			.sub = "sub:GrpcTest.RetrieveIdentity",
+			.id  = "id:GatekeeperTest.RetrieveIdentity",
+			.sub = "sub:GatekeeperTest.RetrieveIdentity",
 		});
 		ASSERT_NO_THROW(identity.store());
 
@@ -859,8 +861,8 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 	// Success: retrieve identity by sub
 	{
 		const datastore::Identity identity({
-			.id  = "id:GrpcTest.RetrieveIdentity-by_sub",
-			.sub = "sub:GrpcTest.RetrieveIdentity-by_sub",
+			.id  = "id:GatekeeperTest.RetrieveIdentity-by_sub",
+			.sub = "sub:GatekeeperTest.RetrieveIdentity-by_sub",
 		});
 		ASSERT_NO_THROW(identity.store());
 
@@ -884,7 +886,7 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 	{
 		const datastore::Identity identity({
 			.attrs = R"({"flag":true})",
-			.sub   = "sub:GrpcTest.RetrieveIdentity-with_attrs",
+			.sub   = "sub:GatekeeperTest.RetrieveIdentity-with_attrs",
 		});
 		ASSERT_NO_THROW(identity.store());
 
@@ -915,7 +917,7 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::RetrieveIdentityRequest request;
-		request.set_id("id:GrpcTest.RetrieveIdentity-not_found");
+		request.set_id("id:GatekeeperTest.RetrieveIdentity-not_found");
 
 		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -924,13 +926,14 @@ TEST_F(GrpcTest, RetrieveIdentity) {
 	}
 }
 
-TEST_F(GrpcTest, UpdateIndentity) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, UpdateIndentity) {
+	service::Gatekeeper service;
 
 	// Success: update identity sub
 	{
 		const datastore::Identity identity(
-			{.id = "id:GrpcTest.UpdateIdentity-sub", .sub = "sub:GrpcTest.UpdateIdentity-sub"});
+			{.id  = "id:GatekeeperTest.UpdateIdentity-sub",
+			 .sub = "sub:GatekeeperTest.UpdateIdentity-sub"});
 		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -939,7 +942,7 @@ TEST_F(GrpcTest, UpdateIndentity) {
 
 		gk::v1::UpdateIdentityRequest request;
 		request.set_id(identity.id());
-		request.set_sub("sub:GrpcTest.UpdateIdentity-new");
+		request.set_sub("sub:GatekeeperTest.UpdateIdentity-new");
 
 		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -958,7 +961,7 @@ TEST_F(GrpcTest, UpdateIndentity) {
 
 	// Success: update identity attrs
 	{
-		const datastore::Identity identity({.sub = "sub:GrpcTest.UpdateIdentity-attrs"});
+		const datastore::Identity identity({.sub = "sub:GatekeeperTest.UpdateIdentity-attrs"});
 		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -1023,7 +1026,7 @@ TEST_F(GrpcTest, UpdateIndentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::UpdateIdentityRequest request;
-		request.set_id("id:GrpcTest.UpdateIdentity-no-updates");
+		request.set_id("id:GatekeeperTest.UpdateIdentity-no-updates");
 
 		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -1038,8 +1041,8 @@ TEST_F(GrpcTest, UpdateIndentity) {
 		gk::v1::Identity                      response;
 
 		gk::v1::UpdateIdentityRequest request;
-		request.set_id("id:GrpcTest.UpdateIdentity-not-found");
-		request.set_sub("name:GrpcTest.UpdateIdentity-not-found");
+		request.set_id("id:GatekeeperTest.UpdateIdentity-not-found");
+		request.set_sub("name:GatekeeperTest.UpdateIdentity-not-found");
 
 		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -1049,8 +1052,8 @@ TEST_F(GrpcTest, UpdateIndentity) {
 }
 
 // RBAC
-TEST_F(GrpcTest, CreateRbacPolicy) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, CreateRbacPolicy) {
+	service::Gatekeeper service;
 	// Success: create rbac policy with `id`
 	{
 		grpc::CallbackServerContext           ctx;
@@ -1058,8 +1061,8 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		gk::v1::RbacPolicy                    response;
 
 		gk::v1::CreateRbacPolicyRequest request;
-		request.set_id("id:GrpcTest.CreateRbacPolicy-id");
-		request.set_name("name:GrpcTest.CreateRbacPolicy-id");
+		request.set_id("id:GatekeeperTest.CreateRbacPolicy-id");
+		request.set_name("name:GatekeeperTest.CreateRbacPolicy-id");
 
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -1071,7 +1074,8 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 
 	// Error: duplicate `id`
 	{
-		const datastore::RbacPolicy policy({.name = "name:GrpcTest.CreateRbacPolicy-duplicate"});
+		const datastore::RbacPolicy policy(
+			{.name = "name:GatekeeperTest.CreateRbacPolicy-duplicate"});
 		EXPECT_NO_THROW(policy.store());
 
 		grpc::CallbackServerContext           ctx;
@@ -1080,7 +1084,7 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 
 		gk::v1::CreateRbacPolicyRequest request;
 		request.set_id(policy.id());
-		request.set_name("name:GrpcTest.CreateRbacPolicy-duplicate");
+		request.set_name("name:GatekeeperTest.CreateRbacPolicy-duplicate");
 
 		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -1090,11 +1094,11 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 
 	// Success: create rbac policy
 	{
-		const datastore::Identity identity({.sub = "sub:GrpcTest.CreateRbacPolicy"});
+		const datastore::Identity identity({.sub = "sub:GatekeeperTest.CreateRbacPolicy"});
 		ASSERT_NO_THROW(identity.store());
-		auto                  permission = "permissions[0]:GrpcTest.CreateRbacRbacPolicy";
+		auto                  permission = "permissions[0]:GatekeeperTest.CreateRbacRbacPolicy";
 		const datastore::Role role({
-			.name = "name:GrpcTest.CreateRbacPolicy",
+			.name = "name:GatekeeperTest.CreateRbacPolicy",
 			.permissions =
 				{
 					permission,
@@ -1107,7 +1111,7 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		gk::v1::RbacPolicy                    response;
 
 		gk::v1::CreateRbacPolicyRequest request;
-		request.set_name("name:GrpcTest.CreateRbacPolicy");
+		request.set_name("name:GatekeeperTest.CreateRbacPolicy");
 		request.add_identity_ids(identity.id());
 
 		auto rule = request.add_rules();
@@ -1144,18 +1148,18 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		gk::v1::RbacPolicy                    response;
 
 		const datastore::Identity identity({
-			.sub = "sub:GrpcTest.CreateRbacPolicy-collection",
+			.sub = "sub:GatekeeperTest.CreateRbacPolicy-collection",
 		});
 		ASSERT_NO_THROW(identity.store());
 		const datastore::Collection collection({
-			.name = "name:GrpcTest.CreateRbacPolicy-collection",
+			.name = "name:GatekeeperTest.CreateRbacPolicy-collection",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
-		auto                  permission = "permissions[0]:GrpcTest.CreateRbacPolicy-collection";
+		auto permission = "permissions[0]:GatekeeperTest.CreateRbacPolicy-collection";
 		const datastore::Role role({
-			.name = "name:GrpcTest.CreateRbacPolicy",
+			.name = "name:GatekeeperTest.CreateRbacPolicy",
 			.permissions =
 				{
 					permission,
@@ -1164,7 +1168,7 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 		ASSERT_NO_THROW(role.store());
 
 		gk::v1::CreateRbacPolicyRequest request;
-		request.set_name("name:GrpcTest.CreateRbacPolicy");
+		request.set_name("name:GatekeeperTest.CreateRbacPolicy");
 		request.add_collection_ids(collection.id());
 
 		auto rule = request.add_rules();
@@ -1198,8 +1202,8 @@ TEST_F(GrpcTest, CreateRbacPolicy) {
 }
 
 // Roles
-TEST_F(GrpcTest, CreateRole) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, CreateRole) {
+	service::Gatekeeper service;
 
 	// Success: create role
 	{
@@ -1208,8 +1212,8 @@ TEST_F(GrpcTest, CreateRole) {
 		gk::v1::Role                          response;
 
 		gk::v1::CreateRoleRequest request;
-		request.set_name("name:GrpcTest.CreateRole");
-		request.add_permissions("permissions[0]:GrpcTest.CreateRole");
+		request.set_name("name:GatekeeperTest.CreateRole");
+		request.add_permissions("permissions[0]:GatekeeperTest.CreateRole");
 
 		auto reactor = service.CreateRole(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -1224,18 +1228,18 @@ TEST_F(GrpcTest, CreateRole) {
 	}
 }
 
-TEST_F(GrpcTest, RetrieveRole) {
-	service::Grpc service;
+TEST_F(GatekeeperTest, RetrieveRole) {
+	service::Gatekeeper service;
 
 	// Success: retrieve role
 	{
 		const datastore::Role role({
-			.id   = "id:GrpcTest.RetrieveRole",
-			.name = "name:GrpcTest.RetrieveRole",
+			.id   = "id:GatekeeperTest.RetrieveRole",
+			.name = "name:GatekeeperTest.RetrieveRole",
 			.permissions =
 				{
-					{"permissions[0]:GrpcTest.RetrieveRole"},
-					{"permissions[1]:GrpcTest.RetrieveRole"},
+					{"permissions[0]:GatekeeperTest.RetrieveRole"},
+					{"permissions[1]:GatekeeperTest.RetrieveRole"},
 				},
 		});
 		ASSERT_NO_THROW(role.store());

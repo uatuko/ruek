@@ -1,4 +1,4 @@
-#include "grpc.h"
+#include "gatekeeper.h"
 
 #include "err/errors.h"
 
@@ -6,7 +6,7 @@
 
 namespace service {
 // Access Policies
-grpc::ServerUnaryReactor *Grpc::CheckAccess(
+grpc::ServerUnaryReactor *Gatekeeper::CheckAccess(
 	grpc::CallbackServerContext *context, const gk::v1::CheckAccessRequest *request,
 	gk::v1::CheckAccessResponse *response) {
 	auto *reactor = context->DefaultReactor();
@@ -30,7 +30,7 @@ grpc::ServerUnaryReactor *Grpc::CheckAccess(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::CheckRbac(
+grpc::ServerUnaryReactor *Gatekeeper::CheckRbac(
 	grpc::CallbackServerContext *context, const gk::v1::CheckRbacRequest *request,
 	gk::v1::CheckRbacResponse *response) {
 	auto *reactor = context->DefaultReactor();
@@ -54,7 +54,7 @@ grpc::ServerUnaryReactor *Grpc::CheckRbac(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
+grpc::ServerUnaryReactor *Gatekeeper::CreateAccessPolicy(
 	grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
 	gk::v1::AccessPolicy *response) {
 	auto *reactor = context->DefaultReactor();
@@ -96,7 +96,7 @@ grpc::ServerUnaryReactor *Grpc::CreateAccessPolicy(
 }
 
 // Collections
-grpc::ServerUnaryReactor *Grpc::CreateCollection(
+grpc::ServerUnaryReactor *Gatekeeper::CreateCollection(
 	grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
@@ -131,7 +131,7 @@ grpc::ServerUnaryReactor *Grpc::CreateCollection(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::RetrieveCollection(
+grpc::ServerUnaryReactor *Gatekeeper::RetrieveCollection(
 	grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request,
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
@@ -151,7 +151,7 @@ grpc::ServerUnaryReactor *Grpc::RetrieveCollection(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::UpdateCollection(
+grpc::ServerUnaryReactor *Gatekeeper::UpdateCollection(
 	grpc::CallbackServerContext *context, const gk::v1::UpdateCollectionRequest *request,
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
@@ -193,7 +193,7 @@ grpc::ServerUnaryReactor *Grpc::UpdateCollection(
 }
 
 // Collections - members
-grpc::ServerUnaryReactor *Grpc::AddCollectionMember(
+grpc::ServerUnaryReactor *Gatekeeper::AddCollectionMember(
 	grpc::CallbackServerContext *context, const gk::v1::AddCollectionMemberRequest *request,
 	gk::v1::AddCollectionMemberResponse *response) {
 	auto *reactor = context->DefaultReactor();
@@ -234,7 +234,7 @@ grpc::ServerUnaryReactor *Grpc::AddCollectionMember(
 	return reactor;
 };
 
-grpc::ServerUnaryReactor *Grpc::ListCollectionMembers(
+grpc::ServerUnaryReactor *Gatekeeper::ListCollectionMembers(
 	grpc::CallbackServerContext *context, const gk::v1::ListCollectionMembersRequest *request,
 	gk::v1::ListCollectionMembersResponse *response) {
 	auto *reactor = context->DefaultReactor();
@@ -255,7 +255,7 @@ grpc::ServerUnaryReactor *Grpc::ListCollectionMembers(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::RemoveCollectionMember(
+grpc::ServerUnaryReactor *Gatekeeper::RemoveCollectionMember(
 	grpc::CallbackServerContext *context, const gk::v1::RemoveCollectionMemberRequest *request,
 	gk::v1::RemoveCollectionMemberResponse *response) {
 	auto *reactor = context->DefaultReactor();
@@ -269,7 +269,7 @@ grpc::ServerUnaryReactor *Grpc::RemoveCollectionMember(
 }
 
 // Events
-grpc::ServerUnaryReactor *Grpc::ConsumeEvent(
+grpc::ServerUnaryReactor *Gatekeeper::ConsumeEvent(
 	grpc::CallbackServerContext *context, const gk::v1::Event *request,
 	gk::v1::ConsumeEventResponse *response) {
 	auto *reactor = context->DefaultReactor();
@@ -330,7 +330,7 @@ grpc::ServerUnaryReactor *Grpc::ConsumeEvent(
 }
 
 // Identities
-grpc::ServerUnaryReactor *Grpc::CreateIdentity(
+grpc::ServerUnaryReactor *Gatekeeper::CreateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
@@ -368,7 +368,7 @@ grpc::ServerUnaryReactor *Grpc::CreateIdentity(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::RetrieveIdentity(
+grpc::ServerUnaryReactor *Gatekeeper::RetrieveIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::RetrieveIdentityRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
@@ -393,7 +393,7 @@ grpc::ServerUnaryReactor *Grpc::RetrieveIdentity(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::UpdateIdentity(
+grpc::ServerUnaryReactor *Gatekeeper::UpdateIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::UpdateIdentityRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
@@ -441,7 +441,7 @@ grpc::ServerUnaryReactor *Grpc::UpdateIdentity(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
+grpc::ServerUnaryReactor *Gatekeeper::CreateRbacPolicy(
 	grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
 	gk::v1::RbacPolicy *response) {
 	auto *reactor = context->DefaultReactor();
@@ -492,7 +492,7 @@ grpc::ServerUnaryReactor *Grpc::CreateRbacPolicy(
 }
 
 // Roles
-grpc::ServerUnaryReactor *Grpc::CreateRole(
+grpc::ServerUnaryReactor *Gatekeeper::CreateRole(
 	grpc::CallbackServerContext *context, const gk::v1::CreateRoleRequest *request,
 	gk::v1::Role *response) {
 	auto *reactor = context->DefaultReactor();
@@ -507,7 +507,7 @@ grpc::ServerUnaryReactor *Grpc::CreateRole(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Grpc::RetrieveRole(
+grpc::ServerUnaryReactor *Gatekeeper::RetrieveRole(
 	grpc::CallbackServerContext *context, const gk::v1::RetrieveRoleRequest *request,
 	gk::v1::Role *response) {
 	auto *reactor = context->DefaultReactor();

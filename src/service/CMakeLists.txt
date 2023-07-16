@@ -1,5 +1,5 @@
 add_library(service
-	grpc.cpp grpc.h
+	gatekeeper.cpp gatekeeper.h
 	mappers.cpp mappers.h
 )
 
@@ -23,7 +23,7 @@ endif()
 # test
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(service_tests
-		grpc_test.cpp
+		gatekeeper_test.cpp
 	)
 
 	target_link_libraries(service_tests
