@@ -31,8 +31,8 @@ public:
 	void               name(const std::string &name) noexcept { _data.name = name; }
 	void               name(std::string &&name) noexcept { _data.name = std::move(name); }
 
-	const members_t members() const;
 	void            add(const member_t &id) const;
+	const members_t members() const;
 	void            remove(const member_t &id) const;
 
 	void store() const;

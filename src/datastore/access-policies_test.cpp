@@ -177,3 +177,18 @@ TEST_F(AccessPoliciesTest, store) {
 		R"([{"attrs": "{\"key\":\"value\"}", "resource": "resource/AccessPoliciesTest.store"}])",
 		rules);
 }
+
+TEST_F(AccessPoliciesTest, retrieveByCollection) {
+	const datastore::Collection   collection({
+		  .name = "collection_name:AccessPoliciesTest.retrieveByCollection",
+    });
+	const datastore::AccessPolicy access({
+		.name = "policy_id:AccessPoliciesTest.retrieveByCollection",
+	});
+
+	EXPECT_NO_THROW(collection.store());
+	EXPECT_NO_THROW(access.store());
+	EXPECT_NO_THROW(access.addCollection(collection.id()));
+
+	EXPECT_EQ(1, datastore::RetrieveAccessPoliciesByCollection(collection.id()).size());
+}

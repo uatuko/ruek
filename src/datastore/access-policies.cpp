@@ -205,4 +205,30 @@ AccessPolicy RetrieveAccessPolicy(const std::string &id) {
 
 	return AccessPolicy(res[0]);
 }
+
+AccessPolicies RetrieveAccessPoliciesByCollection(const std::string &cid) {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			name,
+			rules
+		from
+			"access-policies_collections"
+		inner join "access-policies" on _id = policy_id
+		where
+			collection_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, cid);
+
+	AccessPolicies policies;
+	for (const auto &r : res) {
+		auto policy = AccessPolicy(r);
+		policies.push_back(policy);
+	}
+
+	return policies;
+}
+
 } // namespace datastore

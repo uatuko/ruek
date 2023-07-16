@@ -80,7 +80,8 @@ private:
 
 using AccessPolicies = std::vector<AccessPolicy>;
 
-AccessPolicy RetrieveAccessPolicy(const std::string &id);
+AccessPolicy   RetrieveAccessPolicy(const std::string &id);
+AccessPolicies RetrieveAccessPoliciesByCollection(const std::string &cid);
 } // namespace datastore
 
 template <> struct glz::meta<datastore::AccessPolicy::Rule> {

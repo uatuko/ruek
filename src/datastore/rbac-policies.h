@@ -84,5 +84,6 @@ private:
 
 using RbacPolicies = std::vector<RbacPolicy>;
 
-RbacPolicy RetrieveRbacPolicy(const std::string &id);
+RbacPolicy   RetrieveRbacPolicy(const std::string &id);
+RbacPolicies RetrieveRbacPoliciesByCollection(const std::string &cid);
 } // namespace datastore
