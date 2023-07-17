@@ -1,5 +1,10 @@
 add_library(service
-	grpc.cpp grpc.h
+	gatekeeper.access-policies.cpp
+	gatekeeper.collections.cpp
+	gatekeeper.cpp gatekeeper.h
+	gatekeeper.identities.cpp
+	gatekeeper.rbac-policies.cpp
+	gatekeeper.roles.cpp
 	mappers.cpp mappers.h
 )
 
@@ -20,10 +25,15 @@ if (GATEKEEPER_ENABLE_COVERAGE)
 	)
 endif()
 
-# test
+# tests
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(service_tests
-		grpc_test.cpp
+		gatekeeper.access-policies_test.cpp
+		gatekeeper.collections_test.cpp
+		gatekeeper_test.cpp
+		gatekeeper.identities_test.cpp
+		gatekeeper.rbac-policies_test.cpp
+		gatekeeper.roles_test.cpp
 	)
 
 	target_link_libraries(service_tests

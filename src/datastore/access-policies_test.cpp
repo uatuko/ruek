@@ -107,6 +107,24 @@ TEST_F(AccessPoliciesTest, retrieve) {
 		EXPECT_EQ("attrs:AccessPoliciesTest.retrieve", rule->attrs);
 		EXPECT_EQ("resource:AccessPoliciesTest.retrieve", rule->resource);
 	}
+
+	// Success: retrieve by collection
+	{
+		const datastore::Collection collection({
+			.name = "name:AccessPoliciesTest.retrieve-by_collection",
+		});
+		ASSERT_NO_THROW(collection.store());
+
+		const datastore::AccessPolicy policy({
+			.name = "name:AccessPoliciesTest.retrieve-by_collectio",
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		const auto results = datastore::RetrieveAccessPoliciesByCollection(collection.id());
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(policy.id(), results.front().id());
+	}
 }
 
 TEST_F(AccessPoliciesTest, rev) {
@@ -176,19 +194,4 @@ TEST_F(AccessPoliciesTest, store) {
 	EXPECT_EQ(
 		R"([{"attrs": "{\"key\":\"value\"}", "resource": "resource/AccessPoliciesTest.store"}])",
 		rules);
-}
-
-TEST_F(AccessPoliciesTest, retrieveByCollection) {
-	const datastore::Collection   collection({
-		  .name = "collection_name:AccessPoliciesTest.retrieveByCollection",
-    });
-	const datastore::AccessPolicy access({
-		.name = "policy_id:AccessPoliciesTest.retrieveByCollection",
-	});
-
-	EXPECT_NO_THROW(collection.store());
-	EXPECT_NO_THROW(access.store());
-	EXPECT_NO_THROW(access.addCollection(collection.id()));
-
-	EXPECT_EQ(1, datastore::RetrieveAccessPoliciesByCollection(collection.id()).size());
 }

@@ -170,6 +170,26 @@ TEST_F(RbacPoliciesTest, principals) {
 	}
 }
 
+TEST_F(RbacPoliciesTest, retrieve) {
+	// Success: retrieve by collection
+	{
+		const datastore::Collection collection({
+			.name = "name:RbacPoliciesTest.retrieve-by_collection",
+		});
+		ASSERT_NO_THROW(collection.store());
+
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.retrieve-by_collection",
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		const auto results = datastore::RetrieveRbacPoliciesByCollection(collection.id());
+		EXPECT_EQ(1, results.size());
+		EXPECT_EQ(policy.id(), results.front().id());
+	}
+}
+
 TEST_F(RbacPoliciesTest, roles) {
 	// Success: add roles
 	{
@@ -313,19 +333,4 @@ TEST_F(RbacPoliciesTest, store) {
 	auto [_rev, name] = res[0].as<int, std::string>();
 	EXPECT_EQ(policy.rev(), _rev);
 	EXPECT_EQ(policy.name(), name);
-}
-
-TEST_F(RbacPoliciesTest, retrieveByCollection) {
-	const datastore::Collection collection({
-		.name = "collection_name:RbacPoliciesTest.retrieveByCollection",
-	});
-	const datastore::RbacPolicy rbac({
-		.name = "policy_id:RbacPoliciesTest.retrieveByCollection",
-	});
-
-	EXPECT_NO_THROW(collection.store());
-	EXPECT_NO_THROW(rbac.store());
-	EXPECT_NO_THROW(rbac.addCollection(collection.id()));
-
-	EXPECT_EQ(1, datastore::RetrieveRbacPoliciesByCollection(collection.id()).size());
 }

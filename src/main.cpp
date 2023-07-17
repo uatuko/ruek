@@ -5,7 +5,7 @@
 #include <viper/viper.h>
 
 #include "datastore/datastore.h"
-#include "service/grpc.h"
+#include "service/gatekeeper.h"
 
 int main() {
 	try {
@@ -32,7 +32,7 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-	service::Grpc       service;
+	service::Gatekeeper service;
 	grpc::ServerBuilder builder;
 	builder.AddListeningPort(std::string{conf["tcp.address"]}, grpc::InsecureServerCredentials());
 	builder.RegisterService(&service);
