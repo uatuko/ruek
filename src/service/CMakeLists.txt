@@ -6,6 +6,7 @@ add_library(service
 	gatekeeper.rbac-policies.cpp
 	gatekeeper.roles.cpp
 	mappers.cpp mappers.h
+	interceptors/logger.cpp interceptors/logger.h
 )
 
 target_link_libraries(service
@@ -13,6 +14,7 @@ target_link_libraries(service
 		${PROJECT_NAME}::libproto
 	PRIVATE
 		${PROJECT_NAME}::datastore
+		${PROJECT_NAME}::log
 )
 
 if (GATEKEEPER_ENABLE_COVERAGE)
