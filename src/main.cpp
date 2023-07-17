@@ -38,12 +38,19 @@ int main() {
 	builder.AddListeningPort(std::string{conf["tcp.address"]}, grpc::InsecureServerCredentials());
 	builder.RegisterService(&service);
 
-	if (conf["app.debug"].get<bool>()) {
-		std::vector<std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>>
-			creators;
-		creators.push_back(std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>(
-			new service::interceptors::LoggerFactory()));
-		builder.experimental().SetInterceptorCreators(std::move(creators));
+	// Interceptors
+	{
+		using factory_t = std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>;
+		std::vector<factory_t> creators;
+
+		if (conf["app.debug"].get<bool>()) {
+			factory_t logger(new service::interceptors::LoggerFactory());
+			creators.push_back(std::move(logger));
+		}
+
+		if (creators.size() > 0) {
+			builder.experimental().SetInterceptorCreators(std::move(creators));
+		}
 	}
 
 	std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
