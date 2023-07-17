@@ -1,8 +1,8 @@
-#include "log.h"
+#include "logger.h"
 
 #include <chrono>
 
-namespace log {
+namespace logger {
 std::string timestamp() {
 	const auto                  now  = std::chrono::system_clock::now();
 	auto                        days = std::chrono::floor<std::chrono::days>(now);
@@ -24,4 +24,4 @@ std::string timestamp() {
 
 	return buf;
 }
-} // namespace log
+} // namespace logger

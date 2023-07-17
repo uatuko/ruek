@@ -2,7 +2,7 @@
 
 #include <glaze/glaze.hpp>
 
-namespace log {
+namespace logger {
 std::string timestamp();
 
 template <typename... Args> void info(std::string_view source, Args &&...args) {
@@ -18,4 +18,4 @@ template <typename... Args> void info(std::string_view source, Args &&...args) {
 
 	std::cout << glz::write_json(obj) << std::endl;
 }
-} // namespace log
+} // namespace logger

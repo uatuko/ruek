@@ -14,7 +14,7 @@ target_link_libraries(service
 		${PROJECT_NAME}::libproto
 	PRIVATE
 		${PROJECT_NAME}::datastore
-		${PROJECT_NAME}::log
+		${PROJECT_NAME}::logger
 )
 
 if (GATEKEEPER_ENABLE_COVERAGE)
