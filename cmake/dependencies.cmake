@@ -99,8 +99,8 @@ FetchContent_MakeAvailable(libpqxx)
 
 # libviper
 FetchContent_Declare(libviper
-	URL      https://github.com/uditha-atukorala/libviper/archive/refs/tags/v0.3.1.tar.gz
-	URL_HASH SHA256=24a79fe54708a315394938f7946dab35aa69b884f0fab4ac0a9fa42b60c93313
+	URL      https://github.com/uditha-atukorala/libviper/archive/refs/tags/v0.3.2.tar.gz
+	URL_HASH SHA256=6b4bc56a4015e5a3889bac66f868947781001c621a61db4383bb528e2239722f
 )
 FetchContent_MakeAvailable(libviper)
 
