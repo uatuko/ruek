@@ -6,6 +6,7 @@
 
 #include "datastore/datastore.h"
 #include "service/gatekeeper.h"
+#include "service/interceptors/logger.h"
 
 int main() {
 	try {
@@ -36,6 +37,21 @@ int main() {
 	grpc::ServerBuilder builder;
 	builder.AddListeningPort(std::string{conf["tcp.address"]}, grpc::InsecureServerCredentials());
 	builder.RegisterService(&service);
+
+	// Interceptors
+	{
+		using factory_t = std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>;
+		std::vector<factory_t> creators;
+
+		if (conf["app.debug"].get<bool>()) {
+			factory_t logger(new service::interceptors::LoggerFactory());
+			creators.push_back(std::move(logger));
+		}
+
+		if (creators.size() > 0) {
+			builder.experimental().SetInterceptorCreators(std::move(creators));
+		}
+	}
 
 	std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
 	server->Wait();

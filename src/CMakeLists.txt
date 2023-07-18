@@ -1,6 +1,7 @@
 add_subdirectory(datastore)
 add_subdirectory(err)
 add_subdirectory(events)
+add_subdirectory(logger)
 add_subdirectory(service)
 
 # datastore
@@ -38,6 +39,18 @@ target_include_directories(libevents
 )
 
 add_library(${PROJECT_NAME}::events ALIAS libevents)
+
+# logger
+add_library(liblogger INTERFACE)
+target_link_libraries(liblogger
+	INTERFACE logger
+)
+
+target_include_directories(liblogger
+	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+add_library(${PROJECT_NAME}::logger ALIAS liblogger)
 
 # service
 add_library(libservice INTERFACE)
