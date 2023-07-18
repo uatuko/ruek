@@ -39,6 +39,12 @@ service Gatekeeper {
 		};
 	}
 
+	rpc RetrieveAccessPolicy(RetrieveAccessPolicyRequest) returns (AccessPolicy) {
+		option (google.api.http) = {
+			get : "/v1/access-policies/{id}"
+		};
+	}
+
 	// Collections
 	rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
 		option (google.api.http) = {
@@ -193,6 +199,10 @@ message CreateAccessPolicyRequest {
 	repeated string           collection_ids = 3;
 	repeated string           identity_ids   = 4;
 	repeated AccessPolicyRule rules          = 5;
+}
+
+message RetrieveAccessPolicyRequest {
+	string id = 1;
 }
 
 // Collections
