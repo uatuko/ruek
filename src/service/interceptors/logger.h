@@ -17,7 +17,7 @@ private:
 	std::chrono::high_resolution_clock::time_point _start;
 };
 
-class LoggerFactory : public grpc::experimental::ServerInterceptorFactoryInterface {
+class LoggerFactory final : public grpc::experimental::ServerInterceptorFactoryInterface {
 public:
 	grpc::experimental::Interceptor *CreateServerInterceptor(
 		grpc::experimental::ServerRpcInfo *info) override {
