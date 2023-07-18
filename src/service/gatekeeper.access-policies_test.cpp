@@ -173,3 +173,67 @@ TEST_F(GatekeeperAccessPoliciesTest, CreateAccessPolicy) {
 
 	// FIXME: nested collections
 }
+
+TEST_F(GatekeeperAccessPoliciesTest, RetrieveAccessPolicy) {
+	service::Gatekeeper service;
+
+	// Success: retrieve data
+	{
+		const datastore::Identities identities({
+			{{.sub = "sub:GatekeeperAccessPoliciesTest.RetrieveAccessPolicy[0]"}},
+			{{.sub = "sub:GatekeeperAccessPoliciesTest.RetrieveAccessPolicy[1]"}},
+		});
+
+		for (const auto &idn : identities) {
+			ASSERT_NO_THROW(idn.store());
+		}
+
+		const datastore::Collection collection({
+			.name = "name:GatekeeperAccessPoliciesTest.RetrieveAccessPolicy",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identities[0].id()));
+
+		const datastore::AccessPolicy policy({
+			.name = "name:GatekeeperAccessPoliciesTest.RetrieveAccessPolicy",
+			.rules =
+				{
+					{
+						.attrs    = R"({"key":"value"})",
+						.resource = "resource/GatekeeperAccessPoliciesTest.RetrieveAccessPolicy",
+					},
+				},
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+		ASSERT_NO_THROW(policy.addIdentity(identities[1].id()));
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                  response;
+
+		gk::v1::RetrieveAccessPolicyRequest request;
+		request.set_id(policy.id());
+
+		auto reactor = service.RetrieveAccessPolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_EQ(policy.id(), response.id());
+		EXPECT_EQ(policy.name(), response.name());
+
+		ASSERT_EQ(1, response.collection_ids_size());
+		EXPECT_EQ(collection.id(), response.collection_ids(0));
+
+		ASSERT_EQ(1, response.identity_ids_size());
+		EXPECT_EQ(identities[1].id(), response.identity_ids(0));
+
+		ASSERT_EQ(1, response.rules_size());
+		EXPECT_EQ(policy.rules().cbegin()->resource, response.rules(0).resource());
+
+		std::string attrs;
+		google::protobuf::util::MessageToJsonString(response.rules(0).attrs(), &attrs);
+		EXPECT_EQ(policy.rules().cbegin()->attrs, attrs);
+	}
+}

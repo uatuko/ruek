@@ -82,7 +82,14 @@ void map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) {
 		to->set_name(*from.name());
 	}
 
-	// FIXME: add rules
+	for (const auto &rule : from.rules()) {
+		auto r = to->mutable_rules()->Add();
+		r->set_resource(rule.resource);
+
+		if (!rule.attrs.empty()) {
+			google::protobuf::util::JsonStringToMessage(rule.attrs, r->mutable_attrs());
+		}
+	}
 }
 
 void map(const datastore::AccessPolicy &from, gk::v1::Policy *to) {
