@@ -60,6 +60,7 @@ public:
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
 
+	const collections_t collections() const;
 	const identities_t identities(bool expand = false) const;
 	void               addIdentity(const identity_t &id) const;
 

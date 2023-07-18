@@ -93,6 +93,24 @@ void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
 	}
 }
 
+const AccessPolicy::collections_t AccessPolicy::collections() const {
+	std::string qry = R"(
+		select
+			collection_id
+		from "access-policies_collections"
+		where policy_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, _data.id);
+
+	collections_t collections;
+	for (const auto &r : res) {
+		collections.insert(r["collection_id"].as<std::string>());
+	}
+
+	return collections;
+}
+
 const AccessPolicy::identities_t AccessPolicy::identities(bool expand) const {
 	std::string qry = R"(
 		select
