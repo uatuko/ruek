@@ -45,6 +45,14 @@ service Gatekeeper {
 		};
 	}
 
+	// Access policies - collections
+	rpc AddAccessPolicyCollection(AddAccessPolicyCollectionRequest) returns (AddAccessPolicyCollectionResponse) {
+		option (google.api.http) = {
+			post : "/v1/access-policies/{policy_id}/collections"
+			body : "*"
+		};
+	}
+
 	// Collections
 	rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
 		option (google.api.http) = {
@@ -204,6 +212,14 @@ message CreateAccessPolicyRequest {
 message RetrieveAccessPolicyRequest {
 	string id = 1;
 }
+
+// Access policies - collections
+message AddAccessPolicyCollectionRequest {
+	string policy_id     = 1;
+	string collection_id = 2;
+}
+
+message AddAccessPolicyCollectionResponse {}
 
 // Collections
 message Collection {

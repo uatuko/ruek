@@ -51,6 +51,7 @@ grpc::ServerUnaryReactor *Gatekeeper::RetrieveAccessPolicy(
 	gk::v1::AccessPolicy *response) {
 	auto *reactor = context->DefaultReactor();
 
+	// TODO: error handling
 	auto policy = datastore::RetrieveAccessPolicy(request->id());
 	map(policy, response);
 
@@ -61,6 +62,20 @@ grpc::ServerUnaryReactor *Gatekeeper::RetrieveAccessPolicy(
 	for (const auto &id : policy.identities()) {
 		response->add_identity_ids(id);
 	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+// Collections
+grpc::ServerUnaryReactor *Gatekeeper::AddAccessPolicyCollection(
+	grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyCollectionRequest *request,
+	gk::v1::AddAccessPolicyCollectionResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto policy = datastore::RetrieveAccessPolicy(request->policy_id());
+	policy.addCollection(request->collection_id());
 
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
