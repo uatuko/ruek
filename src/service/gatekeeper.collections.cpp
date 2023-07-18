@@ -129,13 +129,17 @@ grpc::ServerUnaryReactor *Gatekeeper::AddCollectionMember(
 	auto rbac = datastore::RetrieveRbacPoliciesByCollection(collection.id());
 	for (const auto &policy : rbac) {
 		for (const auto &rule : policy.rules()) {
-			datastore::RbacPolicy::Cache cache({
-				.identity = request->identity_id(),
-				.policy   = policy.id(),
-				.rule     = rule,
-			});
+			const auto role = datastore::RetrieveRole(rule.roleId);
+			for (const auto &perm : role.permissions()) {
+				datastore::RbacPolicy::Cache cache({
+					.identity   = request->identity_id(),
+					.permission = perm,
+					.policy     = policy.id(),
+					.rule       = rule,
+				});
 
-			cache.store();
+				cache.store();
+			}
 		}
 	}
 

@@ -3,8 +3,11 @@
 #include <grpcpp/test/default_reactor_test_peer.h>
 #include <gtest/gtest.h>
 
+#include "datastore/access-policies.h"
 #include "datastore/collections.h"
 #include "datastore/identities.h"
+#include "datastore/rbac-policies.h"
+#include "datastore/roles.h"
 #include "datastore/testing.h"
 
 class GatekeeperCollectionsTest : public testing::Test {
@@ -221,6 +224,134 @@ TEST_F(GatekeeperCollectionsTest, AddCollectionMember) {
 
 			auto [count] = res[0].as<int>();
 			EXPECT_EQ(1, count);
+		}
+	}
+	// Success: create an access policy for collection
+	// for an identity added after the policy was in place
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AddCollectionMemberResponse   response;
+
+		const datastore::Identity   identity({
+			  .id  = "identity_id:GrpcTest.AddCollectionMember-access",
+			  .sub = "identity_sub:GrpcTest.AddCollectionMember-access",
+        });
+		const datastore::Collection collection({
+			.id   = "collection_id:GrpcTest.AddCollectionMember-access",
+			.name = "collection_name:GrpcTest.AddCollectionMember-access",
+		});
+
+		try {
+			identity.store();
+			collection.store();
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		gk::v1::AddCollectionMemberRequest request;
+		request.set_collection_id(collection.id());
+		request.set_identity_id(identity.id());
+
+		std::set<datastore::AccessPolicy::Rule> rules;
+		const datastore::AccessPolicy::Rule     rule({
+				.attrs    = R"({"key": "value"})",
+				.resource = "resource_id:GrpcTest.AddCollectionMember",
+        });
+		rules.insert(rule);
+
+		const datastore::AccessPolicy policy({
+			.name  = "access_policy_name:GrpcTest.AddCollectionMember",
+			.rules = rules,
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		// expect no access before request
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule.resource);
+			EXPECT_EQ(0, policies.size());
+		}
+
+		// add user
+		auto reactor = service.AddCollectionMember(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// expect to find single policy when checking access
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule.resource);
+			EXPECT_EQ(1, policies.size());
+		}
+	}
+	//
+	// Success: create an rbac policy for collection
+	// for an identity added after the policy was in place
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AddCollectionMemberResponse   response;
+
+		const datastore::Identity   identity({
+			  .id  = "identity_id:GrpcTest.AddCollectionMember-rbac",
+			  .sub = "identity_sub:GrpcTest.AddCollectionMember-rbac",
+        });
+		const datastore::Collection collection({
+			.id   = "collection_id:GrpcTest.AddCollectionMember-rbac",
+			.name = "collection_name:GrpcTest.AddCollectionMember-rbac",
+		});
+
+		try {
+			identity.store();
+			collection.store();
+		} catch (const std::exception &e) {
+			FAIL() << e.what();
+		}
+
+		gk::v1::AddCollectionMemberRequest request;
+		request.set_collection_id(collection.id());
+		request.set_identity_id(identity.id());
+
+		const auto                  perm = "permissions[0]:GrpcTest.AddCollectionMember-rbac";
+		const datastore::RbacPolicy policy({
+			.name = "name:RbacPoliciesTest.roles-add",
+		});
+		EXPECT_NO_THROW(policy.store());
+
+		const datastore::Role role({
+			.name = "name:RbacPoliciesTest.roles-add",
+			.permissions =
+				{
+					{perm},
+				},
+		});
+		EXPECT_NO_THROW(role.store());
+
+		auto rule = datastore::RbacPolicy::Rule({.roleId = role.id()});
+
+		EXPECT_NO_THROW(policy.addRule(rule));
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+
+		// expect no access before request
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), perm);
+			EXPECT_EQ(0, policies.size());
+		}
+
+		// add user
+		auto reactor = service.AddCollectionMember(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// expect to find single policy when checking rbac
+		{
+			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), perm);
+			EXPECT_EQ(1, policies.size());
 		}
 	}
 }
