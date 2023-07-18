@@ -22,6 +22,12 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::RetrieveAccessPolicyRequest *request,
 		gk::v1::AccessPolicy *response) override;
 
+	// Access policies - collections
+	grpc::ServerUnaryReactor *AddAccessPolicyCollection(
+		grpc::CallbackServerContext                    *context,
+		const gk::v1::AddAccessPolicyCollectionRequest *request,
+		gk::v1::AddAccessPolicyCollectionResponse      *response) override;
+
 	// Collections
 	grpc::ServerUnaryReactor *CreateCollection(
 		grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
