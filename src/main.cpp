@@ -7,6 +7,7 @@
 #include "datastore/datastore.h"
 #include "service/gatekeeper.h"
 #include "service/interceptors/logger.h"
+#include "svc/events.h"
 
 int main() {
 	try {
@@ -33,10 +34,17 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-	service::Gatekeeper service;
 	grpc::ServerBuilder builder;
 	builder.AddListeningPort(std::string{conf["tcp.address"]}, grpc::InsecureServerCredentials());
-	builder.RegisterService(&service);
+
+	std::array<std::unique_ptr<grpc::Service>, 2> services = {
+		std::make_unique<svc::Events>(),
+		std::make_unique<service::Gatekeeper>(),
+	};
+
+	for (const auto &s : services) {
+		builder.RegisterService(s.get());
+	}
 
 	// Interceptors
 	{

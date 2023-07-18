@@ -1,4 +1,10 @@
 # libproto
+cmake_path(SET events_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/events.proto)
+cmake_path(SET events_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.grpc.pb.h)
+cmake_path(SET events_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.grpc.pb.cc)
+cmake_path(SET events_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.pb.h)
+cmake_path(SET events_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.pb.cc)
+
 cmake_path(SET gatekeeper_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/gatekeeper.proto)
 cmake_path(SET gatekeeper_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.h)
 cmake_path(SET gatekeeper_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.cc)
@@ -6,15 +12,18 @@ cmake_path(SET gatekeeper_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb
 cmake_path(SET gatekeeper_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb.cc)
 
 set(protos
+	${events_proto}
 	${gatekeeper_proto}
 )
 
 set(headers
+	${events_header} ${events_grpc_header}
 	${gatekeeper_grpc_header}
 	${gatekeeper_header}
 )
 
 set(sources
+	${events_source} ${events_grpc_source}
 	${gatekeeper_grpc_source}
 	${gatekeeper_source}
 )

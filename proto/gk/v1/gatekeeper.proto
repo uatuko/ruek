@@ -3,9 +3,7 @@ syntax = "proto3";
 package gk.v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/any.proto";
 import "google/protobuf/struct.proto";
-import "google/protobuf/timestamp.proto";
 
 service Gatekeeper {
 	// Access control checks
@@ -19,14 +17,6 @@ service Gatekeeper {
 	rpc CheckRbac(CheckRbacRequest) returns (CheckRbacResponse) {
 		option (google.api.http) = {
 			post : "/v1/rbac:check"
-			body : "*"
-		};
-	}
-
-	// Events
-	rpc ConsumeEvent(Event) returns (ConsumeEventResponse) {
-		option (google.api.http) = {
-			post : "/v1/events"
 			body : "*"
 		};
 	}
@@ -282,27 +272,6 @@ message RemoveCollectionMemberRequest {
 }
 
 message RemoveCollectionMemberResponse {}
-
-// Events
-message Event {
-	// A name that uniquely identify the event.
-	// Supported names are,
-	//   - "request/cache.rebuild:access"
-	//   - "request/cache.rebuild:rbac"
-	string                    name      = 1;
-	google.protobuf.Any       payload   = 3;
-	google.protobuf.Timestamp timestamp = 2;
-}
-
-message ConsumeEventResponse {}
-
-message RebuildAccessCacheEventPayload {
-	repeated string ids = 1;
-}
-
-message RebuildRbacCacheEventPayload {
-	repeated string ids = 1;
-}
 
 // Identities
 message Identity {
