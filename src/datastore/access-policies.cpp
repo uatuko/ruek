@@ -135,7 +135,7 @@ const AccessPolicy::identities_t AccessPolicy::identities(bool expand) const {
 
 	auto res = pg::exec(qry, _data.id);
 
-	AccessPolicy::identities_t identities;
+	identities_t identities;
 	for (const auto &r : res) {
 		identities.insert(r["identity_id"].as<std::string>());
 	}
