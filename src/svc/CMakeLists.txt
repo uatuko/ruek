@@ -1,4 +1,5 @@
 add_library(svc
+	access.cpp access.h
 	events.cpp events.h
 )
 
@@ -7,6 +8,7 @@ target_link_libraries(svc
 		${PROJECT_NAME}::libproto
 	PRIVATE
 		${PROJECT_NAME}::datastore
+		${PROJECT_NAME}::err
 )
 
 if (GATEKEEPER_ENABLE_COVERAGE)
@@ -22,6 +24,7 @@ endif()
 # tests
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(svc_tests
+		access_test.cpp
 		events_test.cpp
 	)
 

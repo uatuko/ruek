@@ -3,26 +3,6 @@
 #include <google/protobuf/util/json_util.h>
 
 namespace service {
-datastore::AccessPolicy map(const gk::v1::CreateAccessPolicyRequest *from) {
-	datastore::AccessPolicy::Data::rules_t rules;
-	for (const auto &rule : from->rules()) {
-		rules.insert({
-			.resource = rule.resource(),
-		});
-	}
-
-	datastore::AccessPolicy policy({
-		.id    = from->id(),
-		.rules = rules,
-	});
-
-	if (from->has_name()) {
-		policy.name(from->name());
-	}
-
-	return policy;
-}
-
 datastore::Collection map(const gk::v1::CreateCollectionRequest *from) {
 	return {{
 		.id   = from->id(),
@@ -76,22 +56,6 @@ datastore::Role map(const gk::v1::CreateRoleRequest *from) {
 	return role;
 }
 
-void map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) {
-	to->set_id(from.id());
-	if (from.name()) {
-		to->set_name(*from.name());
-	}
-
-	for (const auto &rule : from.rules()) {
-		auto r = to->mutable_rules()->Add();
-		r->set_resource(rule.resource);
-
-		if (!rule.attrs.empty()) {
-			google::protobuf::util::JsonStringToMessage(rule.attrs, r->mutable_attrs());
-		}
-	}
-}
-
 void map(const datastore::AccessPolicy &from, gk::v1::Policy *to) {
 	to->set_id(from.id());
 
@@ -109,13 +73,6 @@ void map(const datastore::Identity &from, gk::v1::Identity *to) {
 
 	if (from.attrs()) {
 		google::protobuf::util::JsonStringToMessage(*from.attrs(), to->mutable_attrs());
-	}
-}
-
-void map(const datastore::Policies &from, gk::v1::CheckAccessResponse *to) {
-	for (const auto &policy : from) {
-		auto p = to->add_policies();
-		p->set_id(policy.id);
 	}
 }
 

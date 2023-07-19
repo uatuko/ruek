@@ -5,33 +5,9 @@
 namespace service {
 class Gatekeeper final : public gk::v1::Gatekeeper::CallbackService {
 public:
-	// Access Policies
-	grpc::ServerUnaryReactor *CheckAccess(
-		grpc::CallbackServerContext *context, const gk::v1::CheckAccessRequest *request,
-		gk::v1::CheckAccessResponse *response) override;
-
 	grpc::ServerUnaryReactor *CheckRbac(
 		grpc::CallbackServerContext *context, const gk::v1::CheckRbacRequest *request,
 		gk::v1::CheckRbacResponse *response) override;
-
-	grpc::ServerUnaryReactor *CreateAccessPolicy(
-		grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
-		gk::v1::AccessPolicy *response) override;
-
-	grpc::ServerUnaryReactor *RetrieveAccessPolicy(
-		grpc::CallbackServerContext *context, const gk::v1::RetrieveAccessPolicyRequest *request,
-		gk::v1::AccessPolicy *response) override;
-
-	// Access policies - collections
-	grpc::ServerUnaryReactor *AddAccessPolicyCollection(
-		grpc::CallbackServerContext                    *context,
-		const gk::v1::AddAccessPolicyCollectionRequest *request,
-		gk::v1::AddAccessPolicyCollectionResponse      *response) override;
-
-	// Access policies - identities
-	grpc::ServerUnaryReactor *AddAccessPolicyIdentity(
-		grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyIdentityRequest *request,
-		gk::v1::AddAccessPolicyIdentityResponse *response) override;
 
 	// Collections
 	grpc::ServerUnaryReactor *CreateCollection(

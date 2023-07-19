@@ -1,5 +1,4 @@
 add_library(service
-	gatekeeper.access-policies.cpp
 	gatekeeper.collections.cpp
 	gatekeeper.cpp gatekeeper.h
 	gatekeeper.identities.cpp
@@ -30,7 +29,6 @@ endif()
 # tests
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(service_tests
-		gatekeeper.access-policies_test.cpp
 		gatekeeper.collections_test.cpp
 		gatekeeper_test.cpp
 		gatekeeper.identities_test.cpp

@@ -27,47 +27,6 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-// Access control checks
-TEST_F(GatekeeperTest, CheckAccess) {
-	service::Gatekeeper service;
-
-	// Success: returns policy when found
-	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckAccessResponse           response;
-
-		const datastore::Identity identity({
-			.sub = "sub:GatekeeperTest.CheckAccess",
-		});
-		ASSERT_NO_THROW(identity.store());
-
-		const datastore::AccessPolicy policy({
-			.name = "name:GatekeeperTest.CheckAccess",
-		});
-		ASSERT_NO_THROW(policy.store());
-
-		const std::string resource = "resource/GatekeeperTest.CheckAccess";
-
-		const datastore::AccessPolicy::Cache cache({
-			.identity = identity.id(),
-			.policy   = policy.id(),
-			.rule     = {.resource = resource},
-		});
-		ASSERT_NO_THROW(cache.store());
-
-		gk::v1::CheckAccessRequest request;
-		request.set_resource(resource);
-		request.set_identity_id(identity.id());
-
-		auto reactor = service.CheckAccess(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(1, response.policies().size());
-	}
-}
-
 TEST_F(GatekeeperTest, CheckRbac) {
 	service::Gatekeeper service;
 

@@ -2,51 +2,14 @@ syntax = "proto3";
 
 package gk.v1;
 
+import "gk/v1/common.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Gatekeeper {
-	// Access control checks
-	rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse) {
-		option (google.api.http) = {
-			post : "/v1/access:check"
-			body : "*"
-		};
-	}
-
 	rpc CheckRbac(CheckRbacRequest) returns (CheckRbacResponse) {
 		option (google.api.http) = {
 			post : "/v1/rbac:check"
-			body : "*"
-		};
-	}
-
-	// Access policies
-	rpc CreateAccessPolicy(CreateAccessPolicyRequest) returns (AccessPolicy) {
-		option (google.api.http) = {
-			post : "/v1/access-policies"
-			body : "*"
-		};
-	}
-
-	rpc RetrieveAccessPolicy(RetrieveAccessPolicyRequest) returns (AccessPolicy) {
-		option (google.api.http) = {
-			get : "/v1/access-policies/{id}"
-		};
-	}
-
-	// Access policies - collections
-	rpc AddAccessPolicyCollection(AddAccessPolicyCollectionRequest) returns (AddAccessPolicyCollectionResponse) {
-		option (google.api.http) = {
-			post : "/v1/access-policies/{policy_id}/collections"
-			body : "*"
-		};
-	}
-
-	// Access policies - identity
-	rpc AddAccessPolicyIdentity(AddAccessPolicyIdentityRequest) returns (AddAccessPolicyIdentityResponse) {
-		option (google.api.http) = {
-			post : "/v1/access-policies/{policy_id}/identities"
 			body : "*"
 		};
 	}
@@ -164,68 +127,6 @@ message Page {
 	optional uint32 limit  = 1;
 	optional uint64 offset = 2;
 }
-
-message Policy {
-	google.protobuf.Struct attrs = 2;
-	string                 id    = 1;
-}
-
-// Access policies
-message AccessPolicy {
-	string          id   = 1;
-	optional string name = 2;
-
-	repeated string           collection_ids = 3;
-	repeated string           identity_ids   = 4;
-	repeated AccessPolicyRule rules          = 5;
-}
-
-message AccessPolicyRule {
-	google.protobuf.Struct attrs    = 2;
-	string                 resource = 1;
-}
-
-message CheckAccessRequest {
-	oneof identity {
-		string identity_id  = 1;
-		string identity_sub = 2;
-	}
-
-	string resource = 3;
-}
-
-message CheckAccessResponse {
-	repeated Policy policies = 1;
-}
-
-message CreateAccessPolicyRequest {
-	optional string id   = 1;
-	optional string name = 2;
-
-	repeated string           collection_ids = 3;
-	repeated string           identity_ids   = 4;
-	repeated AccessPolicyRule rules          = 5;
-}
-
-message RetrieveAccessPolicyRequest {
-	string id = 1;
-}
-
-// Access policies - collections
-message AddAccessPolicyCollectionRequest {
-	string policy_id     = 1;
-	string collection_id = 2;
-}
-
-message AddAccessPolicyCollectionResponse {}
-
-// Access policies - identity
-message AddAccessPolicyIdentityRequest {
-	string policy_id   = 1;
-	string identity_id = 2;
-}
-
-message AddAccessPolicyIdentityResponse {}
 
 // Collections
 message Collection {

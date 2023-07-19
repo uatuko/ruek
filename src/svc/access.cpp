@@ -1,0 +1,160 @@
+#include "access.h"
+
+#include "err/errors.h"
+
+namespace svc {
+grpc::ServerUnaryReactor *Access::AddPolicyCollection(
+	grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyCollectionRequest *request,
+	gk::v1::AddAccessPolicyCollectionResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto policy = datastore::RetrieveAccessPolicy(request->policy_id());
+	policy.addCollection(request->collection_id());
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+grpc::ServerUnaryReactor *Access::AddPolicyIdentity(
+	grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyIdentityRequest *request,
+	gk::v1::AddAccessPolicyIdentityResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto policy = datastore::RetrieveAccessPolicy(request->policy_id());
+	policy.addIdentity(request->identity_id());
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+grpc::ServerUnaryReactor *Access::Check(
+	grpc::CallbackServerContext *context, const gk::v1::CheckAccessRequest *request,
+	gk::v1::CheckAccessResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	if (request->has_identity_sub()) {
+		// TODO: implement checking access by sub
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNIMPLEMENTED, "Not implemented"));
+		return reactor;
+	}
+
+	try {
+		const auto policies =
+			datastore::AccessPolicy::Cache::check(request->identity_id(), request->resource());
+		map(policies, response);
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to check access"));
+		return reactor;
+	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+grpc::ServerUnaryReactor *Access::CreatePolicy(
+	grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
+	gk::v1::AccessPolicy *response) {
+	auto *reactor = context->DefaultReactor();
+
+	if (request->has_id()) {
+		try {
+			auto policy = datastore::RetrieveAccessPolicy(request->id());
+			reactor->Finish(grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Duplicate policy id"));
+			return reactor;
+		} catch (const err::DatastoreAccessPolicyNotFound &) {
+			// Policy with an `id` matching the request `id` doesn't exist, we can continue with
+			// creating a new one.
+		} catch (...) {
+			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+			return reactor;
+		}
+	}
+
+	auto policy = map(request);
+	try {
+		policy.store();
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
+		return reactor;
+	}
+
+	for (const auto &id : request->collection_ids()) {
+		policy.addCollection(id);
+	}
+
+	for (const auto &id : request->identity_ids()) {
+		policy.addIdentity(id);
+	}
+
+	map(policy, response);
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+grpc::ServerUnaryReactor *Access::RetrievePolicy(
+	grpc::CallbackServerContext *context, const gk::v1::RetrieveAccessPolicyRequest *request,
+	gk::v1::AccessPolicy *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto policy = datastore::RetrieveAccessPolicy(request->id());
+	map(policy, response);
+
+	for (const auto &id : policy.collections()) {
+		response->add_collection_ids(id);
+	}
+
+	for (const auto &id : policy.identities()) {
+		response->add_identity_ids(id);
+	}
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+datastore::AccessPolicy Access::map(const gk::v1::CreateAccessPolicyRequest *from) {
+	datastore::AccessPolicy::Data::rules_t rules;
+	for (const auto &rule : from->rules()) {
+		rules.insert({
+			.resource = rule.resource(),
+		});
+	}
+
+	datastore::AccessPolicy policy({
+		.id    = from->id(),
+		.rules = rules,
+	});
+
+	if (from->has_name()) {
+		policy.name(from->name());
+	}
+
+	return policy;
+}
+
+void Access::map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) {
+	to->set_id(from.id());
+	if (from.name()) {
+		to->set_name(*from.name());
+	}
+
+	for (const auto &rule : from.rules()) {
+		auto r = to->mutable_rules()->Add();
+		r->set_resource(rule.resource);
+
+		if (!rule.attrs.empty()) {
+			google::protobuf::util::JsonStringToMessage(rule.attrs, r->mutable_attrs());
+		}
+	}
+}
+
+void Access::map(const datastore::Policies &from, gk::v1::CheckAccessResponse *to) {
+	for (const auto &policy : from) {
+		auto p = to->add_policies();
+		p->set_id(policy.id);
+	}
+}
+} // namespace svc

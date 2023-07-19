@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package gk.v1;
+
+import "google/protobuf/struct.proto";
+
+message Policy {
+	google.protobuf.Struct attrs = 2;
+	string                 id    = 1;
+}
