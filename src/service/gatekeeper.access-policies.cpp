@@ -80,4 +80,17 @@ grpc::ServerUnaryReactor *Gatekeeper::AddAccessPolicyCollection(
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
+
+grpc::ServerUnaryReactor *Gatekeeper::AddAccessPolicyIdentity(
+	grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyIdentityRequest *request,
+	gk::v1::AddAccessPolicyIdentityResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto policy = datastore::RetrieveAccessPolicy(request->policy_id());
+	policy.addIdentity(request->identity_id());
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
 } // namespace service

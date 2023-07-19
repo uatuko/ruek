@@ -273,3 +273,38 @@ TEST_F(GatekeeperAccessPoliciesTest, AddAccessPolicyCollection) {
 		EXPECT_EQ(collection.id(), *ids.cbegin());
 	}
 }
+
+TEST_F(GatekeeperAccessPoliciesTest, AddAccessPolicyIdentity) {
+	service::Gatekeeper service;
+
+	// Success: add collection
+	{
+		const datastore::Identity identity({
+			.sub = "sub:GatekeeperAccessPoliciesTest.AddAccessPolicyIdentity",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		const datastore::AccessPolicy policy({
+			.name = "name:GatekeeperAccessPoliciesTest.AddAccessPolicyIdentity",
+		});
+		ASSERT_NO_THROW(policy.store());
+		EXPECT_EQ(0, policy.identities().size());
+
+		grpc::CallbackServerContext             ctx;
+		grpc::testing::DefaultReactorTestPeer   peer(&ctx);
+		gk::v1::AddAccessPolicyIdentityResponse response;
+
+		gk::v1::AddAccessPolicyIdentityRequest request;
+		request.set_policy_id(policy.id());
+		request.set_identity_id(identity.id());
+
+		auto reactor = service.AddAccessPolicyIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		const auto ids = policy.identities();
+		ASSERT_EQ(1, ids.size());
+		EXPECT_EQ(identity.id(), *ids.cbegin());
+	}
+}
