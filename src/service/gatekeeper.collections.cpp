@@ -1,5 +1,6 @@
 #include "gatekeeper.h"
 
+#include "datastore/rbac-policies.h"
 #include "err/errors.h"
 
 #include "mappers.h"

@@ -1,8 +1,7 @@
 add_library(service
 	gatekeeper.collections.cpp
-	gatekeeper.cpp gatekeeper.h
+	gatekeeper.h
 	gatekeeper.identities.cpp
-	gatekeeper.rbac-policies.cpp
 	mappers.cpp mappers.h
 	interceptors/logger.cpp interceptors/logger.h
 )
@@ -29,9 +28,7 @@ endif()
 if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(service_tests
 		gatekeeper.collections_test.cpp
-		gatekeeper_test.cpp
 		gatekeeper.identities_test.cpp
-		gatekeeper.rbac-policies_test.cpp
 	)
 
 	target_link_libraries(service_tests

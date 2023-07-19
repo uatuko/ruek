@@ -21,6 +21,12 @@ cmake_path(SET gatekeeper_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeep
 cmake_path(SET gatekeeper_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb.h)
 cmake_path(SET gatekeeper_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb.cc)
 
+cmake_path(SET rbac_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/rbac.proto)
+cmake_path(SET rbac_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.grpc.pb.h)
+cmake_path(SET rbac_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.grpc.pb.cc)
+cmake_path(SET rbac_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.pb.h)
+cmake_path(SET rbac_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.pb.cc)
+
 cmake_path(SET roles_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/roles.proto)
 cmake_path(SET roles_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/roles.grpc.pb.h)
 cmake_path(SET roles_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/roles.grpc.pb.cc)
@@ -32,6 +38,7 @@ set(protos
 	${common_proto}
 	${events_proto}
 	${gatekeeper_proto}
+	${rbac_proto}
 	${roles_proto}
 )
 
@@ -41,6 +48,7 @@ set(headers
 	${events_header} ${events_grpc_header}
 	${gatekeeper_grpc_header}
 	${gatekeeper_header}
+	${rbac_header} ${rbac_grpc_header}
 	${roles_header} ${roles_grpc_header}
 )
 
@@ -50,6 +58,7 @@ set(sources
 	${events_source} ${events_grpc_source}
 	${gatekeeper_grpc_source}
 	${gatekeeper_source}
+	${rbac_source} ${rbac_grpc_source}
 	${roles_source} ${roles_grpc_source}
 )
 

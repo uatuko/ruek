@@ -5,10 +5,6 @@
 namespace service {
 class Gatekeeper final : public gk::v1::Gatekeeper::CallbackService {
 public:
-	grpc::ServerUnaryReactor *CheckRbac(
-		grpc::CallbackServerContext *context, const gk::v1::CheckRbacRequest *request,
-		gk::v1::CheckRbacResponse *response) override;
-
 	// Collections
 	grpc::ServerUnaryReactor *CreateCollection(
 		grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
@@ -47,10 +43,5 @@ public:
 	grpc::ServerUnaryReactor *UpdateIdentity(
 		grpc::CallbackServerContext *context, const gk::v1::UpdateIdentityRequest *request,
 		gk::v1::Identity *response) override;
-
-	// RBAC policies
-	grpc::ServerUnaryReactor *CreateRbacPolicy(
-		grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
-		gk::v1::RbacPolicy *response) override;
 };
 } // namespace service

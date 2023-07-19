@@ -26,18 +26,6 @@ datastore::Identity map(const gk::v1::CreateIdentityRequest *from) {
 	return identity;
 }
 
-datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from) {
-	datastore::RbacPolicy policy({
-		.id = from->id(),
-	});
-
-	if (from->has_name()) {
-		policy.name(from->name());
-	}
-
-	return policy;
-}
-
 void map(const datastore::AccessPolicy &from, gk::v1::Policy *to) {
 	to->set_id(from.id());
 
@@ -55,38 +43,6 @@ void map(const datastore::Identity &from, gk::v1::Identity *to) {
 
 	if (from.attrs()) {
 		google::protobuf::util::JsonStringToMessage(*from.attrs(), to->mutable_attrs());
-	}
-}
-
-void map(const datastore::Policies &from, gk::v1::CheckRbacResponse *to) {
-	for (const auto &policy : from) {
-		auto p = to->add_policies();
-		p->set_id(policy.id);
-	}
-}
-
-void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to) {
-	to->set_id(from.id());
-	if (from.name()) {
-		to->set_name(*from.name());
-	}
-
-	// Map role ids
-	auto rules = from.rules();
-	if (rules.size() > 0) {
-		for (const auto &rule : rules) {
-			auto r = to->add_rules();
-			r->set_role_id(rule.roleId);
-		}
-	}
-
-	// Map principals
-	for (const auto &id : from.collections()) {
-		to->add_collection_ids(id);
-	}
-
-	for (const auto &id : from.identities()) {
-		to->add_identity_ids(id);
 	}
 }
 } // namespace service

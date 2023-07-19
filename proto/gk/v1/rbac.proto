@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package gk.v1;
+
+import "gk/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+service Rbac {
+	rpc Check(CheckRbacRequest) returns (CheckRbacResponse) {
+		option (google.api.http) = {
+			post : "/v1/check:rbac"
+			body : "*"
+		};
+	}
+
+	rpc CreatePolicy(CreateRbacPolicyRequest) returns (RbacPolicy) {
+		option (google.api.http) = {
+			post : "/v1/rbac-policies"
+			body : "*"
+		};
+	}
+}
+
+message RbacPolicy {
+	string          id   = 1;
+	optional string name = 2;
+
+	repeated string         collection_ids = 3;
+	repeated string         identity_ids   = 4;
+	repeated RbacPolicyRule rules          = 5;
+}
+
+message RbacPolicyRule {
+	google.protobuf.Struct attrs   = 2;
+	string                 role_id = 1;
+}
+
+message CheckRbacRequest {
+	oneof identity {
+		string identity_id  = 1;
+		string identity_sub = 2;
+	}
+
+	string permission = 3;
+}
+
+message CheckRbacResponse {
+	repeated Policy policies = 1;
+}
+
+message CreateRbacPolicyRequest {
+	optional string id   = 1;
+	optional string name = 2;
+
+	repeated string         collection_ids = 3;
+	repeated string         identity_ids   = 4;
+	repeated RbacPolicyRule rules          = 5;
+}
