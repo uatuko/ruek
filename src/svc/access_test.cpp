@@ -184,7 +184,7 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 
 		gk::v1::CreateAccessPolicyRequest request;
 		request.set_id(policy.id());
-		request.set_name("name:svc_AccessTest.CreatePolicy-duplicate");
+		request.set_name("name:svc_AccessTest.CreatePolicy-duplicate_id");
 
 		auto reactor = svc.CreatePolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -233,10 +233,6 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 
 	// Success: create access policy with collection and resource
 	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::AccessPolicy                  response;
-
 		const datastore::Identity identity({
 			.id  = "id:svc_AccessTest.CreatePolicy-with_collection_and_resource",
 			.sub = "sub:svc_AccessTest.CreatePolicy-with_collection_and_resource",
@@ -249,6 +245,10 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                  response;
 
 		gk::v1::CreateAccessPolicyRequest request;
 		request.set_name("name:svc_AccessTest.CreatePolicy-with_collection_and_resource");
