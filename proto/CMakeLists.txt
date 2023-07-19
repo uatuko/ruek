@@ -72,4 +72,3 @@ target_link_libraries(proto
 )
 
 add_library(${PROJECT_NAME}::libproto ALIAS proto)
-

@@ -99,4 +99,3 @@ target_link_libraries(${PROJECT_NAME}
 		${PROJECT_NAME}::svc
 		libviper::viper
 )
-
