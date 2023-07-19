@@ -1,6 +1,7 @@
 add_library(svc
 	access.cpp access.h
 	events.cpp events.h
+	roles.cpp roles.h
 )
 
 target_link_libraries(svc
@@ -26,6 +27,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 	add_executable(svc_tests
 		access_test.cpp
 		events_test.cpp
+		roles_test.cpp
 	)
 
 	target_link_libraries(svc_tests

@@ -4,6 +4,15 @@ package gk.v1;
 
 import "google/protobuf/struct.proto";
 
+message Meta {
+	optional Page page = 1;
+}
+
+message Page {
+	optional uint32 limit  = 1;
+	optional uint64 offset = 2;
+}
+
 message Policy {
 	google.protobuf.Struct attrs = 2;
 	string                 id    = 1;

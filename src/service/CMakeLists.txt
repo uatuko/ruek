@@ -3,7 +3,6 @@ add_library(service
 	gatekeeper.cpp gatekeeper.h
 	gatekeeper.identities.cpp
 	gatekeeper.rbac-policies.cpp
-	gatekeeper.roles.cpp
 	mappers.cpp mappers.h
 	interceptors/logger.cpp interceptors/logger.h
 )
@@ -33,7 +32,6 @@ if (GATEKEEPER_ENABLE_TESTING)
 		gatekeeper_test.cpp
 		gatekeeper.identities_test.cpp
 		gatekeeper.rbac-policies_test.cpp
-		gatekeeper.roles_test.cpp
 	)
 
 	target_link_libraries(service_tests

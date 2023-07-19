@@ -52,14 +52,5 @@ public:
 	grpc::ServerUnaryReactor *CreateRbacPolicy(
 		grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
 		gk::v1::RbacPolicy *response) override;
-
-	// Roles
-	grpc::ServerUnaryReactor *CreateRole(
-		grpc::CallbackServerContext *context, const gk::v1::CreateRoleRequest *request,
-		gk::v1::Role *response) override;
-
-	grpc::ServerUnaryReactor *RetrieveRole(
-		grpc::CallbackServerContext *context, const gk::v1::RetrieveRoleRequest *request,
-		gk::v1::Role *response) override;
 };
 } // namespace service

@@ -83,49 +83,6 @@ service Gatekeeper {
 			body : "*"
 		};
 	}
-
-	// Roles
-	rpc CreateRole(CreateRoleRequest) returns (Role) {
-		option (google.api.http) = {
-			post : "/v1/roles"
-			body : "*"
-		};
-	}
-
-	rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
-		option (google.api.http) = {
-			get : "/v1/roles?_limit={page.limit}&_offset={page.offset}"
-		};
-	}
-
-	rpc RetrieveRole(RetrieveRoleRequest) returns (Role) {
-		option (google.api.http) = {
-			get : "/v1/roles/{id}"
-		};
-	}
-
-	rpc SetRolePermissions(SetRolePermissionsRequest) returns (Role) {
-		option (google.api.http) = {
-			put : "/v1/roles/{id}/permissions"
-			body : "*"
-		};
-	}
-
-	rpc UpdateRole(UpdateRoleRequest) returns (Role) {
-		option (google.api.http) = {
-			patch : "/v1/roles/{id}"
-			body : "*"
-		};
-	}
-}
-
-message Meta {
-	optional Page page = 1;
-}
-
-message Page {
-	optional uint32 limit  = 1;
-	optional uint64 offset = 2;
 }
 
 // Collections
@@ -238,43 +195,4 @@ message CreateRbacPolicyRequest {
 	repeated string         collection_ids = 3;
 	repeated string         identity_ids   = 4;
 	repeated RbacPolicyRule rules          = 5;
-}
-
-// Roles
-message Role {
-	string id   = 1;
-	string name = 2;
-
-	repeated string permissions = 3;
-}
-
-message CreateRoleRequest {
-	optional string id   = 1;
-	string          name = 2;
-
-	repeated string permissions = 3;
-}
-
-message ListRolesRequest {
-	optional Page page = 1;
-}
-
-message ListRolesResponse {
-	repeated Role data = 1;
-	Meta          meta = 2;
-}
-
-message RetrieveRoleRequest {
-	string id = 1;
-}
-
-message SetRolePermissionsRequest {
-	string id = 1;
-
-	repeated string permissions = 2;
-}
-
-message UpdateRoleRequest {
-	string id   = 1;
-	string name = 2;
 }
