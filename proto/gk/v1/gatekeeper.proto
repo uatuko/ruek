@@ -53,6 +53,14 @@ service Gatekeeper {
 		};
 	}
 
+	// Access policies - identity
+	rpc AddAccessPolicyIdentity(AddAccessPolicyIdentityRequest) returns (AddAccessPolicyIdentityResponse) {
+		option (google.api.http) = {
+			post : "/v1/access-policies/{policy_id}/identities"
+			body : "*"
+		};
+	}
+
 	// Collections
 	rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
 		option (google.api.http) = {
@@ -220,6 +228,14 @@ message AddAccessPolicyCollectionRequest {
 }
 
 message AddAccessPolicyCollectionResponse {}
+
+// Access policies - identity
+message AddAccessPolicyIdentityRequest {
+	string policy_id   = 1;
+	string identity_id = 2;
+}
+
+message AddAccessPolicyIdentityResponse {}
 
 // Collections
 message Collection {
