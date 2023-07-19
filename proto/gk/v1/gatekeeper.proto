@@ -3,6 +3,7 @@ syntax = "proto3";
 package gk.v1;
 
 import "gk/v1/common.proto";
+import "gk/v1/identities.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -45,27 +46,6 @@ service Gatekeeper {
 	rpc RemoveCollectionMember(RemoveCollectionMemberRequest) returns (RemoveCollectionMemberResponse) {
 		option (google.api.http) = {
 			delete : "/v1/collections/{collection_id}/members/{identity_id}"
-		};
-	}
-
-	// Identities
-	rpc CreateIdentity(CreateIdentityRequest) returns (Identity) {
-		option (google.api.http) = {
-			post : "/v1/identities"
-			body : "*"
-		};
-	}
-
-	rpc RetrieveIdentity(RetrieveIdentityRequest) returns (Identity) {
-		option (google.api.http) = {
-			get : "/v1/identities/{id}"
-		};
-	}
-
-	rpc UpdateIdentity(UpdateIdentityRequest) returns (Identity) {
-		option (google.api.http) = {
-			patch : "/v1/identities/{id}"
-			body : "*"
 		};
 	}
 }
@@ -115,32 +95,3 @@ message RemoveCollectionMemberRequest {
 }
 
 message RemoveCollectionMemberResponse {}
-
-// Identities
-message Identity {
-	string id  = 1;
-	string sub = 2;
-
-	optional google.protobuf.Struct attrs = 3;
-}
-
-message CreateIdentityRequest {
-	optional string id  = 1;
-	string          sub = 2;
-
-	optional google.protobuf.Struct attrs = 3;
-}
-
-message RetrieveIdentityRequest {
-	oneof identity {
-		string id  = 1;
-		string sub = 2;
-	}
-}
-
-message UpdateIdentityRequest {
-	string id = 1;
-
-	optional string sub                   = 2;
-	optional google.protobuf.Struct attrs = 3;
-}

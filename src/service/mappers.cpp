@@ -10,22 +10,6 @@ datastore::Collection map(const gk::v1::CreateCollectionRequest *from) {
 	}};
 }
 
-datastore::Identity map(const gk::v1::CreateIdentityRequest *from) {
-	datastore::Identity identity({
-		.id  = from->id(),
-		.sub = from->sub(),
-	});
-
-	if (from->has_attrs()) {
-		std::string attrs;
-		google::protobuf::util::MessageToJsonString(from->attrs(), &attrs);
-
-		identity.attrs(std::move(attrs));
-	}
-
-	return identity;
-}
-
 void map(const datastore::AccessPolicy &from, gk::v1::Policy *to) {
 	to->set_id(from.id());
 
