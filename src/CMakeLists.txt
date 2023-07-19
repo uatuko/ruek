@@ -2,7 +2,6 @@ add_subdirectory(datastore)
 add_subdirectory(err)
 add_subdirectory(events)
 add_subdirectory(logger)
-add_subdirectory(service)
 add_subdirectory(svc)
 
 # datastore
@@ -53,18 +52,6 @@ target_include_directories(liblogger
 
 add_library(${PROJECT_NAME}::logger ALIAS liblogger)
 
-# service
-add_library(libservice INTERFACE)
-target_link_libraries(libservice
-	INTERFACE service
-)
-
-target_include_directories(libservice
-	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-)
-
-add_library(${PROJECT_NAME}::service ALIAS libservice)
-
 # svc
 add_library(libsvc INTERFACE)
 target_link_libraries(libsvc
@@ -95,7 +82,6 @@ endif()
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE
 		${PROJECT_NAME}::datastore
-		${PROJECT_NAME}::service
 		${PROJECT_NAME}::svc
 		libviper::viper
 )

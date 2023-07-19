@@ -5,52 +5,49 @@ package gk.v1;
 import "gk/v1/common.proto";
 import "gk/v1/identities.proto";
 import "google/api/annotations.proto";
-import "google/protobuf/struct.proto";
 
-service Gatekeeper {
-	// Collections
-	rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
+service Collections {
+	rpc Create(CreateCollectionRequest) returns (Collection) {
 		option (google.api.http) = {
 			post : "/v1/collections"
 			body : "*"
 		};
 	}
 
-	rpc RetrieveCollection(RetrieveCollectionRequest) returns (Collection) {
+	rpc Retrieve(RetrieveCollectionRequest) returns (Collection) {
 		option (google.api.http) = {
 			get : "/v1/collections/{id}"
 		};
 	}
 
-	rpc UpdateCollection(UpdateCollectionRequest) returns (Collection) {
+	rpc Update(UpdateCollectionRequest) returns (Collection) {
 		option (google.api.http) = {
 			patch : "/v1/collections/{id}"
 			body : "*"
 		};
 	}
 
-	// Collections - members
-	rpc AddCollectionMember(AddCollectionMemberRequest) returns (AddCollectionMemberResponse) {
+	// Members
+	rpc AddMember(AddCollectionMemberRequest) returns (AddCollectionMemberResponse) {
 		option (google.api.http) = {
 			post : "/v1/collections/{collection_id}/members"
 			body : "*"
 		};
 	}
 
-	rpc ListCollectionMembers(ListCollectionMembersRequest) returns (ListCollectionMembersResponse) {
+	rpc ListMembers(ListCollectionMembersRequest) returns (ListCollectionMembersResponse) {
 		option (google.api.http) = {
 			get : "/v1/collections/{id}/members?_limit={page.limit}&_offset={page.offset}"
 		};
 	}
 
-	rpc RemoveCollectionMember(RemoveCollectionMemberRequest) returns (RemoveCollectionMemberResponse) {
+	rpc RemoveMember(RemoveCollectionMemberRequest) returns (RemoveCollectionMemberResponse) {
 		option (google.api.http) = {
 			delete : "/v1/collections/{collection_id}/members/{identity_id}"
 		};
 	}
 }
 
-// Collections
 message Collection {
 	string id   = 1;
 	string name = 2;
@@ -70,7 +67,7 @@ message UpdateCollectionRequest {
 	optional string name = 2;
 }
 
-// Collections - members
+// Members
 message AddCollectionMemberRequest {
 	string collection_id = 1;
 	string identity_id   = 2;
