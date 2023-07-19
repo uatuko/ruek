@@ -10,7 +10,7 @@
 
 #include "events.h"
 
-class EventsTest : public testing::Test {
+class svc_EventsTest : public testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		datastore::testing::setup();
@@ -27,24 +27,24 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-TEST_F(EventsTest, Process_cache_rebuild) {
+TEST_F(svc_EventsTest, Process_cache_rebuild) {
 	svc::Events svc;
 
 	// Success: request/cache.rebuild:access
 	{
 		const datastore::Identity identity({
-			.sub = "sub:EventsTest.Process(request/cache.rebuild:access)",
+			.sub = "sub:svc_EventsTest.Process(request/cache.rebuild:access)",
 		});
 		ASSERT_NO_THROW(identity.store());
 
 		const datastore::Collection collection({
-			.name = "name:EventsTest.Process(request/cache.rebuild:access)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:access)",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
 		const datastore::AccessPolicy policy({
-			.name = "name:EventsTest.Process(request/cache.rebuild:access)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:access)",
 			.rules =
 				{
 					{
@@ -109,27 +109,27 @@ TEST_F(EventsTest, Process_cache_rebuild) {
 	// Success: request/cache.rebuild:rbac
 	{
 		const datastore::Identity identity({
-			.sub = "sub:EventsTest.Process(request/cache.rebuild:rbac)",
+			.sub = "sub:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(identity.store());
 
 		const datastore::Collection collection({
-			.name = "name:EventsTest.Process(request/cache.rebuild:rbac)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
 		const datastore::Role role({
-			.name = "name:EventsTest.Process(request/cache.rebuild:rbac)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 			.permissions =
 				{
-					{"permissions[0]:EventsTest.Process(request/cache.rebuild:rbac)"},
+					{"permissions[0]:svc_EventsTest.Process(request/cache.rebuild:rbac)"},
 				},
 		});
 		ASSERT_NO_THROW(role.store());
 
 		const datastore::RbacPolicy policy({
-			.name = "name:EventsTest.Process(request/cache.rebuild:rbac)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(policy.store());
 

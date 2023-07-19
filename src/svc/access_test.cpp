@@ -61,7 +61,7 @@ TEST_F(svc_AccessTest, AddPolicyCollection) {
 TEST_F(svc_AccessTest, AddPolicyIdentity) {
 	svc::Access svc;
 
-	// Success: add collection
+	// Success: add identity
 	{
 		const datastore::Identity identity({
 			.sub = "sub:svc_AccessTest.AddPolicyIdentity",
