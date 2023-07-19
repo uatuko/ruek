@@ -28,6 +28,11 @@ public:
 		const gk::v1::AddAccessPolicyCollectionRequest *request,
 		gk::v1::AddAccessPolicyCollectionResponse      *response) override;
 
+	// Access policies - identities
+	grpc::ServerUnaryReactor *AddAccessPolicyIdentity(
+		grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyIdentityRequest *request,
+		gk::v1::AddAccessPolicyIdentityResponse *response) override;
+
 	// Collections
 	grpc::ServerUnaryReactor *CreateCollection(
 		grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
