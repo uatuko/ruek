@@ -4,7 +4,7 @@
 
 namespace svc {
 grpc::ServerUnaryReactor *Identities::Create(
-	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::IdentitiesCreateRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -42,7 +42,7 @@ grpc::ServerUnaryReactor *Identities::Create(
 }
 
 grpc::ServerUnaryReactor *Identities::Retrieve(
-	grpc::CallbackServerContext *context, const gk::v1::RetrieveIdentityRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::IdentitiesRetrieveRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -67,7 +67,7 @@ grpc::ServerUnaryReactor *Identities::Retrieve(
 }
 
 grpc::ServerUnaryReactor *Identities::Update(
-	grpc::CallbackServerContext *context, const gk::v1::UpdateIdentityRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::IdentitiesUpdateRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -114,7 +114,7 @@ grpc::ServerUnaryReactor *Identities::Update(
 	return reactor;
 }
 
-datastore::Identity Identities::map(const gk::v1::CreateIdentityRequest *from) {
+datastore::Identity Identities::map(const gk::v1::IdentitiesCreateRequest *from) {
 	datastore::Identity identity({
 		.id  = from->id(),
 		.sub = from->sub(),

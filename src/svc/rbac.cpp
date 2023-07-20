@@ -4,8 +4,8 @@
 
 namespace svc {
 grpc::ServerUnaryReactor *Rbac::Check(
-	grpc::CallbackServerContext *context, const gk::v1::CheckRbacRequest *request,
-	gk::v1::CheckRbacResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::RbacCheckRequest *request,
+	gk::v1::RbacCheckResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	if (request->has_identity_sub()) {
@@ -28,7 +28,7 @@ grpc::ServerUnaryReactor *Rbac::Check(
 }
 
 grpc::ServerUnaryReactor *Rbac::CreatePolicy(
-	grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::RbacCreatePolicyRequest *request,
 	gk::v1::RbacPolicy *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -77,7 +77,7 @@ grpc::ServerUnaryReactor *Rbac::CreatePolicy(
 	return reactor;
 }
 
-datastore::RbacPolicy Rbac::map(const gk::v1::CreateRbacPolicyRequest *from) {
+datastore::RbacPolicy Rbac::map(const gk::v1::RbacCreatePolicyRequest *from) {
 	datastore::RbacPolicy policy({
 		.id = from->id(),
 	});
@@ -89,7 +89,7 @@ datastore::RbacPolicy Rbac::map(const gk::v1::CreateRbacPolicyRequest *from) {
 	return policy;
 }
 
-void Rbac::map(const datastore::Policies &from, gk::v1::CheckRbacResponse *to) {
+void Rbac::map(const datastore::Policies &from, gk::v1::RbacCheckResponse *to) {
 	for (const auto &policy : from) {
 		auto p = to->add_policies();
 		p->set_id(policy.id);

@@ -76,15 +76,16 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::ProcessEventResponse          response;
+		gk::v1::EventsProcessResponse         response;
 
 		gk::v1::RebuildAccessCacheEventPayload payload;
 		payload.add_ids(policy.id());
 
-		gk::v1::Event request;
-		request.set_name("request/cache.rebuild:access");
+		gk::v1::EventsProcessRequest request;
+		auto                        *event = request.mutable_event();
+		event->set_name("request/cache.rebuild:access");
 
-		auto any = request.mutable_payload();
+		auto any = event->mutable_payload();
 		any->PackFrom(payload);
 
 		auto reactor = svc.Process(&ctx, &request, &response);
@@ -162,15 +163,16 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::ProcessEventResponse          response;
+		gk::v1::EventsProcessResponse         response;
 
 		gk::v1::RebuildRbacCacheEventPayload payload;
 		payload.add_ids(policy.id());
 
-		gk::v1::Event request;
-		request.set_name("request/cache.rebuild:rbac");
+		gk::v1::EventsProcessRequest request;
+		auto                        *event = request.mutable_event();
+		event->set_name("request/cache.rebuild:rbac");
 
-		auto any = request.mutable_payload();
+		auto any = event->mutable_payload();
 		any->PackFrom(payload);
 
 		auto reactor = svc.Process(&ctx, &request, &response);

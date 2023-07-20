@@ -7,16 +7,16 @@ namespace svc {
 class Rbac final : public gk::v1::Rbac::CallbackService {
 public:
 	grpc::ServerUnaryReactor *Check(
-		grpc::CallbackServerContext *context, const gk::v1::CheckRbacRequest *request,
-		gk::v1::CheckRbacResponse *response) override;
+		grpc::CallbackServerContext *context, const gk::v1::RbacCheckRequest *request,
+		gk::v1::RbacCheckResponse *response) override;
 
 	grpc::ServerUnaryReactor *CreatePolicy(
-		grpc::CallbackServerContext *context, const gk::v1::CreateRbacPolicyRequest *request,
+		grpc::CallbackServerContext *context, const gk::v1::RbacCreatePolicyRequest *request,
 		gk::v1::RbacPolicy *response) override;
 
-	static datastore::RbacPolicy map(const gk::v1::CreateRbacPolicyRequest *from);
+	static datastore::RbacPolicy map(const gk::v1::RbacCreatePolicyRequest *from);
 
-	static void map(const datastore::Policies &from, gk::v1::CheckRbacResponse *to);
+	static void map(const datastore::Policies &from, gk::v1::RbacCheckResponse *to);
 	static void map(const datastore::RbacPolicy &from, gk::v1::RbacPolicy *to);
 };
 } // namespace svc

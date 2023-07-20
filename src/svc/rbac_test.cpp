@@ -32,7 +32,7 @@ TEST_F(svc_RbacTest, Check) {
 	{
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckRbacResponse             response;
+		gk::v1::RbacCheckResponse             response;
 
 		const datastore::Identity identity({
 			.sub = "sub:svc_RbacTest.Check",
@@ -54,7 +54,7 @@ TEST_F(svc_RbacTest, Check) {
 		});
 		ASSERT_NO_THROW(cache.store());
 
-		gk::v1::CheckRbacRequest request;
+		gk::v1::RbacCheckRequest request;
 		request.set_permission(permission);
 		request.set_identity_id(identity.id());
 
@@ -74,7 +74,7 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		gk::v1::CreateRbacPolicyRequest request;
+		gk::v1::RbacCreatePolicyRequest request;
 		request.set_id("id:svc_RbacTest.CreatePolicy-with_id");
 		request.set_name("name:svc_RbacTest.CreatePolicy-with_id");
 
@@ -97,7 +97,7 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		gk::v1::CreateRbacPolicyRequest request;
+		gk::v1::RbacCreatePolicyRequest request;
 		request.set_id(policy.id());
 		request.set_name("name:svc_RbacTest.CreatePolicy-duplicate_id");
 
@@ -130,7 +130,7 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		gk::v1::CreateRbacPolicyRequest request;
+		gk::v1::RbacCreatePolicyRequest request;
 		request.set_name("name:svc_RbacTest.CreatePolicy-with_identity_and_role");
 		request.add_identity_ids(identity.id());
 
@@ -188,7 +188,7 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		gk::v1::CreateRbacPolicyRequest request;
+		gk::v1::RbacCreatePolicyRequest request;
 		request.set_name("name:svc_RbacTest.CreatePolicy-with_collection_and_role");
 		request.add_collection_ids(collection.id());
 

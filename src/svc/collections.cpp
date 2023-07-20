@@ -10,8 +10,8 @@
 
 namespace svc {
 grpc::ServerUnaryReactor *Collections::AddMember(
-	grpc::CallbackServerContext *context, const gk::v1::AddCollectionMemberRequest *request,
-	gk::v1::AddCollectionMemberResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::CollectionsAddMemberRequest *request,
+	gk::v1::CollectionsAddMemberResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
@@ -55,7 +55,7 @@ grpc::ServerUnaryReactor *Collections::AddMember(
 }
 
 grpc::ServerUnaryReactor *Collections::Create(
-	grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::CollectionsCreateRequest *request,
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -90,8 +90,8 @@ grpc::ServerUnaryReactor *Collections::Create(
 }
 
 grpc::ServerUnaryReactor *Collections::ListMembers(
-	grpc::CallbackServerContext *context, const gk::v1::ListCollectionMembersRequest *request,
-	gk::v1::ListCollectionMembersResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::CollectionsListMembersRequest *request,
+	gk::v1::CollectionsListMembersResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
@@ -111,8 +111,8 @@ grpc::ServerUnaryReactor *Collections::ListMembers(
 }
 
 grpc::ServerUnaryReactor *Collections::RemoveMember(
-	grpc::CallbackServerContext *context, const gk::v1::RemoveCollectionMemberRequest *request,
-	gk::v1::RemoveCollectionMemberResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::CollectionsRemoveMemberRequest *request,
+	gk::v1::CollectionsRemoveMemberResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
@@ -124,7 +124,7 @@ grpc::ServerUnaryReactor *Collections::RemoveMember(
 }
 
 grpc::ServerUnaryReactor *Collections::Retrieve(
-	grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::CollectionsRetrieveRequest *request,
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -144,7 +144,7 @@ grpc::ServerUnaryReactor *Collections::Retrieve(
 }
 
 grpc::ServerUnaryReactor *Collections::Update(
-	grpc::CallbackServerContext *context, const gk::v1::UpdateCollectionRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::CollectionsUpdateRequest *request,
 	gk::v1::Collection *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -184,7 +184,7 @@ grpc::ServerUnaryReactor *Collections::Update(
 	return reactor;
 }
 
-datastore::Collection Collections::map(const gk::v1::CreateCollectionRequest *from) {
+datastore::Collection Collections::map(const gk::v1::CollectionsCreateRequest *from) {
 	return {{
 		.id   = from->id(),
 		.name = from->name(),

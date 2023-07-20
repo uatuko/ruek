@@ -36,9 +36,9 @@ TEST_F(svc_CollectionsTest, AddMember) {
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::AddCollectionMemberResponse   response;
+		gk::v1::CollectionsAddMemberResponse  response;
 
-		gk::v1::AddCollectionMemberRequest request;
+		gk::v1::CollectionsAddMemberRequest request;
 		request.set_collection_id(collection.id());
 		request.set_identity_id(identity.id());
 
@@ -68,7 +68,7 @@ TEST_F(svc_CollectionsTest, AddMember) {
 	{
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::AddCollectionMemberResponse   response;
+		gk::v1::CollectionsAddMemberResponse  response;
 
 		const datastore::Identity identity({
 			.id  = "id:svc_CollectionsTest.AddMember-access",
@@ -82,7 +82,7 @@ TEST_F(svc_CollectionsTest, AddMember) {
 		});
 		ASSERT_NO_THROW(collection.store());
 
-		gk::v1::AddCollectionMemberRequest request;
+		gk::v1::CollectionsAddMemberRequest request;
 		request.set_collection_id(collection.id());
 		request.set_identity_id(identity.id());
 
@@ -125,7 +125,7 @@ TEST_F(svc_CollectionsTest, AddMember) {
 	{
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::AddCollectionMemberResponse   response;
+		gk::v1::CollectionsAddMemberResponse  response;
 
 		const datastore::Identity identity({
 			.id  = "id:svc_CollectionsTest.AddMember-rbac",
@@ -139,7 +139,7 @@ TEST_F(svc_CollectionsTest, AddMember) {
 		});
 		ASSERT_NO_THROW(collection.store());
 
-		gk::v1::AddCollectionMemberRequest request;
+		gk::v1::CollectionsAddMemberRequest request;
 		request.set_collection_id(collection.id());
 		request.set_identity_id(identity.id());
 
@@ -194,7 +194,7 @@ TEST_F(svc_CollectionsTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::CreateCollectionRequest request;
+		gk::v1::CollectionsCreateRequest request;
 		request.set_name("name:svc_CollectionsTest.Create");
 
 		auto reactor = svc.Create(&ctx, &request, &response);
@@ -211,7 +211,7 @@ TEST_F(svc_CollectionsTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::CreateCollectionRequest request;
+		gk::v1::CollectionsCreateRequest request;
 		request.set_id("id:svc_CollectionsTest.Create-with_id");
 		request.set_name("name:svc_CollectionsTest.Create-with_id");
 
@@ -234,7 +234,7 @@ TEST_F(svc_CollectionsTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::CreateCollectionRequest request;
+		gk::v1::CollectionsCreateRequest request;
 		request.set_id(collection.id());
 		request.set_name("name:svc_CollectionsTest.Create-duplicate_id");
 
@@ -266,11 +266,11 @@ TEST_F(svc_CollectionsTest, ListMembers) {
 
 		ASSERT_NO_THROW(collection.add(identities[0].id()));
 
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::ListCollectionMembersResponse response;
+		grpc::CallbackServerContext            ctx;
+		grpc::testing::DefaultReactorTestPeer  peer(&ctx);
+		gk::v1::CollectionsListMembersResponse response;
 
-		gk::v1::ListCollectionMembersRequest request;
+		gk::v1::CollectionsListMembersRequest request;
 		request.set_id(collection.id());
 
 		auto reactor = svc.ListMembers(&ctx, &request, &response);
@@ -301,11 +301,11 @@ TEST_F(svc_CollectionsTest, RemoveMember) {
 		ASSERT_NO_THROW(identity.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
-		grpc::CallbackServerContext            ctx;
-		grpc::testing::DefaultReactorTestPeer  peer(&ctx);
-		gk::v1::RemoveCollectionMemberResponse response;
+		grpc::CallbackServerContext             ctx;
+		grpc::testing::DefaultReactorTestPeer   peer(&ctx);
+		gk::v1::CollectionsRemoveMemberResponse response;
 
-		gk::v1::RemoveCollectionMemberRequest request;
+		gk::v1::CollectionsRemoveMemberRequest request;
 		request.set_collection_id(collection.id());
 		request.set_identity_id(identity.id());
 
@@ -347,7 +347,7 @@ TEST_F(svc_CollectionsTest, Retrieve) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::RetrieveCollectionRequest request;
+		gk::v1::CollectionsRetrieveRequest request;
 		request.set_id(collection.id());
 
 		auto reactor = svc.Retrieve(&ctx, &request, &response);
@@ -364,7 +364,7 @@ TEST_F(svc_CollectionsTest, Retrieve) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::RetrieveCollectionRequest request;
+		gk::v1::CollectionsRetrieveRequest request;
 		request.set_id("id:svc_CollectionsTest.Retrieve-not_found");
 
 		auto reactor = svc.Retrieve(&ctx, &request, &response);
@@ -389,7 +389,7 @@ TEST_F(svc_CollectionsTest, Update) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::UpdateCollectionRequest request;
+		gk::v1::CollectionsUpdateRequest request;
 		request.set_id(collection.id());
 		request.set_name("name:svc_CollectionsTest.Update-edit");
 
@@ -412,7 +412,7 @@ TEST_F(svc_CollectionsTest, Update) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::UpdateCollectionRequest request;
+		gk::v1::CollectionsUpdateRequest request;
 		request.set_id("id:svc_CollectionsTest.Update-no_changes");
 
 		auto reactor = svc.Update(&ctx, &request, &response);
@@ -427,7 +427,7 @@ TEST_F(svc_CollectionsTest, Update) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Collection                    response;
 
-		gk::v1::UpdateCollectionRequest request;
+		gk::v1::CollectionsUpdateRequest request;
 		request.set_id("id:svc_CollectionsTest.Update-not_found");
 		request.set_name("name:svc_CollectionsTest.Update-not_found");
 

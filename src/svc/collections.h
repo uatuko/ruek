@@ -7,30 +7,30 @@ namespace svc {
 class Collections final : public gk::v1::Collections::CallbackService {
 public:
 	grpc::ServerUnaryReactor *AddMember(
-		grpc::CallbackServerContext *context, const gk::v1::AddCollectionMemberRequest *request,
-		gk::v1::AddCollectionMemberResponse *response) override;
+		grpc::CallbackServerContext *context, const gk::v1::CollectionsAddMemberRequest *request,
+		gk::v1::CollectionsAddMemberResponse *response) override;
 
 	grpc::ServerUnaryReactor *Create(
-		grpc::CallbackServerContext *context, const gk::v1::CreateCollectionRequest *request,
+		grpc::CallbackServerContext *context, const gk::v1::CollectionsCreateRequest *request,
 		gk::v1::Collection *response) override;
 
 	grpc::ServerUnaryReactor *ListMembers(
-		grpc::CallbackServerContext *context, const gk::v1::ListCollectionMembersRequest *request,
-		gk::v1::ListCollectionMembersResponse *response) override;
+		grpc::CallbackServerContext *context, const gk::v1::CollectionsListMembersRequest *request,
+		gk::v1::CollectionsListMembersResponse *response) override;
 
 	grpc::ServerUnaryReactor *RemoveMember(
-		grpc::CallbackServerContext *context, const gk::v1::RemoveCollectionMemberRequest *request,
-		gk::v1::RemoveCollectionMemberResponse *response) override;
+		grpc::CallbackServerContext *context, const gk::v1::CollectionsRemoveMemberRequest *request,
+		gk::v1::CollectionsRemoveMemberResponse *response) override;
 
 	grpc::ServerUnaryReactor *Retrieve(
-		grpc::CallbackServerContext *context, const gk::v1::RetrieveCollectionRequest *request,
+		grpc::CallbackServerContext *context, const gk::v1::CollectionsRetrieveRequest *request,
 		gk::v1::Collection *response) override;
 
 	grpc::ServerUnaryReactor *Update(
-		grpc::CallbackServerContext *context, const gk::v1::UpdateCollectionRequest *request,
+		grpc::CallbackServerContext *context, const gk::v1::CollectionsUpdateRequest *request,
 		gk::v1::Collection *response) override;
 
-	static datastore::Collection map(const gk::v1::CreateCollectionRequest *from);
+	static datastore::Collection map(const gk::v1::CollectionsCreateRequest *from);
 
 	static void map(const datastore::Collection &from, gk::v1::Collection *to);
 };

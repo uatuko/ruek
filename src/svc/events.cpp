@@ -6,13 +6,14 @@
 
 namespace svc {
 grpc::ServerUnaryReactor *Events::Process(
-	grpc::CallbackServerContext *context, const gk::v1::Event *request,
-	gk::v1::ProcessEventResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::EventsProcessRequest *request,
+	gk::v1::EventsProcessResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
-	if (request->name() == "request/cache.rebuild:access") {
+	auto event = request->event();
+	if (event.name() == "request/cache.rebuild:access") {
 		gk::v1::RebuildAccessCacheEventPayload payload;
-		if (!request->payload().UnpackTo(&payload)) {
+		if (!event.payload().UnpackTo(&payload)) {
 			reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Invalid payload"));
 			return reactor;
 		}
@@ -31,9 +32,9 @@ grpc::ServerUnaryReactor *Events::Process(
 				}
 			}
 		}
-	} else if (request->name() == "request/cache.rebuild:rbac") {
+	} else if (event.name() == "request/cache.rebuild:rbac") {
 		gk::v1::RebuildRbacCacheEventPayload payload;
-		if (!request->payload().UnpackTo(&payload)) {
+		if (!event.payload().UnpackTo(&payload)) {
 			reactor->Finish(grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Invalid payload"));
 			return reactor;
 		}

@@ -6,26 +6,26 @@ import "gk/v1/common.proto";
 import "google/api/annotations.proto";
 
 service Roles {
-	rpc Create(CreateRoleRequest) returns (Role) {
+	rpc Create(RolesCreateRequest) returns (Role) {
 		option (google.api.http) = {
 			post : "/v1/roles"
 			body : "*"
 		};
 	}
 
-	rpc List(ListRolesRequest) returns (ListRolesResponse) {
+	rpc List(RolesListRequest) returns (ListRolesResponse) {
 		option (google.api.http) = {
 			get : "/v1/roles?_limit={page.limit}&_offset={page.offset}"
 		};
 	}
 
-	rpc Retrieve(RetrieveRoleRequest) returns (Role) {
+	rpc Retrieve(RolesRetrieveRequest) returns (Role) {
 		option (google.api.http) = {
 			get : "/v1/roles/{id}"
 		};
 	}
 
-	rpc Update(UpdateRoleRequest) returns (Role) {
+	rpc Update(RolesUpdateRequest) returns (Role) {
 		option (google.api.http) = {
 			patch : "/v1/roles/{id}"
 			body : "*"
@@ -40,14 +40,14 @@ message Role {
 	repeated string permissions = 3;
 }
 
-message CreateRoleRequest {
+message RolesCreateRequest {
 	optional string id   = 1;
 	string          name = 2;
 
 	repeated string permissions = 3;
 }
 
-message ListRolesRequest {
+message RolesListRequest {
 	optional Page page = 1;
 }
 
@@ -56,11 +56,11 @@ message ListRolesResponse {
 	Meta          meta = 2;
 }
 
-message RetrieveRoleRequest {
+message RolesRetrieveRequest {
 	string id = 1;
 }
 
-message UpdateRoleRequest {
+message RolesUpdateRequest {
 	string id   = 1;
 	string name = 2;
 }

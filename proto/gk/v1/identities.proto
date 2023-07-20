@@ -6,20 +6,20 @@ import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Identities {
-	rpc Create(CreateIdentityRequest) returns (Identity) {
+	rpc Create(IdentitiesCreateRequest) returns (Identity) {
 		option (google.api.http) = {
 			post : "/v1/identities"
 			body : "*"
 		};
 	}
 
-	rpc Retrieve(RetrieveIdentityRequest) returns (Identity) {
+	rpc Retrieve(IdentitiesRetrieveRequest) returns (Identity) {
 		option (google.api.http) = {
 			get : "/v1/identities/{id}"
 		};
 	}
 
-	rpc Update(UpdateIdentityRequest) returns (Identity) {
+	rpc Update(IdentitiesUpdateRequest) returns (Identity) {
 		option (google.api.http) = {
 			patch : "/v1/identities/{id}"
 			body : "*"
@@ -34,21 +34,21 @@ message Identity {
 	optional google.protobuf.Struct attrs = 3;
 }
 
-message CreateIdentityRequest {
+message IdentitiesCreateRequest {
 	optional string id  = 1;
 	string          sub = 2;
 
 	optional google.protobuf.Struct attrs = 3;
 }
 
-message RetrieveIdentityRequest {
+message IdentitiesRetrieveRequest {
 	oneof identity {
 		string id  = 1;
 		string sub = 2;
 	}
 }
 
-message UpdateIdentityRequest {
+message IdentitiesUpdateRequest {
 	string id = 1;
 
 	optional string sub                   = 2;

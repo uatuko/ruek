@@ -7,20 +7,20 @@ import "gk/v1/identities.proto";
 import "google/api/annotations.proto";
 
 service Collections {
-	rpc Create(CreateCollectionRequest) returns (Collection) {
+	rpc Create(CollectionsCreateRequest) returns (Collection) {
 		option (google.api.http) = {
 			post : "/v1/collections"
 			body : "*"
 		};
 	}
 
-	rpc Retrieve(RetrieveCollectionRequest) returns (Collection) {
+	rpc Retrieve(CollectionsRetrieveRequest) returns (Collection) {
 		option (google.api.http) = {
 			get : "/v1/collections/{id}"
 		};
 	}
 
-	rpc Update(UpdateCollectionRequest) returns (Collection) {
+	rpc Update(CollectionsUpdateRequest) returns (Collection) {
 		option (google.api.http) = {
 			patch : "/v1/collections/{id}"
 			body : "*"
@@ -28,20 +28,20 @@ service Collections {
 	}
 
 	// Members
-	rpc AddMember(AddCollectionMemberRequest) returns (AddCollectionMemberResponse) {
+	rpc AddMember(CollectionsAddMemberRequest) returns (CollectionsAddMemberResponse) {
 		option (google.api.http) = {
 			post : "/v1/collections/{collection_id}/members"
 			body : "*"
 		};
 	}
 
-	rpc ListMembers(ListCollectionMembersRequest) returns (ListCollectionMembersResponse) {
+	rpc ListMembers(CollectionsListMembersRequest) returns (CollectionsListMembersResponse) {
 		option (google.api.http) = {
 			get : "/v1/collections/{id}/members?_limit={page.limit}&_offset={page.offset}"
 		};
 	}
 
-	rpc RemoveMember(RemoveCollectionMemberRequest) returns (RemoveCollectionMemberResponse) {
+	rpc RemoveMember(CollectionsRemoveMemberRequest) returns (CollectionsRemoveMemberResponse) {
 		option (google.api.http) = {
 			delete : "/v1/collections/{collection_id}/members/{identity_id}"
 		};
@@ -53,42 +53,42 @@ message Collection {
 	string name = 2;
 }
 
-message CreateCollectionRequest {
+message CollectionsCreateRequest {
 	optional string id   = 1;
 	string          name = 2;
 }
 
-message RetrieveCollectionRequest {
+message CollectionsRetrieveRequest {
 	string id = 1;
 }
 
-message UpdateCollectionRequest {
+message CollectionsUpdateRequest {
 	string          id   = 1;
 	optional string name = 2;
 }
 
 // Members
-message AddCollectionMemberRequest {
+message CollectionsAddMemberRequest {
 	string collection_id = 1;
 	string identity_id   = 2;
 }
 
-message AddCollectionMemberResponse {}
+message CollectionsAddMemberResponse {}
 
-message ListCollectionMembersRequest {
+message CollectionsListMembersRequest {
 	string id = 1;
 
 	optional Page page = 2;
 }
 
-message ListCollectionMembersResponse {
+message CollectionsListMembersResponse {
 	repeated Identity data = 1;
 	Meta              meta = 2;
 }
 
-message RemoveCollectionMemberRequest {
+message CollectionsRemoveMemberRequest {
 	string collection_id = 1;
 	string identity_id   = 2;
 }
 
-message RemoveCollectionMemberResponse {}
+message CollectionsRemoveMemberResponse {}

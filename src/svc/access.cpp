@@ -4,8 +4,8 @@
 
 namespace svc {
 grpc::ServerUnaryReactor *Access::AddPolicyCollection(
-	grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyCollectionRequest *request,
-	gk::v1::AddAccessPolicyCollectionResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::AccessAddPolicyCollectionRequest *request,
+	gk::v1::AccessAddPolicyCollectionResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
@@ -17,8 +17,8 @@ grpc::ServerUnaryReactor *Access::AddPolicyCollection(
 }
 
 grpc::ServerUnaryReactor *Access::AddPolicyIdentity(
-	grpc::CallbackServerContext *context, const gk::v1::AddAccessPolicyIdentityRequest *request,
-	gk::v1::AddAccessPolicyIdentityResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::AccessAddPolicyIdentityRequest *request,
+	gk::v1::AccessAddPolicyIdentityResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
@@ -30,8 +30,8 @@ grpc::ServerUnaryReactor *Access::AddPolicyIdentity(
 }
 
 grpc::ServerUnaryReactor *Access::Check(
-	grpc::CallbackServerContext *context, const gk::v1::CheckAccessRequest *request,
-	gk::v1::CheckAccessResponse *response) {
+	grpc::CallbackServerContext *context, const gk::v1::AccessCheckRequest *request,
+	gk::v1::AccessCheckResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	if (request->has_identity_sub()) {
@@ -54,7 +54,7 @@ grpc::ServerUnaryReactor *Access::Check(
 }
 
 grpc::ServerUnaryReactor *Access::CreatePolicy(
-	grpc::CallbackServerContext *context, const gk::v1::CreateAccessPolicyRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::AccessCreatePolicyRequest *request,
 	gk::v1::AccessPolicy *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -95,7 +95,7 @@ grpc::ServerUnaryReactor *Access::CreatePolicy(
 }
 
 grpc::ServerUnaryReactor *Access::RetrievePolicy(
-	grpc::CallbackServerContext *context, const gk::v1::RetrieveAccessPolicyRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::AccessRetrievePolicyRequest *request,
 	gk::v1::AccessPolicy *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -115,7 +115,7 @@ grpc::ServerUnaryReactor *Access::RetrievePolicy(
 	return reactor;
 }
 
-datastore::AccessPolicy Access::map(const gk::v1::CreateAccessPolicyRequest *from) {
+datastore::AccessPolicy Access::map(const gk::v1::AccessCreatePolicyRequest *from) {
 	datastore::AccessPolicy::Data::rules_t rules;
 	for (const auto &rule : from->rules()) {
 		rules.insert({
@@ -151,7 +151,7 @@ void Access::map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) 
 	}
 }
 
-void Access::map(const datastore::Policies &from, gk::v1::CheckAccessResponse *to) {
+void Access::map(const datastore::Policies &from, gk::v1::AccessCheckResponse *to) {
 	for (const auto &policy : from) {
 		auto p = to->add_policies();
 		p->set_id(policy.id);

@@ -27,7 +27,7 @@ TEST_F(svc_IdentitiesTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
+		gk::v1::IdentitiesCreateRequest request;
 		request.set_sub("sub:svc_IdentitiesTest.Create");
 
 		auto reactor = svc.Create(&ctx, &request, &response);
@@ -45,7 +45,7 @@ TEST_F(svc_IdentitiesTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
+		gk::v1::IdentitiesCreateRequest request;
 		request.set_id("id:svc_IdentitiesTest.Create-with_id");
 		request.set_sub("sub:svc_IdentitiesTest.Create-with_id");
 
@@ -64,7 +64,7 @@ TEST_F(svc_IdentitiesTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
+		gk::v1::IdentitiesCreateRequest request;
 		request.set_sub("sub:svc_IdentitiesTest.Create-with_attrs");
 
 		const std::string attrs(R"({"foo":"bar"})");
@@ -98,7 +98,7 @@ TEST_F(svc_IdentitiesTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
+		gk::v1::IdentitiesCreateRequest request;
 		request.set_id(identity.id());
 		request.set_sub("sub:svc_IdentitiesTest.Create-duplicate_id");
 
@@ -119,7 +119,7 @@ TEST_F(svc_IdentitiesTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
+		gk::v1::IdentitiesCreateRequest request;
 		request.set_sub(identity.sub());
 
 		auto reactor = svc.Create(&ctx, &request, &response);
@@ -144,7 +144,7 @@ TEST_F(svc_IdentitiesTest, Retrieve) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
+		gk::v1::IdentitiesRetrieveRequest request;
 		request.set_id(identity.id());
 
 		auto reactor = svc.Retrieve(&ctx, &request, &response);
@@ -168,7 +168,7 @@ TEST_F(svc_IdentitiesTest, Retrieve) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
+		gk::v1::IdentitiesRetrieveRequest request;
 		request.set_sub(identity.sub());
 
 		auto reactor = svc.Retrieve(&ctx, &request, &response);
@@ -192,7 +192,7 @@ TEST_F(svc_IdentitiesTest, Retrieve) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
+		gk::v1::IdentitiesRetrieveRequest request;
 		request.set_id(identity.id());
 
 		auto reactor = svc.Retrieve(&ctx, &request, &response);
@@ -214,7 +214,7 @@ TEST_F(svc_IdentitiesTest, Retrieve) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
+		gk::v1::IdentitiesRetrieveRequest request;
 		request.set_id("id:svc_IdentitiesTest.RetrieveIdentity-not_found");
 
 		auto reactor = svc.Retrieve(&ctx, &request, &response);
@@ -239,7 +239,7 @@ TEST_F(svc_IdentitiesTest, Update) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
+		gk::v1::IdentitiesUpdateRequest request;
 		request.set_id(identity.id());
 		request.set_sub("sub:svc_IdentitiesTest.Update-new");
 
@@ -269,7 +269,7 @@ TEST_F(svc_IdentitiesTest, Update) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
+		gk::v1::IdentitiesUpdateRequest request;
 		request.set_id(identity.id());
 		{
 			auto &attrs  = *request.mutable_attrs();
@@ -326,7 +326,7 @@ TEST_F(svc_IdentitiesTest, Update) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
+		gk::v1::IdentitiesUpdateRequest request;
 		request.set_id("id:svc_IdentitiesTest.UpdateIdentity-no_updates");
 
 		auto reactor = svc.Update(&ctx, &request, &response);
@@ -341,7 +341,7 @@ TEST_F(svc_IdentitiesTest, Update) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
+		gk::v1::IdentitiesUpdateRequest request;
 		request.set_id("id:svc_IdentitiesTest.Update-not_found");
 		request.set_sub("name:svc_IdentitiesTest.Update-not_found");
 

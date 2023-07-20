@@ -7,14 +7,14 @@ namespace svc {
 class Roles final : public gk::v1::Roles::CallbackService {
 public:
 	grpc::ServerUnaryReactor *Create(
-		grpc::CallbackServerContext *context, const gk::v1::CreateRoleRequest *request,
+		grpc::CallbackServerContext *context, const gk::v1::RolesCreateRequest *request,
 		gk::v1::Role *response) override;
 
 	grpc::ServerUnaryReactor *Retrieve(
-		grpc::CallbackServerContext *context, const gk::v1::RetrieveRoleRequest *request,
+		grpc::CallbackServerContext *context, const gk::v1::RolesRetrieveRequest *request,
 		gk::v1::Role *response) override;
 
-	static datastore::Role map(const gk::v1::CreateRoleRequest *from);
+	static datastore::Role map(const gk::v1::RolesCreateRequest *from);
 
 	static void map(const datastore::Role &from, gk::v1::Role *to);
 };

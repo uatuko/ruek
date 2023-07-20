@@ -27,7 +27,7 @@ TEST_F(svc_RolesTest, Create) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Role                          response;
 
-		gk::v1::CreateRoleRequest request;
+		gk::v1::RolesCreateRequest request;
 		request.set_name("name:svc_RolesTest.CreateRole");
 		request.add_permissions("permissions[0]:svc_RolesTest.CreateRole");
 
@@ -64,7 +64,7 @@ TEST_F(svc_RolesTest, Retrieve) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Role                          response;
 
-		gk::v1::RetrieveRoleRequest request;
+		gk::v1::RolesRetrieveRequest request;
 		request.set_id(role.id());
 
 		auto reactor = svc.Retrieve(&ctx, &request, &response);

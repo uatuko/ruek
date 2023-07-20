@@ -7,28 +7,28 @@ import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Access {
-	rpc Check(CheckAccessRequest) returns (CheckAccessResponse) {
+	rpc Check(AccessCheckRequest) returns (AccessCheckResponse) {
 		option (google.api.http) = {
 			post : "/v1/check:access"
 			body : "*"
 		};
 	}
 
-	rpc CreatePolicy(CreateAccessPolicyRequest) returns (AccessPolicy) {
+	rpc CreatePolicy(AccessCreatePolicyRequest) returns (AccessPolicy) {
 		option (google.api.http) = {
 			post : "/v1/access-policies"
 			body : "*"
 		};
 	}
 
-	rpc RetrievePolicy(RetrieveAccessPolicyRequest) returns (AccessPolicy) {
+	rpc RetrievePolicy(AccessRetrievePolicyRequest) returns (AccessPolicy) {
 		option (google.api.http) = {
 			get : "/v1/access-policies/{id}"
 		};
 	}
 
 	// Policy collections
-	rpc AddPolicyCollection(AddAccessPolicyCollectionRequest) returns (AddAccessPolicyCollectionResponse) {
+	rpc AddPolicyCollection(AccessAddPolicyCollectionRequest) returns (AccessAddPolicyCollectionResponse) {
 		option (google.api.http) = {
 			post : "/v1/access-policies/{policy_id}/collections"
 			body : "*"
@@ -36,7 +36,7 @@ service Access {
 	}
 
 	// Policy identities
-	rpc AddPolicyIdentity(AddAccessPolicyIdentityRequest) returns (AddAccessPolicyIdentityResponse) {
+	rpc AddPolicyIdentity(AccessAddPolicyIdentityRequest) returns (AccessAddPolicyIdentityResponse) {
 		option (google.api.http) = {
 			post : "/v1/access-policies/{policy_id}/identities"
 			body : "*"
@@ -58,7 +58,7 @@ message AccessPolicyRule {
 	string                 resource = 1;
 }
 
-message CheckAccessRequest {
+message AccessCheckRequest {
 	oneof identity {
 		string identity_id  = 1;
 		string identity_sub = 2;
@@ -67,11 +67,11 @@ message CheckAccessRequest {
 	string resource = 3;
 }
 
-message CheckAccessResponse {
+message AccessCheckResponse {
 	repeated Policy policies = 1;
 }
 
-message CreateAccessPolicyRequest {
+message AccessCreatePolicyRequest {
 	optional string id   = 1;
 	optional string name = 2;
 
@@ -80,22 +80,22 @@ message CreateAccessPolicyRequest {
 	repeated AccessPolicyRule rules          = 5;
 }
 
-message RetrieveAccessPolicyRequest {
+message AccessRetrievePolicyRequest {
 	string id = 1;
 }
 
 // Policy collections
-message AddAccessPolicyCollectionRequest {
+message AccessAddPolicyCollectionRequest {
 	string policy_id     = 1;
 	string collection_id = 2;
 }
 
-message AddAccessPolicyCollectionResponse {}
+message AccessAddPolicyCollectionResponse {}
 
 // Policy identities
-message AddAccessPolicyIdentityRequest {
+message AccessAddPolicyIdentityRequest {
 	string policy_id   = 1;
 	string identity_id = 2;
 }
 
-message AddAccessPolicyIdentityResponse {}
+message AccessAddPolicyIdentityResponse {}

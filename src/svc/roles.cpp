@@ -2,7 +2,7 @@
 
 namespace svc {
 grpc::ServerUnaryReactor *Roles::Create(
-	grpc::CallbackServerContext *context, const gk::v1::CreateRoleRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::RolesCreateRequest *request,
 	gk::v1::Role *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -17,7 +17,7 @@ grpc::ServerUnaryReactor *Roles::Create(
 }
 
 grpc::ServerUnaryReactor *Roles::Retrieve(
-	grpc::CallbackServerContext *context, const gk::v1::RetrieveRoleRequest *request,
+	grpc::CallbackServerContext *context, const gk::v1::RolesRetrieveRequest *request,
 	gk::v1::Role *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -29,7 +29,7 @@ grpc::ServerUnaryReactor *Roles::Retrieve(
 	return reactor;
 }
 
-datastore::Role Roles::map(const gk::v1::CreateRoleRequest *from) {
+datastore::Role Roles::map(const gk::v1::RolesCreateRequest *from) {
 	datastore::Role role({
 		.id   = from->id(),
 		.name = from->name(),

@@ -41,9 +41,9 @@ TEST_F(svc_AccessTest, AddPolicyCollection) {
 
 		grpc::CallbackServerContext               ctx;
 		grpc::testing::DefaultReactorTestPeer     peer(&ctx);
-		gk::v1::AddAccessPolicyCollectionResponse response;
+		gk::v1::AccessAddPolicyCollectionResponse response;
 
-		gk::v1::AddAccessPolicyCollectionRequest request;
+		gk::v1::AccessAddPolicyCollectionRequest request;
 		request.set_policy_id(policy.id());
 		request.set_collection_id(collection.id());
 
@@ -76,9 +76,9 @@ TEST_F(svc_AccessTest, AddPolicyIdentity) {
 
 		grpc::CallbackServerContext             ctx;
 		grpc::testing::DefaultReactorTestPeer   peer(&ctx);
-		gk::v1::AddAccessPolicyIdentityResponse response;
+		gk::v1::AccessAddPolicyIdentityResponse response;
 
-		gk::v1::AddAccessPolicyIdentityRequest request;
+		gk::v1::AccessAddPolicyIdentityRequest request;
 		request.set_policy_id(policy.id());
 		request.set_identity_id(identity.id());
 
@@ -100,7 +100,7 @@ TEST_F(svc_AccessTest, Check) {
 	{
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckAccessResponse           response;
+		gk::v1::AccessCheckResponse           response;
 
 		const datastore::Identity identity({
 			.sub = "sub:svc_AccessTest.Check",
@@ -121,7 +121,7 @@ TEST_F(svc_AccessTest, Check) {
 		});
 		ASSERT_NO_THROW(cache.store());
 
-		gk::v1::CheckAccessRequest request;
+		gk::v1::AccessCheckRequest request;
 		request.set_resource(resource);
 		request.set_identity_id(identity.id());
 
@@ -142,7 +142,7 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
-		gk::v1::CreateAccessPolicyRequest request;
+		gk::v1::AccessCreatePolicyRequest request;
 		request.set_name("name:svc_AccessTest.CreatePolicy");
 
 		auto reactor = svc.CreatePolicy(&ctx, &request, &response);
@@ -159,7 +159,7 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
-		gk::v1::CreateAccessPolicyRequest request;
+		gk::v1::AccessCreatePolicyRequest request;
 		request.set_id("id:svc_AccessTest.CreatePolicy-with_id");
 		request.set_name("name:svc_AccessTest.CreatePolicy-with_id");
 
@@ -182,7 +182,7 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
-		gk::v1::CreateAccessPolicyRequest request;
+		gk::v1::AccessCreatePolicyRequest request;
 		request.set_id(policy.id());
 		request.set_name("name:svc_AccessTest.CreatePolicy-duplicate_id");
 
@@ -203,7 +203,7 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
-		gk::v1::CreateAccessPolicyRequest request;
+		gk::v1::AccessCreatePolicyRequest request;
 		request.set_name("name:svc_AccessTest.CreatePolicy-with_identity_and_resource");
 		request.add_identity_ids(identity.id());
 
@@ -250,7 +250,7 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
-		gk::v1::CreateAccessPolicyRequest request;
+		gk::v1::AccessCreatePolicyRequest request;
 		request.set_name("name:svc_AccessTest.CreatePolicy-with_collection_and_resource");
 		request.add_collection_ids(collection.id());
 
@@ -317,7 +317,7 @@ TEST_F(svc_AccessTest, RetrievePolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::AccessPolicy                  response;
 
-		gk::v1::RetrieveAccessPolicyRequest request;
+		gk::v1::AccessRetrievePolicyRequest request;
 		request.set_id(policy.id());
 
 		auto reactor = svc.RetrievePolicy(&ctx, &request, &response);
