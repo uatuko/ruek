@@ -82,7 +82,8 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 		payload.add_ids(policy.id());
 
 		gk::v1::EventsProcessRequest request;
-		auto                        *event = request.mutable_event();
+
+		auto *event = request.mutable_event();
 		event->set_name("request/cache.rebuild:access");
 
 		auto any = event->mutable_payload();
@@ -169,7 +170,8 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 		payload.add_ids(policy.id());
 
 		gk::v1::EventsProcessRequest request;
-		auto                        *event = request.mutable_event();
+
+		auto *event = request.mutable_event();
 		event->set_name("request/cache.rebuild:rbac");
 
 		auto any = event->mutable_payload();
