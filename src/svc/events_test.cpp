@@ -8,9 +8,9 @@
 #include "datastore/roles.h"
 #include "datastore/testing.h"
 
-#include "gatekeeper.h"
+#include "events.h"
 
-class GatekeeperTest : public testing::Test {
+class svc_EventsTest : public testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		datastore::testing::setup();
@@ -27,106 +27,24 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-// Access control checks
-TEST_F(GatekeeperTest, CheckAccess) {
-	service::Gatekeeper service;
-
-	// Success: returns policy when found
-	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckAccessResponse           response;
-
-		const datastore::Identity identity({
-			.sub = "sub:GatekeeperTest.CheckAccess",
-		});
-		ASSERT_NO_THROW(identity.store());
-
-		const datastore::AccessPolicy policy({
-			.name = "name:GatekeeperTest.CheckAccess",
-		});
-		ASSERT_NO_THROW(policy.store());
-
-		const std::string resource = "resource/GatekeeperTest.CheckAccess";
-
-		const datastore::AccessPolicy::Cache cache({
-			.identity = identity.id(),
-			.policy   = policy.id(),
-			.rule     = {.resource = resource},
-		});
-		ASSERT_NO_THROW(cache.store());
-
-		gk::v1::CheckAccessRequest request;
-		request.set_resource(resource);
-		request.set_identity_id(identity.id());
-
-		auto reactor = service.CheckAccess(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(1, response.policies().size());
-	}
-}
-
-TEST_F(GatekeeperTest, CheckRbac) {
-	service::Gatekeeper service;
-
-	// Success: returns policy when found
-	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::CheckRbacResponse             response;
-
-		// create identity
-		const datastore::Identity identity({.sub = "sub:GatekeeperTest.CheckRbac"});
-		ASSERT_NO_THROW(identity.store());
-
-		datastore::RbacPolicy policy({
-			.name = "name::GatekeeperTest.CheckRbac",
-		});
-		ASSERT_NO_THROW(policy.store());
-
-		const auto permission = "permission:GatekeeperTest.CheckRbac";
-
-		const datastore::RbacPolicy::Cache cache({
-			.identity   = identity.id(),
-			.permission = permission,
-			.policy     = policy.id(),
-			.rule       = {},
-		});
-		ASSERT_NO_THROW(cache.store());
-
-		gk::v1::CheckRbacRequest request;
-		request.set_permission(permission);
-		request.set_identity_id(identity.id());
-
-		auto reactor = service.CheckRbac(&ctx, &request, &response);
-		EXPECT_TRUE(peer.test_status_set());
-		EXPECT_TRUE(peer.test_status().ok());
-		EXPECT_EQ(peer.reactor(), reactor);
-		EXPECT_EQ(1, response.policies().size());
-	}
-}
-
-// Events
-TEST_F(GatekeeperTest, ConsumeEvent_cache_rebuild) {
-	service::Gatekeeper service;
+TEST_F(svc_EventsTest, Process_cache_rebuild) {
+	svc::Events svc;
 
 	// Success: request/cache.rebuild:access
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GatekeeperTest.ConsumeEvent(request/cache.rebuild:access)",
+			.sub = "sub:svc_EventsTest.Process(request/cache.rebuild:access)",
 		});
 		ASSERT_NO_THROW(identity.store());
 
 		const datastore::Collection collection({
-			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:access)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:access)",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
 		const datastore::AccessPolicy policy({
-			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:access)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:access)",
 			.rules =
 				{
 					{
@@ -158,18 +76,20 @@ TEST_F(GatekeeperTest, ConsumeEvent_cache_rebuild) {
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::ConsumeEventResponse          response;
+		gk::v1::EventsProcessResponse         response;
 
 		gk::v1::RebuildAccessCacheEventPayload payload;
 		payload.add_ids(policy.id());
 
-		gk::v1::Event request;
-		request.set_name("request/cache.rebuild:access");
+		gk::v1::EventsProcessRequest request;
 
-		auto any = request.mutable_payload();
+		auto *event = request.mutable_event();
+		event->set_name("request/cache.rebuild:access");
+
+		auto any = event->mutable_payload();
 		any->PackFrom(payload);
 
-		auto reactor = service.ConsumeEvent(&ctx, &request, &response);
+		auto reactor = svc.Process(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -191,27 +111,27 @@ TEST_F(GatekeeperTest, ConsumeEvent_cache_rebuild) {
 	// Success: request/cache.rebuild:rbac
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.sub = "sub:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(identity.store());
 
 		const datastore::Collection collection({
-			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
 		const datastore::Role role({
-			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 			.permissions =
 				{
-					{"permissions[0]:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)"},
+					{"permissions[0]:svc_EventsTest.Process(request/cache.rebuild:rbac)"},
 				},
 		});
 		ASSERT_NO_THROW(role.store());
 
 		const datastore::RbacPolicy policy({
-			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
+			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(policy.store());
 
@@ -244,18 +164,20 @@ TEST_F(GatekeeperTest, ConsumeEvent_cache_rebuild) {
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::ConsumeEventResponse          response;
+		gk::v1::EventsProcessResponse         response;
 
 		gk::v1::RebuildRbacCacheEventPayload payload;
 		payload.add_ids(policy.id());
 
-		gk::v1::Event request;
-		request.set_name("request/cache.rebuild:rbac");
+		gk::v1::EventsProcessRequest request;
 
-		auto any = request.mutable_payload();
+		auto *event = request.mutable_event();
+		event->set_name("request/cache.rebuild:rbac");
+
+		auto any = event->mutable_payload();
 		any->PackFrom(payload);
 
-		auto reactor = service.ConsumeEvent(&ctx, &request, &response);
+		auto reactor = svc.Process(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);

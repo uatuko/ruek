@@ -1,12 +1,12 @@
-#include "gatekeeper.h"
-
 #include <grpcpp/test/default_reactor_test_peer.h>
 #include <gtest/gtest.h>
 
 #include "datastore/roles.h"
 #include "datastore/testing.h"
 
-class GatekeeperRolesTest : public testing::Test {
+#include "roles.h"
+
+class svc_RolesTest : public testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		datastore::testing::setup();
@@ -18,8 +18,8 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-TEST_F(GatekeeperRolesTest, CreateRole) {
-	service::Gatekeeper service;
+TEST_F(svc_RolesTest, Create) {
+	svc::Roles svc;
 
 	// Success: create role
 	{
@@ -27,11 +27,11 @@ TEST_F(GatekeeperRolesTest, CreateRole) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Role                          response;
 
-		gk::v1::CreateRoleRequest request;
-		request.set_name("name:GatekeeperTest.CreateRole");
-		request.add_permissions("permissions[0]:GatekeeperTest.CreateRole");
+		gk::v1::RolesCreateRequest request;
+		request.set_name("name:svc_RolesTest.CreateRole");
+		request.add_permissions("permissions[0]:svc_RolesTest.CreateRole");
 
-		auto reactor = service.CreateRole(&ctx, &request, &response);
+		auto reactor = svc.Create(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -44,18 +44,18 @@ TEST_F(GatekeeperRolesTest, CreateRole) {
 	}
 }
 
-TEST_F(GatekeeperRolesTest, RetrieveRole) {
-	service::Gatekeeper service;
+TEST_F(svc_RolesTest, Retrieve) {
+	svc::Roles svc;
 
 	// Success: retrieve role
 	{
 		const datastore::Role role({
-			.id   = "id:GatekeeperTest.RetrieveRole",
-			.name = "name:GatekeeperTest.RetrieveRole",
+			.id   = "id:svc_RolesTest.RetrieveRole",
+			.name = "name:svc_RolesTest.RetrieveRole",
 			.permissions =
 				{
-					{"permissions[0]:GatekeeperTest.RetrieveRole"},
-					{"permissions[1]:GatekeeperTest.RetrieveRole"},
+					{"permissions[0]:svc_RolesTest.RetrieveRole"},
+					{"permissions[1]:svc_RolesTest.RetrieveRole"},
 				},
 		});
 		ASSERT_NO_THROW(role.store());
@@ -64,10 +64,10 @@ TEST_F(GatekeeperRolesTest, RetrieveRole) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Role                          response;
 
-		gk::v1::RetrieveRoleRequest request;
+		gk::v1::RolesRetrieveRequest request;
 		request.set_id(role.id());
 
-		auto reactor = service.RetrieveRole(&ctx, &request, &response);
+		auto reactor = svc.Retrieve(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);

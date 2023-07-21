@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package gk.v1;
+
+import "gk/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+service Access {
+	rpc Check(AccessCheckRequest) returns (AccessCheckResponse) {
+		option (google.api.http) = {
+			post : "/v1/check:access"
+			body : "*"
+		};
+	}
+
+	rpc CreatePolicy(AccessCreatePolicyRequest) returns (AccessPolicy) {
+		option (google.api.http) = {
+			post : "/v1/access-policies"
+			body : "*"
+		};
+	}
+
+	rpc RetrievePolicy(AccessRetrievePolicyRequest) returns (AccessPolicy) {
+		option (google.api.http) = {
+			get : "/v1/access-policies/{id}"
+		};
+	}
+
+	// Policy collections
+	rpc AddPolicyCollection(AccessAddPolicyCollectionRequest) returns (AccessAddPolicyCollectionResponse) {
+		option (google.api.http) = {
+			post : "/v1/access-policies/{policy_id}/collections"
+			body : "*"
+		};
+	}
+
+	// Policy identities
+	rpc AddPolicyIdentity(AccessAddPolicyIdentityRequest) returns (AccessAddPolicyIdentityResponse) {
+		option (google.api.http) = {
+			post : "/v1/access-policies/{policy_id}/identities"
+			body : "*"
+		};
+	}
+}
+
+message AccessPolicy {
+	string          id   = 1;
+	optional string name = 2;
+
+	repeated string           collection_ids = 3;
+	repeated string           identity_ids   = 4;
+	repeated AccessPolicyRule rules          = 5;
+}
+
+message AccessPolicyRule {
+	google.protobuf.Struct attrs    = 2;
+	string                 resource = 1;
+}
+
+message AccessCheckRequest {
+	oneof identity {
+		string identity_id  = 1;
+		string identity_sub = 2;
+	}
+
+	string resource = 3;
+}
+
+message AccessCheckResponse {
+	repeated Policy policies = 1;
+}
+
+message AccessCreatePolicyRequest {
+	optional string id   = 1;
+	optional string name = 2;
+
+	repeated string           collection_ids = 3;
+	repeated string           identity_ids   = 4;
+	repeated AccessPolicyRule rules          = 5;
+}
+
+message AccessRetrievePolicyRequest {
+	string id = 1;
+}
+
+// Policy collections
+message AccessAddPolicyCollectionRequest {
+	string policy_id     = 1;
+	string collection_id = 2;
+}
+
+message AccessAddPolicyCollectionResponse {}
+
+// Policy identities
+message AccessAddPolicyIdentityRequest {
+	string policy_id   = 1;
+	string identity_id = 2;
+}
+
+message AccessAddPolicyIdentityResponse {}

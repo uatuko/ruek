@@ -1,22 +1,72 @@
 # libproto
-cmake_path(SET gatekeeper_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/gatekeeper.proto)
-cmake_path(SET gatekeeper_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.h)
-cmake_path(SET gatekeeper_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.grpc.pb.cc)
-cmake_path(SET gatekeeper_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb.h)
-cmake_path(SET gatekeeper_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/gatekeeper.pb.cc)
+cmake_path(SET access_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/access.proto)
+cmake_path(SET access_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/access.grpc.pb.h)
+cmake_path(SET access_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/access.grpc.pb.cc)
+cmake_path(SET access_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/access.pb.h)
+cmake_path(SET access_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/access.pb.cc)
+
+cmake_path(SET collections_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/collections.proto)
+cmake_path(SET collections_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/collections.grpc.pb.h)
+cmake_path(SET collections_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/collections.grpc.pb.cc)
+cmake_path(SET collections_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/collections.pb.h)
+cmake_path(SET collections_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/collections.pb.cc)
+
+cmake_path(SET common_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/common.proto)
+cmake_path(SET common_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/common.pb.h)
+cmake_path(SET common_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/common.pb.cc)
+
+cmake_path(SET events_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/events.proto)
+cmake_path(SET events_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.grpc.pb.h)
+cmake_path(SET events_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.grpc.pb.cc)
+cmake_path(SET events_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.pb.h)
+cmake_path(SET events_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/events.pb.cc)
+
+cmake_path(SET identities_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/identities.proto)
+cmake_path(SET identities_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/identities.grpc.pb.h)
+cmake_path(SET identities_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/identities.grpc.pb.cc)
+cmake_path(SET identities_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/identities.pb.h)
+cmake_path(SET identities_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/identities.pb.cc)
+
+cmake_path(SET rbac_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/rbac.proto)
+cmake_path(SET rbac_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.grpc.pb.h)
+cmake_path(SET rbac_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.grpc.pb.cc)
+cmake_path(SET rbac_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.pb.h)
+cmake_path(SET rbac_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.pb.cc)
+
+cmake_path(SET roles_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/roles.proto)
+cmake_path(SET roles_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/roles.grpc.pb.h)
+cmake_path(SET roles_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/roles.grpc.pb.cc)
+cmake_path(SET roles_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/roles.pb.h)
+cmake_path(SET roles_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/roles.pb.cc)
 
 set(protos
-	${gatekeeper_proto}
+	${access_proto}
+	${collections_proto}
+	${common_proto}
+	${events_proto}
+	${identities_proto}
+	${rbac_proto}
+	${roles_proto}
 )
 
 set(headers
-	${gatekeeper_grpc_header}
-	${gatekeeper_header}
+	${access_header} ${access_grpc_header}
+	${collections_header} ${collections_grpc_header}
+	${common_header}
+	${events_header} ${events_grpc_header}
+	${identities_header} ${identities_grpc_header}
+	${rbac_header} ${rbac_grpc_header}
+	${roles_header} ${roles_grpc_header}
 )
 
 set(sources
-	${gatekeeper_grpc_source}
-	${gatekeeper_source}
+	${access_source} ${access_grpc_source}
+	${collections_source} ${collections_grpc_source}
+	${common_source}
+	${events_source} ${events_grpc_source}
+	${identities_source} ${identities_grpc_source}
+	${rbac_source} ${rbac_grpc_source}
+	${roles_source} ${roles_grpc_source}
 )
 
 add_custom_command(
@@ -47,4 +97,3 @@ target_link_libraries(proto
 )
 
 add_library(${PROJECT_NAME}::libproto ALIAS proto)
-

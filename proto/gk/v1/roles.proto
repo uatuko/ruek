@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package gk.v1;
+
+import "gk/v1/common.proto";
+import "google/api/annotations.proto";
+
+service Roles {
+	rpc Create(RolesCreateRequest) returns (Role) {
+		option (google.api.http) = {
+			post : "/v1/roles"
+			body : "*"
+		};
+	}
+
+	rpc List(RolesListRequest) returns (ListRolesResponse) {
+		option (google.api.http) = {
+			get : "/v1/roles?_limit={page.limit}&_offset={page.offset}"
+		};
+	}
+
+	rpc Retrieve(RolesRetrieveRequest) returns (Role) {
+		option (google.api.http) = {
+			get : "/v1/roles/{id}"
+		};
+	}
+
+	rpc Update(RolesUpdateRequest) returns (Role) {
+		option (google.api.http) = {
+			patch : "/v1/roles/{id}"
+			body : "*"
+		};
+	}
+}
+
+message Role {
+	string id   = 1;
+	string name = 2;
+
+	repeated string permissions = 3;
+}
+
+message RolesCreateRequest {
+	optional string id   = 1;
+	string          name = 2;
+
+	repeated string permissions = 3;
+}
+
+message RolesListRequest {
+	optional Page page = 1;
+}
+
+message ListRolesResponse {
+	repeated Role data = 1;
+	Meta          meta = 2;
+}
+
+message RolesRetrieveRequest {
+	string id = 1;
+}
+
+message RolesUpdateRequest {
+	string id   = 1;
+	string name = 2;
+}

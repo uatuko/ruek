@@ -1,12 +1,12 @@
-#include "gatekeeper.h"
-
 #include <grpcpp/test/default_reactor_test_peer.h>
 #include <gtest/gtest.h>
 
 #include "datastore/identities.h"
 #include "datastore/testing.h"
 
-class GatekeeperIdentitiesTest : public testing::Test {
+#include "identities.h"
+
+class svc_IdentitiesTest : public testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		datastore::testing::setup();
@@ -18,8 +18,8 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
-	service::Gatekeeper service;
+TEST_F(svc_IdentitiesTest, Create) {
+	svc::Identities svc;
 
 	// Success: create identity
 	{
@@ -27,10 +27,10 @@ TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
-		request.set_sub("sub:GatekeeperTest.CreateIdentity");
+		gk::v1::IdentitiesCreateRequest request;
+		request.set_sub("sub:svc_IdentitiesTest.Create");
 
-		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Create(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -45,11 +45,11 @@ TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
-		request.set_id("id:GatekeeperTest.CreateIdentity-with_id");
-		request.set_sub("sub:GatekeeperTest.CreateIdentity-with_id");
+		gk::v1::IdentitiesCreateRequest request;
+		request.set_id("id:svc_IdentitiesTest.Create-with_id");
+		request.set_sub("sub:svc_IdentitiesTest.Create-with_id");
 
-		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Create(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -64,13 +64,13 @@ TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
-		request.set_sub("sub:GatekeeperTest.CreateIdentity-with_attrs");
+		gk::v1::IdentitiesCreateRequest request;
+		request.set_sub("sub:svc_IdentitiesTest.Create-with_attrs");
 
 		const std::string attrs(R"({"foo":"bar"})");
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
 
-		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Create(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -85,7 +85,7 @@ TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
 	// Error: duplicate `id`
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GatekeeperTest.CreateIdentity-duplicate_id",
+			.sub = "sub:svc_IdentitiesTest.Create-duplicate_id",
 		});
 
 		try {
@@ -98,11 +98,11 @@ TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
+		gk::v1::IdentitiesCreateRequest request;
 		request.set_id(identity.id());
-		request.set_sub("sub:GatekeeperTest.CreateIdentity-duplicate_id");
+		request.set_sub("sub:svc_IdentitiesTest.Create-duplicate_id");
 
-		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Create(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
 		EXPECT_EQ("Duplicate identity id", peer.test_status().error_message());
@@ -111,7 +111,7 @@ TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
 	// Error: duplicate `sub`
 	{
 		const datastore::Identity identity({
-			.sub = "sub:GatekeeperTest.CreateIdentity-duplicate",
+			.sub = "sub:svc_IdentitiesTest.Create-duplicate_sub",
 		});
 		EXPECT_NO_THROW(identity.store());
 
@@ -119,24 +119,24 @@ TEST_F(GatekeeperIdentitiesTest, CreateIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::CreateIdentityRequest request;
+		gk::v1::IdentitiesCreateRequest request;
 		request.set_sub(identity.sub());
 
-		auto reactor = service.CreateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Create(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
 		EXPECT_EQ("Duplicate identity", peer.test_status().error_message());
 	}
 }
 
-TEST_F(GatekeeperIdentitiesTest, RetrieveIdentity) {
-	service::Gatekeeper service;
+TEST_F(svc_IdentitiesTest, Retrieve) {
+	svc::Identities svc;
 
 	// Success: retrieve identity by id
 	{
 		const datastore::Identity identity({
-			.id  = "id:GatekeeperTest.RetrieveIdentity",
-			.sub = "sub:GatekeeperTest.RetrieveIdentity",
+			.id  = "id:svc_IdentitiesTest.Retrieve",
+			.sub = "sub:svc_IdentitiesTest.Retrieve",
 		});
 		ASSERT_NO_THROW(identity.store());
 
@@ -144,10 +144,10 @@ TEST_F(GatekeeperIdentitiesTest, RetrieveIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
+		gk::v1::IdentitiesRetrieveRequest request;
 		request.set_id(identity.id());
 
-		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		auto reactor = svc.Retrieve(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -159,8 +159,8 @@ TEST_F(GatekeeperIdentitiesTest, RetrieveIdentity) {
 	// Success: retrieve identity by sub
 	{
 		const datastore::Identity identity({
-			.id  = "id:GatekeeperTest.RetrieveIdentity-by_sub",
-			.sub = "sub:GatekeeperTest.RetrieveIdentity-by_sub",
+			.id  = "id:svc_IdentitiesTest.Retrieve-by_sub",
+			.sub = "sub:svc_IdentitiesTest.Retrieve-by_sub",
 		});
 		ASSERT_NO_THROW(identity.store());
 
@@ -168,10 +168,10 @@ TEST_F(GatekeeperIdentitiesTest, RetrieveIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
+		gk::v1::IdentitiesRetrieveRequest request;
 		request.set_sub(identity.sub());
 
-		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		auto reactor = svc.Retrieve(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -184,7 +184,7 @@ TEST_F(GatekeeperIdentitiesTest, RetrieveIdentity) {
 	{
 		const datastore::Identity identity({
 			.attrs = R"({"flag":true})",
-			.sub   = "sub:GatekeeperTest.RetrieveIdentity-with_attrs",
+			.sub   = "sub:svc_IdentitiesTest.Retrieve-with_attrs",
 		});
 		ASSERT_NO_THROW(identity.store());
 
@@ -192,10 +192,10 @@ TEST_F(GatekeeperIdentitiesTest, RetrieveIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
+		gk::v1::IdentitiesRetrieveRequest request;
 		request.set_id(identity.id());
 
-		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		auto reactor = svc.Retrieve(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -214,35 +214,36 @@ TEST_F(GatekeeperIdentitiesTest, RetrieveIdentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::RetrieveIdentityRequest request;
-		request.set_id("id:GatekeeperTest.RetrieveIdentity-not_found");
+		gk::v1::IdentitiesRetrieveRequest request;
+		request.set_id("id:svc_IdentitiesTest.RetrieveIdentity-not_found");
 
-		auto reactor = service.RetrieveIdentity(&ctx, &request, &response);
+		auto reactor = svc.Retrieve(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
 		EXPECT_EQ("Document not found", peer.test_status().error_message());
 	}
 }
 
-TEST_F(GatekeeperIdentitiesTest, UpdateIndentity) {
-	service::Gatekeeper service;
+TEST_F(svc_IdentitiesTest, Update) {
+	svc::Identities svc;
 
 	// Success: update identity sub
 	{
-		const datastore::Identity identity(
-			{.id  = "id:GatekeeperTest.UpdateIdentity-sub",
-			 .sub = "sub:GatekeeperTest.UpdateIdentity-sub"});
+		const datastore::Identity identity({
+			.id  = "id:svc_IdentitiesTest.Update-sub",
+			.sub = "sub:svc_IdentitiesTest.Update-sub",
+		});
 		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
+		gk::v1::IdentitiesUpdateRequest request;
 		request.set_id(identity.id());
-		request.set_sub("sub:GatekeeperTest.UpdateIdentity-new");
+		request.set_sub("sub:svc_IdentitiesTest.Update-new");
 
-		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Update(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -259,14 +260,16 @@ TEST_F(GatekeeperIdentitiesTest, UpdateIndentity) {
 
 	// Success: update identity attrs
 	{
-		const datastore::Identity identity({.sub = "sub:GatekeeperTest.UpdateIdentity-attrs"});
+		const datastore::Identity identity({
+			.sub = "sub:svc_IdentitiesTest.Update-attrs",
+		});
 		ASSERT_NO_THROW(identity.store());
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
+		gk::v1::IdentitiesUpdateRequest request;
 		request.set_id(identity.id());
 		{
 			auto &attrs  = *request.mutable_attrs();
@@ -287,7 +290,7 @@ TEST_F(GatekeeperIdentitiesTest, UpdateIndentity) {
 			}
 		}
 
-		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Update(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -323,10 +326,10 @@ TEST_F(GatekeeperIdentitiesTest, UpdateIndentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
-		request.set_id("id:GatekeeperTest.UpdateIdentity-no-updates");
+		gk::v1::IdentitiesUpdateRequest request;
+		request.set_id("id:svc_IdentitiesTest.UpdateIdentity-no_updates");
 
-		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Update(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::INTERNAL, peer.test_status().error_code());
 		EXPECT_EQ("No fields to update", peer.test_status().error_message());
@@ -338,11 +341,11 @@ TEST_F(GatekeeperIdentitiesTest, UpdateIndentity) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::Identity                      response;
 
-		gk::v1::UpdateIdentityRequest request;
-		request.set_id("id:GatekeeperTest.UpdateIdentity-not-found");
-		request.set_sub("name:GatekeeperTest.UpdateIdentity-not-found");
+		gk::v1::IdentitiesUpdateRequest request;
+		request.set_id("id:svc_IdentitiesTest.Update-not_found");
+		request.set_sub("name:svc_IdentitiesTest.Update-not_found");
 
-		auto reactor = service.UpdateIdentity(&ctx, &request, &response);
+		auto reactor = svc.Update(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
 		EXPECT_EQ("Document not found", peer.test_status().error_message());

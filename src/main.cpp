@@ -5,8 +5,8 @@
 #include <viper/viper.h>
 
 #include "datastore/datastore.h"
-#include "service/gatekeeper.h"
-#include "service/interceptors/logger.h"
+#include "svc/interceptors/logger.h"
+#include "svc/svc.h"
 
 int main() {
 	try {
@@ -33,10 +33,21 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-	service::Gatekeeper service;
 	grpc::ServerBuilder builder;
 	builder.AddListeningPort(std::string{conf["tcp.address"]}, grpc::InsecureServerCredentials());
-	builder.RegisterService(&service);
+
+	std::array<std::unique_ptr<grpc::Service>, 6> services = {
+		std::make_unique<svc::Access>(),
+		std::make_unique<svc::Collections>(),
+		std::make_unique<svc::Events>(),
+		std::make_unique<svc::Identities>(),
+		std::make_unique<svc::Rbac>(),
+		std::make_unique<svc::Roles>(),
+	};
+
+	for (const auto &s : services) {
+		builder.RegisterService(s.get());
+	}
 
 	// Interceptors
 	{
@@ -44,7 +55,7 @@ int main() {
 		std::vector<factory_t> creators;
 
 		if (conf["app.debug"].get<bool>()) {
-			factory_t logger(new service::interceptors::LoggerFactory());
+			factory_t logger(new svc::interceptors::LoggerFactory());
 			creators.push_back(std::move(logger));
 		}
 

@@ -1,12 +1,10 @@
-#include "gatekeeper.h"
+#include "identities.h"
 
 #include "err/errors.h"
 
-#include "mappers.h"
-
-namespace service {
-grpc::ServerUnaryReactor *Gatekeeper::CreateIdentity(
-	grpc::CallbackServerContext *context, const gk::v1::CreateIdentityRequest *request,
+namespace svc {
+grpc::ServerUnaryReactor *Identities::Create(
+	grpc::CallbackServerContext *context, const gk::v1::IdentitiesCreateRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -43,8 +41,8 @@ grpc::ServerUnaryReactor *Gatekeeper::CreateIdentity(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Gatekeeper::RetrieveIdentity(
-	grpc::CallbackServerContext *context, const gk::v1::RetrieveIdentityRequest *request,
+grpc::ServerUnaryReactor *Identities::Retrieve(
+	grpc::CallbackServerContext *context, const gk::v1::IdentitiesRetrieveRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -68,8 +66,8 @@ grpc::ServerUnaryReactor *Gatekeeper::RetrieveIdentity(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Gatekeeper::UpdateIdentity(
-	grpc::CallbackServerContext *context, const gk::v1::UpdateIdentityRequest *request,
+grpc::ServerUnaryReactor *Identities::Update(
+	grpc::CallbackServerContext *context, const gk::v1::IdentitiesUpdateRequest *request,
 	gk::v1::Identity *response) {
 	auto *reactor = context->DefaultReactor();
 
@@ -115,4 +113,29 @@ grpc::ServerUnaryReactor *Gatekeeper::UpdateIdentity(
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
-} // namespace service
+
+datastore::Identity Identities::map(const gk::v1::IdentitiesCreateRequest *from) {
+	datastore::Identity identity({
+		.id  = from->id(),
+		.sub = from->sub(),
+	});
+
+	if (from->has_attrs()) {
+		std::string attrs;
+		google::protobuf::util::MessageToJsonString(from->attrs(), &attrs);
+
+		identity.attrs(std::move(attrs));
+	}
+
+	return identity;
+}
+
+void Identities::map(const datastore::Identity &from, gk::v1::Identity *to) {
+	to->set_id(from.id());
+	to->set_sub(from.sub());
+
+	if (from.attrs()) {
+		google::protobuf::util::JsonStringToMessage(*from.attrs(), to->mutable_attrs());
+	}
+}
+} // namespace svc

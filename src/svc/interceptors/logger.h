@@ -2,7 +2,7 @@
 
 #include <grpcpp/support/server_interceptor.h>
 
-namespace service {
+namespace svc {
 namespace interceptors {
 class Logger final : public grpc::experimental::Interceptor {
 public:
@@ -25,4 +25,4 @@ public:
 	}
 };
 } // namespace interceptors
-} // namespace service
+} // namespace svc

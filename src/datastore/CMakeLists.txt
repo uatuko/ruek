@@ -71,4 +71,3 @@ if (GATEKEEPER_ENABLE_TESTING)
 	include(GoogleTest)
 	gtest_discover_tests(datastore_tests)
 endif()
-

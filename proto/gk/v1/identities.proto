@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package gk.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+service Identities {
+	rpc Create(IdentitiesCreateRequest) returns (Identity) {
+		option (google.api.http) = {
+			post : "/v1/identities"
+			body : "*"
+		};
+	}
+
+	rpc Retrieve(IdentitiesRetrieveRequest) returns (Identity) {
+		option (google.api.http) = {
+			get : "/v1/identities/{id}"
+		};
+	}
+
+	rpc Update(IdentitiesUpdateRequest) returns (Identity) {
+		option (google.api.http) = {
+			patch : "/v1/identities/{id}"
+			body : "*"
+		};
+	}
+}
+
+message Identity {
+	string id  = 1;
+	string sub = 2;
+
+	optional google.protobuf.Struct attrs = 3;
+}
+
+message IdentitiesCreateRequest {
+	optional string id  = 1;
+	string          sub = 2;
+
+	optional google.protobuf.Struct attrs = 3;
+}
+
+message IdentitiesRetrieveRequest {
+	oneof identity {
+		string id  = 1;
+		string sub = 2;
+	}
+}
+
+message IdentitiesUpdateRequest {
+	string id = 1;
+
+	optional string sub                   = 2;
+	optional google.protobuf.Struct attrs = 3;
+}

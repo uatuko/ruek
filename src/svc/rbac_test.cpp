@@ -1,5 +1,3 @@
-#include "gatekeeper.h"
-
 #include <grpcpp/test/default_reactor_test_peer.h>
 #include <gtest/gtest.h>
 
@@ -9,7 +7,9 @@
 #include "datastore/roles.h"
 #include "datastore/testing.h"
 
-class GatekeeperRbacPoliciesTest : public testing::Test {
+#include "rbac.h"
+
+class svc_RbacTest : public testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		datastore::testing::setup();
@@ -25,19 +25,60 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
-TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
-	service::Gatekeeper service;
+TEST_F(svc_RbacTest, Check) {
+	svc::Rbac svc;
+
+	// Success: returns policy when found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::RbacCheckResponse             response;
+
+		const datastore::Identity identity({
+			.sub = "sub:svc_RbacTest.Check",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		datastore::RbacPolicy policy({
+			.name = "name::svc_RbacTest.Check",
+		});
+		ASSERT_NO_THROW(policy.store());
+
+		const auto permission = "permission:svc_RbacTest.Check";
+
+		const datastore::RbacPolicy::Cache cache({
+			.identity   = identity.id(),
+			.permission = permission,
+			.policy     = policy.id(),
+			.rule       = {},
+		});
+		ASSERT_NO_THROW(cache.store());
+
+		gk::v1::RbacCheckRequest request;
+		request.set_permission(permission);
+		request.set_identity_id(identity.id());
+
+		auto reactor = svc.Check(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+		EXPECT_EQ(1, response.policies().size());
+	}
+}
+
+TEST_F(svc_RbacTest, CreatePolicy) {
+	svc::Rbac svc;
 	// Success: create rbac policy with `id`
 	{
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		gk::v1::CreateRbacPolicyRequest request;
-		request.set_id("id:GatekeeperTest.CreateRbacPolicy-id");
-		request.set_name("name:GatekeeperTest.CreateRbacPolicy-id");
+		gk::v1::RbacCreatePolicyRequest request;
+		request.set_id("id:svc_RbacTest.CreatePolicy-with_id");
+		request.set_name("name:svc_RbacTest.CreatePolicy-with_id");
 
-		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
+		auto reactor = svc.CreatePolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -47,31 +88,37 @@ TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
 
 	// Error: duplicate `id`
 	{
-		const datastore::RbacPolicy policy(
-			{.name = "name:GatekeeperTest.CreateRbacPolicy-duplicate"});
-		EXPECT_NO_THROW(policy.store());
+		const datastore::RbacPolicy policy({
+			.name = "name:svc_RbacTest.CreatePolicy-duplicate_id",
+		});
+		ASSERT_NO_THROW(policy.store());
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		gk::v1::CreateRbacPolicyRequest request;
+		gk::v1::RbacCreatePolicyRequest request;
 		request.set_id(policy.id());
-		request.set_name("name:GatekeeperTest.CreateRbacPolicy-duplicate");
+		request.set_name("name:svc_RbacTest.CreatePolicy-duplicate_id");
 
-		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
+		auto reactor = svc.CreatePolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
 		EXPECT_EQ("Duplicate policy id", peer.test_status().error_message());
 	}
 
-	// Success: create rbac policy
+	// Success: create rbac policy with identity and role
 	{
-		const datastore::Identity identity({.sub = "sub:GatekeeperTest.CreateRbacPolicy"});
+		const datastore::Identity identity({
+			.sub = "sub:svc_RbacTest.CreatePolicy-with_identity_and_role",
+		});
 		ASSERT_NO_THROW(identity.store());
-		auto                  permission = "permissions[0]:GatekeeperTest.CreateRbacRbacPolicy";
+
+		const std::string permission =
+			"permissions[0]:svc_RbacTest.CreateRbacPolicy-with_identity_and_role";
+
 		const datastore::Role role({
-			.name = "name:GatekeeperTest.CreateRbacPolicy",
+			.name = "name:svc_RbacTest.CreatePolicy-with_identity_and_role",
 			.permissions =
 				{
 					permission,
@@ -83,8 +130,8 @@ TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
 		gk::v1::RbacPolicy                    response;
 
-		gk::v1::CreateRbacPolicyRequest request;
-		request.set_name("name:GatekeeperTest.CreateRbacPolicy");
+		gk::v1::RbacCreatePolicyRequest request;
+		request.set_name("name:svc_RbacTest.CreatePolicy-with_identity_and_role");
 		request.add_identity_ids(identity.id());
 
 		auto rule = request.add_rules();
@@ -96,7 +143,7 @@ TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
 			EXPECT_EQ(0, policies.size());
 		}
 
-		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
+		auto reactor = svc.CreatePolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -113,26 +160,23 @@ TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
 		}
 	}
 
-	// Success: create an rbac policy for collection
-	// all members of collection should be granted access
+	// Success: create an rbac policy with collection and role
 	{
-		grpc::CallbackServerContext           ctx;
-		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		gk::v1::RbacPolicy                    response;
-
 		const datastore::Identity identity({
-			.sub = "sub:GatekeeperTest.CreateRbacPolicy-collection",
+			.sub = "sub:svc_RbacTest.CreatePolicy-with_collection_and_role",
 		});
 		ASSERT_NO_THROW(identity.store());
 		const datastore::Collection collection({
-			.name = "name:GatekeeperTest.CreateRbacPolicy-collection",
+			.name = "name:svc_RbacTest.CreatePolicy-with_collection_and_role",
 		});
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
-		auto permission = "permissions[0]:GatekeeperTest.CreateRbacPolicy-collection";
+		const std::string permission =
+			"permissions[0]:svc_RbacTest.CreatePolicy-with_collection_and_role";
+
 		const datastore::Role role({
-			.name = "name:GatekeeperTest.CreateRbacPolicy",
+			.name = "name:svc_RbacTest.CreatePolicy-with_collection_and_role",
 			.permissions =
 				{
 					permission,
@@ -140,8 +184,12 @@ TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
 		});
 		ASSERT_NO_THROW(role.store());
 
-		gk::v1::CreateRbacPolicyRequest request;
-		request.set_name("name:GatekeeperTest.CreateRbacPolicy");
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::RbacPolicy                    response;
+
+		gk::v1::RbacCreatePolicyRequest request;
+		request.set_name("name:svc_RbacTest.CreatePolicy-with_collection_and_role");
 		request.add_collection_ids(collection.id());
 
 		auto rule = request.add_rules();
@@ -154,7 +202,7 @@ TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
 		}
 
 		// create access policy
-		auto reactor = service.CreateRbacPolicy(&ctx, &request, &response);
+		auto reactor = svc.CreatePolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
@@ -170,6 +218,4 @@ TEST_F(GatekeeperRbacPoliciesTest, CreateRbacPolicy) {
 			EXPECT_EQ(1, policies.size());
 		}
 	}
-
-	// FIXME: nested collections
 }
