@@ -39,16 +39,32 @@ create table if not exists "rbac-policies" (
 	constraint "rbac-policies.check-name" check (name <> '')
 );
 
+create table if not exists permissions (
+	_id text not null check (_id <> ''),
+
+	constraint "permissions.pkey" primary key (_id)
+);
+
 create table if not exists roles (
 	_id         text    not null,
 	_rev        integer not null,
 	name        text    not null,
-	permissions text[],
 
-	constraint "roles.pkey" primary key (_id),
-	constraint "roles.check-permissions" check(array_position(permissions, null) = null and array_position(permissions, '') = null)
+	constraint "roles.pkey" primary key (_id)
 );
 
+create table if not exists "roles_permissions" (
+	role_id text not null,
+	permission_id text not null,
+
+	constraint "roles_permissions.pkey" primary key (role_id, permission_id),
+	constraint "roles_permissions.fkey-role_id" foreign key (role_id)
+		references roles(_id)
+		on delete cascade,
+	constraint "roles_permissions.fkey-permission_id" foreign key (permission_id)
+		references permissions(_id)
+		on delete cascade
+)
 
 create table if not exists "access-policies_collections" (
 	policy_id     text not null,
