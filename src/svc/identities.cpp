@@ -1,6 +1,7 @@
 #include "identities.h"
 
 #include "err/errors.h"
+#include "logger/logger.h"
 
 namespace svc {
 grpc::ServerUnaryReactor *Identities::Create(
@@ -18,6 +19,10 @@ grpc::ServerUnaryReactor *Identities::Create(
 		} catch (const err::DatastoreIdentityNotFound &) {
 			// Identity with an `id` matching the request `id` doesn't exist, we can continue with
 			// creating a new one.
+		} catch (const std::exception &e) {
+			// FIXME: added to help debug unhandled exceptions, should be removed.
+			logger::critical("svc", "exception", e.what());
+			return reactor;
 		} catch (...) {
 			reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
 			return reactor;
@@ -29,6 +34,10 @@ grpc::ServerUnaryReactor *Identities::Create(
 		identity.store();
 	} catch (const err::DatastoreDuplicateIdentity &e) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::ALREADY_EXISTS, e.what()));
+		return reactor;
+	} catch (const std::exception &e) {
+		// FIXME: added to help debug unhandled exceptions, should be removed.
+		logger::critical("svc", "exception", e.what());
 		return reactor;
 	} catch (...) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
@@ -56,6 +65,10 @@ grpc::ServerUnaryReactor *Identities::Retrieve(
 		}
 	} catch (const err::DatastoreIdentityNotFound &) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Document not found"));
+		return reactor;
+	} catch (const std::exception &e) {
+		// FIXME: added to help debug unhandled exceptions, should be removed.
+		logger::critical("svc", "exception", e.what());
 		return reactor;
 	} catch (...) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
