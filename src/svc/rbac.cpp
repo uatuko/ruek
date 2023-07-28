@@ -77,6 +77,19 @@ grpc::ServerUnaryReactor *Rbac::CreatePolicy(
 	return reactor;
 }
 
+grpc::ServerUnaryReactor *Rbac::RetrievePolicy(
+	grpc::CallbackServerContext *context, const gk::v1::RbacRetrievePolicyRequest *request,
+	gk::v1::RbacPolicy *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto policy = datastore::RetrieveRbacPolicy(request->id());
+	map(policy, response);
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 datastore::RbacPolicy Rbac::map(const gk::v1::RbacCreatePolicyRequest *from) {
 	datastore::RbacPolicy policy({
 		.id = from->id(),
