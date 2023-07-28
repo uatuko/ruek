@@ -23,7 +23,7 @@ service Rbac {
 
 	rpc RetrievePolicy(RbacRetrievePolicyRequest) returns (RbacPolicy) {
 		option (google.api.http) = {
-			post : "/v1/check:rbac"
+			post : "/v1/rbac-policies/{id}"
 			body : "*"
 		};
 	}
