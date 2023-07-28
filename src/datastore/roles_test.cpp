@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "permissions.h"
 #include "roles.h"
 #include "testing.h"
 
@@ -15,6 +16,7 @@ protected:
 	void SetUp() {
 		// Clear data before each test
 		datastore::pg::exec("delete from roles cascade;");
+		datastore::pg::exec("delete from permissions cascade;");
 	}
 
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
@@ -27,23 +29,16 @@ TEST_F(RolesTest, retrieve) {
 			insert into roles (
 				_id,
 				_rev,
-				name,
-				permissions
+				name
 			) values (
 				$1::text,
 				$2::integer,
-				$3::text,
-				$4::text[]
+				$3::text
 			);
 		)";
 
 		try {
-			datastore::pg::exec(
-				qry,
-				"_id:RolesTest.retrieve",
-				2306,
-				"name:RolesTest.retrieve",
-				R"({"permissions[0]:RolesTest.retrieve"})");
+			datastore::pg::exec(qry, "_id:RolesTest.retrieve", 2306, "name:RolesTest.retrieve");
 		} catch (const std::exception &e) {
 			FAIL() << e.what();
 		}
@@ -51,29 +46,19 @@ TEST_F(RolesTest, retrieve) {
 		auto role = datastore::RetrieveRole("_id:RolesTest.retrieve");
 		EXPECT_EQ(2306, role.rev());
 		EXPECT_EQ("name:RolesTest.retrieve", role.name());
-
-		const auto &perms = role.permissions();
-		EXPECT_EQ(1, perms.size());
-		EXPECT_EQ("permissions[0]:RolesTest.retrieve", *perms.cbegin());
 	}
 }
 
 TEST_F(RolesTest, store) {
 	const datastore::Role role({
 		.name = "name:RolesTest.store",
-		.permissions =
-			{
-				{"permissions[0]:RolesTest.store"},
-				{"permissions[1]:RolesTest.store"},
-			},
 	});
 	ASSERT_NO_THROW(role.store());
 
 	std::string_view qry = R"(
 		select
 			_rev,
-			name,
-			permissions
+			name
 		from roles
 		where
 			_id = $1::text;
@@ -82,8 +67,33 @@ TEST_F(RolesTest, store) {
 	auto res = datastore::pg::exec(qry, role.id());
 	ASSERT_EQ(1, res.size());
 
-	auto [_rev, name, permissions] = res[0].as<int, std::string, std::string>();
+	auto [_rev, name] = res[0].as<int, std::string>();
 	EXPECT_EQ(role.rev(), _rev);
 	EXPECT_EQ(role.name(), name);
-	EXPECT_EQ(R"({permissions[0]:RolesTest.store,permissions[1]:RolesTest.store})", permissions);
+}
+
+TEST_F(RolesTest, addPermission) {
+	const datastore::Permission permission({
+		.id = "permission:RolesTest.addPermission",
+	});
+	ASSERT_NO_THROW(permission.store());
+	const datastore::Role role({
+		.name = "name:RolesTest.addPermission",
+	});
+	ASSERT_NO_THROW(role.store());
+	ASSERT_NO_THROW(role.addPermission(permission.id()));
+
+	std::string_view qry = R"(
+		select
+			permission_id
+		from "roles_permissions"
+		where
+			role_id = $1::text;
+	)";
+
+	auto res = datastore::pg::exec(qry, role.id());
+	ASSERT_EQ(1, res.size());
+
+	auto [permissionId] = res[0].as<std::string>();
+	EXPECT_EQ(permission.id(), permissionId);
 }

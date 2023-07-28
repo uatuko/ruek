@@ -12,9 +12,8 @@ public:
 	using permissions_t = std::set<std::string>;
 
 	struct Data {
-		std::string   id;
-		std::string   name;
-		permissions_t permissions;
+		std::string id;
+		std::string name;
 
 		bool operator==(const Data &) const noexcept = default;
 	};
@@ -31,13 +30,8 @@ public:
 	void               name(const std::string &name) noexcept { _data.name = name; }
 	void               name(std::string &&name) noexcept { _data.name = std::move(name); }
 
-	const permissions_t &permissions() const noexcept { return _data.permissions; }
-	void permissions(const permissions_t &permissions) noexcept { _data.permissions = permissions; }
-	void permissions(permissions_t &&permissions) noexcept {
-		_data.permissions = std::move(permissions);
-	}
-
 	void store() const;
+	void addPermission(const std::string &pid) const;
 
 private:
 	Data        _data;
@@ -48,33 +42,3 @@ using Roles = std::vector<Role>;
 
 Role RetrieveRole(const std::string &id);
 } // namespace datastore
-
-namespace pqxx {
-using permissions_t = datastore::Role::permissions_t;
-
-template <> struct nullness<permissions_t> {
-	static constexpr bool has_null = {true};
-
-	[[nodiscard]] static permissions_t null() { return {}; }
-};
-
-template <> struct string_traits<permissions_t> {
-	static permissions_t from_string(std::string_view text) {
-		// FIXME: this is a very optimistic lookup, expects `{string,string}` with no escaped chars
-		permissions_t result;
-
-		using size_t = std::string_view::size_type;
-		for (size_t next, pos = 1; pos < text.size() - 1; pos = next + 1) {
-			next = text.find(',', pos);
-			if (next == text.npos) {
-				result.insert(std::string(text.substr(pos, (text.size() - 1) - pos)));
-				break;
-			}
-
-			result.insert(std::string(text.substr(pos, next - pos)));
-		}
-
-		return result;
-	}
-};
-} // namespace pqxx
