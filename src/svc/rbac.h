@@ -14,6 +14,10 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::RbacCreatePolicyRequest *request,
 		gk::v1::RbacPolicy *response) override;
 
+	grpc::ServerUnaryReactor *RetrievePolicy(
+		grpc::CallbackServerContext *context, const gk::v1::RbacRetrievePolicyRequest *request,
+		gk::v1::RbacPolicy *response) override;
+
 	static datastore::RbacPolicy map(const gk::v1::RbacCreatePolicyRequest *from);
 
 	static void map(const datastore::Policies &from, gk::v1::RbacCheckResponse *to);

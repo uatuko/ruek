@@ -195,13 +195,13 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		auto rule = request.add_rules();
 		rule->set_role_id(role.id());
 
-		// expect no access before request
+		// expect no permission before request
 		{
 			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
 			EXPECT_EQ(0, policies.size());
 		}
 
-		// create access policy
+		// create rbac policy
 		auto reactor = svc.CreatePolicy(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
@@ -212,10 +212,62 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		EXPECT_EQ(collection.id(), response.collection_ids(0));
 		EXPECT_EQ(role.id(), response.rules(0).role_id());
 
-		// expect to find single policy when checking access
+		// expect to find single policy when checking
 		{
 			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
 			EXPECT_EQ(1, policies.size());
 		}
+	}
+}
+
+TEST_F(svc_RbacTest, RetrievePolicy) {
+	svc::Rbac svc;
+
+	// Success: retrieve data
+	{
+		const datastore::Identities identities({
+			{{.sub = "sub:svc_RbacTest.RetrievePolicy[0]"}},
+			{{.sub = "sub:svc_RbacTest.RetrievePolicy[1]"}},
+		});
+
+		for (const auto &idn : identities) {
+			ASSERT_NO_THROW(idn.store());
+		}
+
+		const datastore::Collection collection({
+			.name = "name:svc_RbacTest.RetrievePolicy",
+		});
+		ASSERT_NO_THROW(collection.store());
+		ASSERT_NO_THROW(collection.add(identities[0].id()));
+
+		const auto                  permission = "permission:svc_RbacTest.RetrievePolicy";
+		const datastore::RbacPolicy policy({
+			.id   = "id:svc_RbacTest.RetrievePolicy",
+			.name = "name:svc_RbacTest.RetrievePolicy",
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
+		ASSERT_NO_THROW(policy.addIdentity(identities[1].id()));
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::RbacPolicy                    response;
+
+		gk::v1::RbacRetrievePolicyRequest request;
+		request.set_id(policy.id());
+
+		auto reactor = svc.RetrievePolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_EQ(policy.id(), response.id());
+		EXPECT_EQ(policy.name(), response.name());
+
+		ASSERT_EQ(1, response.collection_ids_size());
+		EXPECT_EQ(collection.id(), response.collection_ids(0));
+
+		ASSERT_EQ(1, response.identity_ids_size());
+		EXPECT_EQ(identities[1].id(), response.identity_ids(0));
 	}
 }

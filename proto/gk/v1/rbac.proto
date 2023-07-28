@@ -20,6 +20,13 @@ service Rbac {
 			body : "*"
 		};
 	}
+
+	rpc RetrievePolicy(RbacRetrievePolicyRequest) returns (RbacPolicy) {
+		option (google.api.http) = {
+			post : "/v1/rbac-policies/{id}"
+			body : "*"
+		};
+	}
 }
 
 message RbacPolicy {
@@ -56,4 +63,8 @@ message RbacCreatePolicyRequest {
 	repeated string         collection_ids = 3;
 	repeated string         identity_ids   = 4;
 	repeated RbacPolicyRule rules          = 5;
+}
+
+message RbacRetrievePolicyRequest {
+	string id = 1;
 }
