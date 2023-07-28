@@ -4,6 +4,8 @@
 #include "datastore/roles.h"
 #include "gk/v1/roles.grpc.pb.h"
 
+#include "permissions.h"
+
 namespace svc {
 class Roles final : public gk::v1::Roles::CallbackService {
 public:

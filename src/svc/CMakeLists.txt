@@ -3,6 +3,7 @@ add_library(svc
 	collections.cpp collections.h
 	events.cpp events.h
 	identities.cpp identities.h
+	permissions.cpp permissions.h
 	rbac.cpp rbac.h
 	roles.cpp roles.h
 	svc.h
@@ -35,6 +36,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 		collections_test.cpp
 		events_test.cpp
 		identities_test.cpp
+		permissions_test.cpp
 		rbac_test.cpp
 		roles_test.cpp
 	)
