@@ -103,14 +103,6 @@ grpc::ServerUnaryReactor *Access::RetrievePolicy(
 	auto policy = datastore::RetrieveAccessPolicy(request->id());
 	map(policy, response);
 
-	for (const auto &id : policy.collections()) {
-		response->add_collection_ids(id);
-	}
-
-	for (const auto &id : policy.identities()) {
-		response->add_identity_ids(id);
-	}
-
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
@@ -153,12 +145,24 @@ void Access::map(const datastore::AccessPolicy &from, gk::v1::AccessPolicy *to) 
 			google::protobuf::util::JsonStringToMessage(rule.attrs, r->mutable_attrs());
 		}
 	}
+
+	// Map principals
+	for (const auto &id : from.collections()) {
+		to->add_collection_ids(id);
+	}
+
+	for (const auto &id : from.identities()) {
+		to->add_identity_ids(id);
+	}
 }
 
 void Access::map(const datastore::Policies &from, gk::v1::AccessCheckResponse *to) {
 	for (const auto &policy : from) {
 		auto p = to->add_policies();
 		p->set_id(policy.id);
+		if (!policy.attrs.empty()) {
+			google::protobuf::util::JsonStringToMessage(policy.attrs, p->mutable_attrs());
+		}
 	}
 }
 } // namespace svc
