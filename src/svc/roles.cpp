@@ -10,6 +10,10 @@ grpc::ServerUnaryReactor *Roles::Create(
 	auto role = map(request);
 	role.store();
 
+	for (const auto &perm : request->permissions()) {
+		role.addPermission(perm);
+	}
+
 	map(role, response);
 
 	reactor->Finish(grpc::Status::OK);
@@ -41,7 +45,7 @@ datastore::Role Roles::map(const gk::v1::RolesCreateRequest *from) {
 			perms.insert(from->permissions(i));
 		}
 
-		role.permissions(std::move(perms));
+		// role.permissions(std::move(perms));
 	}
 
 	return role;
@@ -51,7 +55,7 @@ void Roles::map(const datastore::Role &from, gk::v1::Role *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());
 
-	for (const auto &perm : from.permissions()) {
+	for (const auto &perm : datastore::RetrieveRolePermissions(from.id())) {
 		to->add_permissions(perm);
 	}
 }

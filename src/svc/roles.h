@@ -1,5 +1,6 @@
 #pragma once
 
+#include "datastore/permissions.h"
 #include "datastore/roles.h"
 #include "gk/v1/roles.grpc.pb.h"
 

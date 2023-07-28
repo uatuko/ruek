@@ -2,6 +2,7 @@
 
 #include "datastore/access-policies.h"
 #include "datastore/identities.h"
+#include "datastore/permissions.h"
 #include "datastore/rbac-policies.h"
 #include "datastore/roles.h"
 #include "err/errors.h"
@@ -37,7 +38,7 @@ grpc::ServerUnaryReactor *Collections::AddMember(
 	for (const auto &policy : rbac) {
 		for (const auto &rule : policy.rules()) {
 			const auto role = datastore::RetrieveRole(rule.roleId);
-			for (const auto &perm : role.permissions()) {
+			for (const auto &perm : datastore::RetrieveRolePermissions(role.id())) {
 				datastore::RbacPolicy::Cache cache({
 					.identity   = request->identity_id(),
 					.permission = perm,
