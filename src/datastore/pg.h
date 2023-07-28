@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <mutex>
+
 #include <pqxx/pqxx>
 
 #include "config.h"
