@@ -3,6 +3,7 @@ syntax = "proto3";
 package gk.v1;
 
 import "gk/v1/common.proto";
+import "gk/v1/permissions.proto";
 import "google/api/annotations.proto";
 
 service Roles {
@@ -37,7 +38,7 @@ message Role {
 	string id   = 1;
 	string name = 2;
 
-	repeated string permissions = 3;
+	repeated Permission permissions = 3;
 }
 
 message RolesCreateRequest {

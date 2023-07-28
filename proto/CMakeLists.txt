@@ -27,6 +27,12 @@ cmake_path(SET identities_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/identiti
 cmake_path(SET identities_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/identities.pb.h)
 cmake_path(SET identities_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/identities.pb.cc)
 
+cmake_path(SET permissions_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/permissions.proto)
+cmake_path(SET permissions_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/permissions.grpc.pb.h)
+cmake_path(SET permissions_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/permissions.grpc.pb.cc)
+cmake_path(SET permissions_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/permissions.pb.h)
+cmake_path(SET permissions_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/permissions.pb.cc)
+
 cmake_path(SET rbac_proto ${CMAKE_CURRENT_SOURCE_DIR}/gk/v1/rbac.proto)
 cmake_path(SET rbac_grpc_header ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.grpc.pb.h)
 cmake_path(SET rbac_grpc_source ${CMAKE_CURRENT_BINARY_DIR}/gk/v1/rbac.grpc.pb.cc)
@@ -45,6 +51,7 @@ set(protos
 	${common_proto}
 	${events_proto}
 	${identities_proto}
+	${permissions_proto}
 	${rbac_proto}
 	${roles_proto}
 )
@@ -55,6 +62,7 @@ set(headers
 	${common_header}
 	${events_header} ${events_grpc_header}
 	${identities_header} ${identities_grpc_header}
+	${permissions_header} ${permissions_grpc_header}
 	${rbac_header} ${rbac_grpc_header}
 	${roles_header} ${roles_grpc_header}
 )
@@ -65,6 +73,7 @@ set(sources
 	${common_source}
 	${events_source} ${events_grpc_source}
 	${identities_source} ${identities_grpc_source}
+	${permissions_source} ${permissions_grpc_source}
 	${rbac_source} ${rbac_grpc_source}
 	${roles_source} ${roles_grpc_source}
 )
