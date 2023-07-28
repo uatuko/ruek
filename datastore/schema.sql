@@ -64,7 +64,7 @@ create table if not exists "roles_permissions" (
 	constraint "roles_permissions.fkey-permission_id" foreign key (permission_id)
 		references permissions(_id)
 		on delete cascade
-)
+);
 
 create table if not exists "access-policies_collections" (
 	policy_id     text not null,
