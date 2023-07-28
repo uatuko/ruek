@@ -10,7 +10,7 @@ grpc::ServerUnaryReactor *Roles::Create(
 	auto role = map(request);
 	role.store();
 
-	for (const auto &perm : request->permissions()) {
+	for (const auto &perm : request->permission_ids()) {
 		role.addPermission(perm);
 	}
 

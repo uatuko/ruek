@@ -35,7 +35,7 @@ TEST_F(svc_RolesTest, Create) {
 
 		gk::v1::RolesCreateRequest request;
 		request.set_name("name:svc_RolesTest.Create");
-		request.add_permissions(permission.id());
+		request.add_permission_ids(permission.id());
 
 		auto reactor = svc.Create(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -44,8 +44,8 @@ TEST_F(svc_RolesTest, Create) {
 
 		EXPECT_FALSE(response.id().empty());
 		EXPECT_EQ(request.name(), response.name());
-		for (int i = 0; i < request.permissions_size(); i++) {
-			EXPECT_EQ(request.permissions(i), response.permissions(i).id());
+		for (int i = 0; i < request.permission_ids_size(); i++) {
+			EXPECT_EQ(request.permission_ids(i), response.permissions(i).id());
 		}
 	}
 }
