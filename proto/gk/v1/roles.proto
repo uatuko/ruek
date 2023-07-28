@@ -45,7 +45,7 @@ message RolesCreateRequest {
 	optional string id   = 1;
 	string          name = 2;
 
-	repeated string permissions = 3;
+	repeated string permission_ids = 3;
 }
 
 message RolesListRequest {
