@@ -44,8 +44,9 @@ Permission RetrievePermission(const std::string &id) {
 Permissions RetrieveRolePermissions(const std::string &rid) {
 	std::string_view qry = R"(
 		select
-			permission_id
-		from "roles_permissions"
+			_id
+		from permissions
+		inner join "roles_permissions" on _id=permission_id
 		where role_id = $1::text;
 	)";
 
@@ -53,7 +54,7 @@ Permissions RetrieveRolePermissions(const std::string &rid) {
 
 	Permissions permissions;
 	for (const auto &r : res) {
-		permissions.insert(r["permission_id"].as<std::string>());
+		permissions.push_back(Permission(r));
 	}
 
 	return permissions;

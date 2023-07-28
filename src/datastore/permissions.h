@@ -28,7 +28,7 @@ private:
 	Data _data;
 };
 
-using Permissions = std::set<std::string>;
+using Permissions = std::vector<Permission>;
 
 Permissions RetrieveRolePermissions(const std::string &rid);
 Permission  RetrievePermission(const std::string &id);
