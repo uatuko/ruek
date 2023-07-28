@@ -114,8 +114,8 @@ datastore::AccessPolicy Access::map(const gk::v1::AccessCreatePolicyRequest *fro
 		google::protobuf::util::MessageToJsonString(rule.attrs(), &attrs);
 
 		rules.insert({
-			.resource = rule.resource(),
 			.attrs    = attrs,
+			.resource = rule.resource(),
 		});
 	}
 
