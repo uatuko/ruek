@@ -118,8 +118,12 @@ grpc::ServerUnaryReactor *Access::RetrievePolicy(
 datastore::AccessPolicy Access::map(const gk::v1::AccessCreatePolicyRequest *from) {
 	datastore::AccessPolicy::Data::rules_t rules;
 	for (const auto &rule : from->rules()) {
+		std::string attrs;
+		google::protobuf::util::MessageToJsonString(rule.attrs(), &attrs);
+
 		rules.insert({
 			.resource = rule.resource(),
+			.attrs    = attrs,
 		});
 	}
 

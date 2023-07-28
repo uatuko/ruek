@@ -93,6 +93,9 @@ void Rbac::map(const datastore::Policies &from, gk::v1::RbacCheckResponse *to) {
 	for (const auto &policy : from) {
 		auto p = to->add_policies();
 		p->set_id(policy.id);
+		if (!policy.attrs.empty()) {
+			google::protobuf::util::JsonStringToMessage(policy.attrs, p->mutable_attrs());
+		}
 	}
 }
 
