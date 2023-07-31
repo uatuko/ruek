@@ -27,6 +27,7 @@ struct config {
 
 	struct pg_t {
 		std::string opts;
+		duration_t  timeout = 1000ms;
 	};
 
 	struct redis_t {
