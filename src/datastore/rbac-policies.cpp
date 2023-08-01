@@ -54,7 +54,7 @@ void RbacPolicy::addCollection(const collection_t &id) const {
 	for (const auto &mid : members) {
 		for (const auto &rule : rules()) {
 			const auto role = RetrieveRole(rule.roleId);
-			for (const auto &perm : datastore::RetrieveRolePermissions(role.id())) {
+			for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
 				Cache cache({
 					.identity   = mid,
 					.permission = perm.id(),
@@ -89,7 +89,7 @@ void RbacPolicy::addIdentity(const identity_t &id) const {
 
 	for (const auto &rule : rules()) {
 		const auto role = RetrieveRole(rule.roleId);
-		for (const auto &perm : datastore::RetrieveRolePermissions(role.id())) {
+		for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
 			Cache cache({
 				.identity   = id,
 				.permission = perm.id(),

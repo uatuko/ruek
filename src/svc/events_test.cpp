@@ -152,7 +152,7 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 		// Ensure cache is clear
 		{
 			for (const auto &id : identityIds) {
-				for (const auto &perm : datastore::RetrieveRolePermissions(role.id())) {
+				for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
 					const datastore::RbacPolicy::Cache cache({
 						.identity   = id,
 						.permission = perm.id(),
@@ -188,7 +188,7 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 		// Expect cache to be rebuilt
 		{
 			for (const auto &id : identityIds) {
-				for (const auto &perm : datastore::RetrieveRolePermissions(role.id())) {
+				for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
 					const auto policies = datastore::RbacPolicy::Cache::check(id, perm.id());
 					ASSERT_EQ(1, policies.size());
 					EXPECT_EQ(policy.id(), policies[0].id);

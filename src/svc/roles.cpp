@@ -46,7 +46,7 @@ void Roles::map(const datastore::Role &from, gk::v1::Role *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());
 
-	for (const auto &perm : datastore::RetrieveRolePermissions(from.id())) {
+	for (const auto &perm : datastore::RetrievePermissionsByRole(from.id())) {
 		auto p = to->add_permissions();
 		Permissions::map(perm, p);
 	}

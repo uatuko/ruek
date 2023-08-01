@@ -87,7 +87,7 @@ TEST_F(svc_RolesTest, Retrieve) {
 		EXPECT_EQ(role.id(), response.id());
 		EXPECT_EQ(role.name(), response.name());
 
-		const auto &perms = datastore::RetrieveRolePermissions(role.id());
+		const auto &perms = datastore::RetrievePermissionsByRole(role.id());
 		ASSERT_EQ(perms.size(), response.permissions_size());
 		ASSERT_EQ(perms[0].id(), response.permissions(0).id());
 		ASSERT_EQ(perms[1].id(), response.permissions(1).id());

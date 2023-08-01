@@ -41,7 +41,7 @@ Permission RetrievePermission(const std::string &id) {
 	return Permission(res[0]);
 }
 
-Permissions RetrieveRolePermissions(const std::string &rid) {
+Permissions RetrievePermissionsByRole(const std::string &rid) {
 	std::string_view qry = R"(
 		select
 			_id

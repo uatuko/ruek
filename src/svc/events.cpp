@@ -45,7 +45,7 @@ grpc::ServerUnaryReactor *Events::Process(
 			for (const auto &identity : policy.identities(true)) {
 				for (const auto &rule : policy.rules()) {
 					const auto role = datastore::RetrieveRole(rule.roleId);
-					for (const auto &perm : datastore::RetrieveRolePermissions(role.id())) {
+					for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
 						const datastore::RbacPolicy::Cache cache({
 							.identity   = identity,
 							.permission = perm.id(),

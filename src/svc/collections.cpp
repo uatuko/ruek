@@ -38,7 +38,7 @@ grpc::ServerUnaryReactor *Collections::AddMember(
 	for (const auto &policy : rbac) {
 		for (const auto &rule : policy.rules()) {
 			const auto role = datastore::RetrieveRole(rule.roleId);
-			for (const auto &perm : datastore::RetrieveRolePermissions(role.id())) {
+			for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
 				datastore::RbacPolicy::Cache cache({
 					.identity   = request->identity_id(),
 					.permission = perm.id(),
