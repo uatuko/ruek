@@ -16,7 +16,7 @@ public:
 		std::strcat(_err, M.c_str());
 	}
 
-	inline std::string_view str() const noexcept { return _err; }
+	std::string_view str() const noexcept { return _err; }
 
 	friend std::ostream &operator<<(std::ostream &os, const basic_error &err) {
 		return os << err.str();

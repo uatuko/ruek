@@ -3,6 +3,9 @@
 #include "basic_error.h"
 
 namespace err {
+using DatastorePgConnectionUnavailable = basic_error<"gk:1.0.5.503", "Unavailable">;
+using DatastorePgTimeout               = basic_error<"gk:1.0.6.503", "Operation timed out">;
+
 using DatastoreRedisCommandError          = basic_error<"gk:1.0.4.503", "Unavailable">;
 using DatastoreRedisConnectionFailure     = basic_error<"gk:1.0.1.503", "Unavailable">;
 using DatastoreRedisConnectionUnavailable = basic_error<"gk:1.0.3.503", "Unavailable">;

@@ -20,7 +20,7 @@ inline void log(std::string_view severity, std::string_view source, Args &&...ar
 	std::cout << glz::write_json(obj) << std::endl;
 }
 
-void critical(std::string_view source, auto &&...args) {
+inline void critical(std::string_view source, auto &&...args) {
 	log("critical", source, std::forward<decltype(args)>(args)...);
 	std::exit(EXIT_FAILURE);
 }

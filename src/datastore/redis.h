@@ -20,7 +20,7 @@ public:
 
 	connection(const context_t &ptr, lock_t &&lock) noexcept : _ctx(ptr), _lock(std::move(lock)) {}
 
-	template <typename... Args> inline reply_t cmd(const std::string_view str, Args &&...args) {
+	template <typename... Args> reply_t cmd(const std::string_view str, Args &&...args) {
 		reply_t reply(
 			static_cast<reply_t::element_type *>(redisCommand(ctx(), str.data(), args...)),
 			freeReplyObject);
