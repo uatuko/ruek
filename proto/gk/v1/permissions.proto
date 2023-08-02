@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package gk.v1;
+
+import "google/api/annotations.proto";
+
+service Permissions {
+	rpc Create(PermissionsCreateRequest) returns (Permission) {
+		option (google.api.http) = {
+			post : "/v1/permissions"
+			body : "*"
+		};
+	}
+}
+
+message Permission {
+	string id = 1;
+}
+
+message PermissionsCreateRequest {
+	string id = 1;
+}

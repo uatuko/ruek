@@ -10,6 +10,10 @@ grpc::ServerUnaryReactor *Roles::Create(
 	auto role = map(request);
 	role.store();
 
+	for (const auto &perm : request->permission_ids()) {
+		role.addPermission(perm);
+	}
+
 	map(role, response);
 
 	reactor->Finish(grpc::Status::OK);
@@ -35,15 +39,6 @@ datastore::Role Roles::map(const gk::v1::RolesCreateRequest *from) {
 		.name = from->name(),
 	});
 
-	if (from->permissions_size() > 0) {
-		datastore::Role::permissions_t perms;
-		for (int i = 0; i < from->permissions_size(); i++) {
-			perms.insert(from->permissions(i));
-		}
-
-		role.permissions(std::move(perms));
-	}
-
 	return role;
 }
 
@@ -51,8 +46,9 @@ void Roles::map(const datastore::Role &from, gk::v1::Role *to) {
 	to->set_id(from.id());
 	to->set_name(from.name());
 
-	for (const auto &perm : from.permissions()) {
-		to->add_permissions(perm);
+	for (const auto &perm : datastore::RetrievePermissionsByRole(from.id())) {
+		auto p = to->add_permissions();
+		Permissions::map(perm, p);
 	}
 }
 } // namespace svc

@@ -5,6 +5,7 @@ add_library(datastore
 	datastore.h
 	identities.cpp identities.h
 	pg.cpp pg.h
+	permissions.cpp permissions.h
 	policies.h
 	rbac-policies.cpp rbac-policies.h
 	redis.cpp redis.h
@@ -47,6 +48,7 @@ if (GATEKEEPER_ENABLE_TESTING)
 		access-policies_test.cpp
 		collections_test.cpp
 		identities_test.cpp
+		permissions_test.cpp
 		pg_test.cpp
 		rbac-policies_test.cpp
 		redis_test.cpp

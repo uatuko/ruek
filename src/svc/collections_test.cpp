@@ -4,6 +4,7 @@
 #include "datastore/access-policies.h"
 #include "datastore/collections.h"
 #include "datastore/identities.h"
+#include "datastore/permissions.h"
 #include "datastore/rbac-policies.h"
 #include "datastore/roles.h"
 #include "datastore/testing.h"
@@ -143,21 +144,21 @@ TEST_F(svc_CollectionsTest, AddMember) {
 		request.set_collection_id(collection.id());
 		request.set_identity_id(identity.id());
 
-		const std::string perm = "permissions[0]:svc_CollectionsTest.AddMember-rbac";
-
 		const datastore::RbacPolicy policy({
 			.name = "name:svc_CollectionsTest.AddMember-rbac",
 		});
 		ASSERT_NO_THROW(policy.store());
 
+		datastore::Permission permission({
+			.id = "permission_id:svc_CollectionsTest.AddMember-rbac",
+		});
+		ASSERT_NO_THROW(permission.store());
+
 		const datastore::Role role({
 			.name = "name:svc_CollectionsTest.AddMember-rbac",
-			.permissions =
-				{
-					perm,
-				},
 		});
-		ASSERT_NO_THROW(role.store());
+		EXPECT_NO_THROW(role.store());
+		EXPECT_NO_THROW(role.addPermission(permission.id()));
 
 		auto rule = datastore::RbacPolicy::Rule({.roleId = role.id()});
 
@@ -167,7 +168,8 @@ TEST_F(svc_CollectionsTest, AddMember) {
 
 		// expect no access before request
 		{
-			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), perm);
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
 			EXPECT_EQ(0, policies.size());
 		}
 
@@ -179,7 +181,8 @@ TEST_F(svc_CollectionsTest, AddMember) {
 
 		// expect to find single policy when checking rbac
 		{
-			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), perm);
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
 			EXPECT_EQ(1, policies.size());
 		}
 	}

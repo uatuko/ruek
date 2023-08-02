@@ -4,6 +4,7 @@
 #include "datastore/access-policies.h"
 #include "datastore/collections.h"
 #include "datastore/identities.h"
+#include "datastore/permissions.h"
 #include "datastore/rbac-policies.h"
 #include "datastore/roles.h"
 #include "datastore/testing.h"
@@ -121,14 +122,16 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
+		datastore::Permission permission({
+			.id = "permissions[0].id:svc_EventsTest.Process(request/cache.rebuild:rbac)",
+		});
+		ASSERT_NO_THROW(permission.store());
+
 		const datastore::Role role({
-			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
-			.permissions =
-				{
-					{"permissions[0]:svc_EventsTest.Process(request/cache.rebuild:rbac)"},
-				},
+			.name = "name:GatekeeperTest.ConsumeEvent(request/cache.rebuild:rbac)",
 		});
 		ASSERT_NO_THROW(role.store());
+		ASSERT_NO_THROW(role.addPermission(permission.id()));
 
 		const datastore::RbacPolicy policy({
 			.name = "name:svc_EventsTest.Process(request/cache.rebuild:rbac)",
@@ -149,10 +152,10 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 		// Ensure cache is clear
 		{
 			for (const auto &id : identityIds) {
-				for (const auto &perm : role.permissions()) {
+				for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
 					const datastore::RbacPolicy::Cache cache({
 						.identity   = id,
-						.permission = perm,
+						.permission = perm.id(),
 						.policy     = policy.id(),
 						.rule       = rule,
 					});
@@ -185,8 +188,8 @@ TEST_F(svc_EventsTest, Process_cache_rebuild) {
 		// Expect cache to be rebuilt
 		{
 			for (const auto &id : identityIds) {
-				for (const auto &perm : role.permissions()) {
-					const auto policies = datastore::RbacPolicy::Cache::check(id, perm);
+				for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
+					const auto policies = datastore::RbacPolicy::Cache::check(id, perm.id());
 					ASSERT_EQ(1, policies.size());
 					EXPECT_EQ(policy.id(), policies[0].id);
 					EXPECT_EQ(*rule.attrs, policies[0].attrs);

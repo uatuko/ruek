@@ -3,6 +3,7 @@
 
 #include "datastore/collections.h"
 #include "datastore/identities.h"
+#include "datastore/permissions.h"
 #include "datastore/rbac-policies.h"
 #include "datastore/roles.h"
 #include "datastore/testing.h"
@@ -114,17 +115,16 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		});
 		ASSERT_NO_THROW(identity.store());
 
-		const std::string permission =
-			"permissions[0]:svc_RbacTest.CreateRbacPolicy-with_identity_and_role";
+		const datastore::Permission permission({
+			.id = "permissions[0].id:vc_RbacTest.CreateRbacPolicy-with_identity_and_rol",
+		});
+		ASSERT_NO_THROW(permission.store());
 
 		const datastore::Role role({
 			.name = "name:svc_RbacTest.CreatePolicy-with_identity_and_role",
-			.permissions =
-				{
-					permission,
-				},
 		});
 		ASSERT_NO_THROW(role.store());
+		ASSERT_NO_THROW(role.addPermission(permission.id()));
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
@@ -139,7 +139,8 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 
 		// expect no access before request
 		{
-			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
 			EXPECT_EQ(0, policies.size());
 		}
 
@@ -155,7 +156,8 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 
 		// expect to find single policy when checking access
 		{
-			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
 			EXPECT_EQ(1, policies.size());
 		}
 	}
@@ -172,17 +174,16 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
 
-		const std::string permission =
-			"permissions[0]:svc_RbacTest.CreatePolicy-with_collection_and_role";
+		const datastore::Permission permission({
+			.id = "permissions[0].id:svc_RbacTest.CreatePolicy-with_collection_and_role",
+		});
+		ASSERT_NO_THROW(permission.store());
 
 		const datastore::Role role({
 			.name = "name:svc_RbacTest.CreatePolicy-with_collection_and_role",
-			.permissions =
-				{
-					permission,
-				},
 		});
 		ASSERT_NO_THROW(role.store());
+		ASSERT_NO_THROW(role.addPermission(permission.id()));
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
@@ -197,7 +198,8 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 
 		// expect no permission before request
 		{
-			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
 			EXPECT_EQ(0, policies.size());
 		}
 
@@ -214,7 +216,8 @@ TEST_F(svc_RbacTest, CreatePolicy) {
 
 		// expect to find single policy when checking
 		{
-			const auto policies = datastore::RbacPolicy::Cache::check(identity.id(), permission);
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
 			EXPECT_EQ(1, policies.size());
 		}
 	}
@@ -240,7 +243,6 @@ TEST_F(svc_RbacTest, RetrievePolicy) {
 		ASSERT_NO_THROW(collection.store());
 		ASSERT_NO_THROW(collection.add(identities[0].id()));
 
-		const auto                  permission = "permission:svc_RbacTest.RetrievePolicy";
 		const datastore::RbacPolicy policy({
 			.id   = "id:svc_RbacTest.RetrievePolicy",
 			.name = "name:svc_RbacTest.RetrievePolicy",
