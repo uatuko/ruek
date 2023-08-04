@@ -5,7 +5,9 @@
 
 namespace events {
 template <typename T>
-concept encodable = requires(T t) { t.encode(); };
+concept encodable = requires(T t) {
+	t.encode();
+};
 
 template <typename T>
 concept serializable = requires(T t) {
