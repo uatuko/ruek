@@ -93,7 +93,7 @@ void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
 	}
 }
 
-void AccessPolicy::deleteIdentity(const AccessPolicy::identity_t &id) const {
+void AccessPolicy::removeIdentity(const AccessPolicy::identity_t &id) const {
 	std::string_view qry = R"(
 		delete from "access-policies_identities"
 		where (policy_id, identity_id) = ($1::text, $2::text);

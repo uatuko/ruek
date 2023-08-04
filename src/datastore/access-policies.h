@@ -65,7 +65,7 @@ public:
 
 	const identities_t identities(bool expand = false) const;
 	void               addIdentity(const identity_t &id) const;
-	void               deleteIdentity(const identity_t &id) const;
+	void               removeIdentity(const identity_t &id) const;
 
 	const Data::name_t &name() const noexcept { return _data.name; }
 	void                name(const std::string &name) noexcept { _data.name = name; }

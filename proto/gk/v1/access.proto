@@ -44,7 +44,7 @@ service Access {
 		};
 	}
 
-	rpc DeletePolicyIdentity(AccessDeletePolicyIdentityRequest) returns (google.protobuf.Empty) {
+	rpc RemovePolicyIdentity(AccessRemovePolicyIdentityRequest) returns (google.protobuf.Empty) {
 		option (google.api.http) = {
 			delete : "/v1/access-policies/{policy_id}/identities"
 		};
@@ -107,7 +107,7 @@ message AccessAddPolicyIdentityRequest {
 
 message AccessAddPolicyIdentityResponse {}
 
-message AccessDeletePolicyIdentityRequest {
+message AccessRemovePolicyIdentityRequest {
 	string policy_id   = 1;
 	string identity_id = 2;
 }

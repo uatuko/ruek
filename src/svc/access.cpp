@@ -94,14 +94,14 @@ grpc::ServerUnaryReactor *Access::CreatePolicy(
 	return reactor;
 }
 
-grpc::ServerUnaryReactor *Access::DeletePolicyIdentity(
-	grpc::CallbackServerContext *context, const gk::v1::AccessDeletePolicyIdentityRequest *request,
+grpc::ServerUnaryReactor *Access::RemovePolicyIdentity(
+	grpc::CallbackServerContext *context, const gk::v1::AccessRemovePolicyIdentityRequest *request,
 	google::protobuf::Empty *response) {
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
 	auto policy = datastore::RetrieveAccessPolicy(request->policy_id());
-	policy.deleteIdentity(request->identity_id());
+	policy.removeIdentity(request->identity_id());
 
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
