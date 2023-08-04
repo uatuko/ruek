@@ -279,6 +279,41 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 	}
 }
 
+TEST_F(svc_AccessTest, DeletePolicyIdentity) {
+	svc::Access svc;
+
+	// Success: delete identity
+	{
+		const datastore::Identity identity({
+			.sub = "sub:svc_AccessTest.DeletePolicyIdentity",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		const datastore::AccessPolicy policy({
+			.name = "name:svc_AccessTest.DeletePolicyIdentity",
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addIdentity(identity.id()));
+		EXPECT_EQ(1, policy.identities().size());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		google::protobuf::Empty               response;
+
+		gk::v1::AccessDeletePolicyIdentityRequest request;
+		request.set_policy_id(policy.id());
+		request.set_identity_id(identity.id());
+
+		auto reactor = svc.DeletePolicyIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		const auto ids = policy.identities();
+		ASSERT_EQ(0, ids.size());
+	}
+}
+
 TEST_F(svc_AccessTest, RetrievePolicy) {
 	svc::Access svc;
 
