@@ -4,6 +4,7 @@ package gk.v1;
 
 import "gk/v1/common.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 
 service Access {
@@ -40,6 +41,12 @@ service Access {
 		option (google.api.http) = {
 			post : "/v1/access-policies/{policy_id}/identities"
 			body : "*"
+		};
+	}
+
+	rpc DeletePolicyIdentity(AccessDeletePolicyIdentityRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete : "/v1/access-policies/{policy_id}/identities"
 		};
 	}
 }
@@ -99,3 +106,8 @@ message AccessAddPolicyIdentityRequest {
 }
 
 message AccessAddPolicyIdentityResponse {}
+
+message AccessDeletePolicyIdentityRequest {
+	string policy_id   = 1;
+	string identity_id = 2;
+}
