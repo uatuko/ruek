@@ -298,7 +298,7 @@ TEST_F(svc_AccessTest, RemovePolicyIdentity) {
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
-		google::protobuf::Empty               response;
+		gk::v1::AccessRemovePolicyIdentityResponse response;
 
 		gk::v1::AccessRemovePolicyIdentityRequest request;
 		request.set_policy_id(policy.id());

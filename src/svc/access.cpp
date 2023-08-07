@@ -96,7 +96,7 @@ grpc::ServerUnaryReactor *Access::CreatePolicy(
 
 grpc::ServerUnaryReactor *Access::RemovePolicyIdentity(
 	grpc::CallbackServerContext *context, const gk::v1::AccessRemovePolicyIdentityRequest *request,
-	google::protobuf::Empty *response) {
+	gk::v1::AccessRemovePolicyIdentityResponse *response) {
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling

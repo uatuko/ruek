@@ -26,7 +26,7 @@ public:
 	grpc::ServerUnaryReactor *RemovePolicyIdentity(
 		grpc::CallbackServerContext                     *context,
 		const gk::v1::AccessRemovePolicyIdentityRequest *request,
-		google::protobuf::Empty                         *response) override;
+		gk::v1::AccessRemovePolicyIdentityResponse      *response) override;
 
 	grpc::ServerUnaryReactor *RetrievePolicy(
 		grpc::CallbackServerContext *context, const gk::v1::AccessRetrievePolicyRequest *request,
