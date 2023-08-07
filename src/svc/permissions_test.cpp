@@ -37,4 +37,38 @@ TEST_F(svc_PermissionsTest, Create) {
 
 		EXPECT_EQ(request.id(), response.id());
 	}
+
+	// Error: missing `id`
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Permission                    response;
+
+		gk::v1::PermissionsCreateRequest request;
+
+		auto reactor = svc.Create(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::INVALID_ARGUMENT, peer.test_status().error_code());
+		EXPECT_EQ("Permission id cannot be empty", peer.test_status().error_message());
+	}
+
+	// Error: duplicate `id`
+	{
+		const datastore::Permission permission({
+			.id = "id:svc_PermissionsTest.Create-duplicate",
+		});
+		ASSERT_NO_THROW(permission.store());
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Permission                    response;
+
+		gk::v1::PermissionsCreateRequest request;
+		request.set_id(permission.id());
+
+		auto reactor = svc.Create(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::ALREADY_EXISTS, peer.test_status().error_code());
+		EXPECT_EQ("Duplicate permission", peer.test_status().error_message());
+	}
 }
