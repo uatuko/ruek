@@ -23,6 +23,11 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::AccessCreatePolicyRequest *request,
 		gk::v1::AccessPolicy *response) override;
 
+	grpc::ServerUnaryReactor *RemovePolicyIdentity(
+		grpc::CallbackServerContext                     *context,
+		const gk::v1::AccessRemovePolicyIdentityRequest *request,
+		gk::v1::AccessRemovePolicyIdentityResponse      *response) override;
+
 	grpc::ServerUnaryReactor *RetrievePolicy(
 		grpc::CallbackServerContext *context, const gk::v1::AccessRetrievePolicyRequest *request,
 		gk::v1::AccessPolicy *response) override;

@@ -93,6 +93,29 @@ void AccessPolicy::addIdentity(const AccessPolicy::identity_t &id) const {
 	}
 }
 
+void AccessPolicy::removeIdentity(const AccessPolicy::identity_t &id) const {
+	std::string_view qry = R"(
+		delete from "access-policies_identities"
+		where (policy_id, identity_id) = ($1::text, $2::text);
+	)";
+
+	try {
+		pg::exec(qry, _data.id, id);
+	} catch (pg::fkey_violation_t &) {
+		throw err::DatastoreInvalidAccessPolicyOrIdentity();
+	}
+
+	for (const auto &rule : _data.rules) {
+		Cache cache({
+			.identity = id,
+			.policy   = _data.id,
+			.rule     = rule,
+		});
+
+		cache.discard();
+	}
+}
+
 const AccessPolicy::collections_t AccessPolicy::collections() const {
 	std::string qry = R"(
 		select

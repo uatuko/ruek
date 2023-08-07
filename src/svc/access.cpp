@@ -94,6 +94,19 @@ grpc::ServerUnaryReactor *Access::CreatePolicy(
 	return reactor;
 }
 
+grpc::ServerUnaryReactor *Access::RemovePolicyIdentity(
+	grpc::CallbackServerContext *context, const gk::v1::AccessRemovePolicyIdentityRequest *request,
+	gk::v1::AccessRemovePolicyIdentityResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto policy = datastore::RetrieveAccessPolicy(request->policy_id());
+	policy.removeIdentity(request->identity_id());
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 grpc::ServerUnaryReactor *Access::RetrievePolicy(
 	grpc::CallbackServerContext *context, const gk::v1::AccessRetrievePolicyRequest *request,
 	gk::v1::AccessPolicy *response) {

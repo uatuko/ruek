@@ -279,6 +279,64 @@ TEST_F(svc_AccessTest, CreatePolicy) {
 	}
 }
 
+TEST_F(svc_AccessTest, RemovePolicyIdentity) {
+	svc::Access svc;
+
+	// Success: Remove identity
+	{
+		const datastore::Identity identity({
+			.sub = "sub:svc_AccessTest.RemovePolicyIdentity",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		const datastore::AccessPolicy::Rule rule({
+			.resource = "resource:svc_AccessTest.RemovePolicyIdentity",
+		});
+
+		const datastore::AccessPolicy policy({
+			.name = "name:svc_AccessTest.RemovePolicyIdentity",
+			.rules =
+				{
+					rule,
+				},
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addIdentity(identity.id()));
+		EXPECT_EQ(1, policy.identities().size());
+
+		grpc::CallbackServerContext                ctx;
+		grpc::testing::DefaultReactorTestPeer      peer(&ctx);
+		gk::v1::AccessRemovePolicyIdentityResponse response;
+
+		// Expect access before request
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule.resource);
+			EXPECT_EQ(1, policies.size());
+		}
+
+		gk::v1::AccessRemovePolicyIdentityRequest request;
+		request.set_policy_id(policy.id());
+		request.set_identity_id(identity.id());
+
+		auto reactor = svc.RemovePolicyIdentity(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		// Expect no access after request
+		{
+			const auto policies =
+				datastore::AccessPolicy::Cache::check(identity.id(), rule.resource);
+			EXPECT_EQ(0, policies.size());
+		}
+
+		// Expect policy no longer contains removed identity
+		const auto ids = policy.identities();
+		ASSERT_EQ(0, ids.size());
+	}
+}
+
 TEST_F(svc_AccessTest, RetrievePolicy) {
 	svc::Access svc;
 
