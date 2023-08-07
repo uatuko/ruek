@@ -47,7 +47,10 @@ using DatastoreDuplicateRbacPolicyRole = basic_error<"gk:1.6.4.409", "Duplicate 
 using DatastoreDuplicateRoleOrPermission =
 	basic_error<"gk:1.7.1.409", "Duplicate role or permission">;
 using DatastoreInvalidRoleOrPermission = basic_error<"gk:1.7.2.400", "Invalid role or permission">;
-using DatastorePermissionNotFound      = basic_error<"gk:1.7.3.404", "Permission not found">;
+
+using DatastoreDuplicatePermission   = basic_error<"gp:1.8.1.409", "Duplicate permission">;
+using DatastoreInvalidPermissionData = basic_error<"gk:1.8.2.400", "Invalid permission data">;
+using DatastorePermissionNotFound    = basic_error<"gk:1.8.3.404", "Permission not found">;
 
 using EventsPubsubTransportFailure = basic_error<"gk:2.1.1.503", "Unavailable">;
 } // namespace err
