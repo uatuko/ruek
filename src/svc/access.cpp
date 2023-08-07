@@ -112,9 +112,16 @@ grpc::ServerUnaryReactor *Access::RetrievePolicy(
 	gk::v1::AccessPolicy *response) {
 	auto *reactor = context->DefaultReactor();
 
-	// TODO: error handling
-	auto policy = datastore::RetrieveAccessPolicy(request->id());
-	map(policy, response);
+	try {
+		auto policy = datastore::RetrieveAccessPolicy(request->id());
+		map(policy, response);
+	} catch (const err::DatastoreAccessPolicyNotFound &) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::NOT_FOUND, "Policy not found"));
+		return reactor;
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to retrieve data"));
+		return reactor;
+	}
 
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
