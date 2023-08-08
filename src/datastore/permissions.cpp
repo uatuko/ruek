@@ -22,7 +22,13 @@ void Permission::store() const {
 		);
 	)";
 
-	pg::exec(qry, _data.id);
+	try {
+		pg::exec(qry, _data.id);
+	} catch (const pqxx::check_violation &) {
+		throw err::DatastoreInvalidPermissionData();
+	} catch (const pqxx::unique_violation &) {
+		throw err::DatastoreDuplicatePermission();
+	}
 }
 
 Permission RetrievePermission(const std::string &id) {

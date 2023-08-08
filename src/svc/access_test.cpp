@@ -399,4 +399,19 @@ TEST_F(svc_AccessTest, RetrievePolicy) {
 		google::protobuf::util::MessageToJsonString(response.rules(0).attrs(), &attrs);
 		EXPECT_EQ(policy.rules().cbegin()->attrs, attrs);
 	}
+
+	// Error: policy not found
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::AccessPolicy                  response;
+
+		gk::v1::AccessRetrievePolicyRequest request;
+		request.set_id("id:svc_AccessTest.RetrievePolicy-not_found");
+
+		auto reactor = svc.RetrievePolicy(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_EQ(grpc::StatusCode::NOT_FOUND, peer.test_status().error_code());
+		EXPECT_EQ("Policy not found", peer.test_status().error_message());
+	}
 }

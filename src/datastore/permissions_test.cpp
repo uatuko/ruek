@@ -47,19 +47,37 @@ TEST_F(PermissionsTest, store) {
 	const datastore::Permission permission({
 		.id = "id:PermissionsTest.store",
 	});
-	ASSERT_NO_THROW(permission.store());
 
-	std::string_view qry = R"(
-		select
-			_id
-		from permissions
-		where
-			_id = $1::text;
-	)";
+	// Success: persist data
+	{
+		ASSERT_NO_THROW(permission.store());
 
-	auto res = datastore::pg::exec(qry, permission.id());
-	ASSERT_EQ(1, res.size());
+		std::string_view qry = R"(
+			select
+				_id
+			from permissions
+			where
+				_id = $1::text;
+		)";
 
-	auto [id] = res[0].as<std::string>();
-	EXPECT_EQ(permission.id(), id);
+		auto res = datastore::pg::exec(qry, permission.id());
+		ASSERT_EQ(1, res.size());
+
+		auto [id] = res[0].as<std::string>();
+		EXPECT_EQ(permission.id(), id);
+	}
+
+	// Error: invalid `_id`
+	{
+		const datastore::Permission permission(datastore::Permission::Data{});
+		EXPECT_THROW(permission.store(), err::DatastoreInvalidPermissionData);
+	}
+
+	// Error: duplicate `_id`
+	{
+		const datastore::Permission duplicate({
+			.id = permission.id(),
+		});
+		EXPECT_THROW(duplicate.store(), err::DatastoreDuplicatePermission);
+	}
 }

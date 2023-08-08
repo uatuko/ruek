@@ -73,27 +73,41 @@ TEST_F(RolesTest, store) {
 }
 
 TEST_F(RolesTest, addPermission) {
-	const datastore::Permission permission({
-		.id = "permission:RolesTest.addPermission",
-	});
-	ASSERT_NO_THROW(permission.store());
-	const datastore::Role role({
-		.name = "name:RolesTest.addPermission",
-	});
-	ASSERT_NO_THROW(role.store());
-	ASSERT_NO_THROW(role.addPermission(permission.id()));
+	// Success: add permission
+	{
+		const datastore::Permission permission({
+			.id = "permission:RolesTest.addPermission",
+		});
+		ASSERT_NO_THROW(permission.store());
 
-	std::string_view qry = R"(
-		select
-			permission_id
-		from "roles_permissions"
-		where
-			role_id = $1::text;
-	)";
+		const datastore::Role role({
+			.name = "name:RolesTest.addPermission",
+		});
+		ASSERT_NO_THROW(role.store());
+		ASSERT_NO_THROW(role.addPermission(permission.id()));
 
-	auto res = datastore::pg::exec(qry, role.id());
-	ASSERT_EQ(1, res.size());
+		std::string_view qry = R"(
+			select
+				permission_id
+			from "roles_permissions"
+			where
+				role_id = $1::text;
+		)";
 
-	auto [permissionId] = res[0].as<std::string>();
-	EXPECT_EQ(permission.id(), permissionId);
+		auto res = datastore::pg::exec(qry, role.id());
+		ASSERT_EQ(1, res.size());
+
+		auto [permissionId] = res[0].as<std::string>();
+		EXPECT_EQ(permission.id(), permissionId);
+	}
+
+	// Error: invalid permission
+	{
+		const datastore::Role role({
+			.name = "name:RolesTest.addPermission-invalid_permission",
+		});
+		ASSERT_NO_THROW(role.store());
+
+		ASSERT_THROW(role.addPermission("invalid"), err::DatastoreInvalidRoleOrPermission);
+	}
 }

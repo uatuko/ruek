@@ -4,7 +4,6 @@ package gk.v1;
 
 import "gk/v1/common.proto";
 import "google/api/annotations.proto";
-import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 
 service Access {
@@ -112,5 +111,4 @@ message AccessRemovePolicyIdentityRequest {
 	string identity_id = 2;
 }
 
-message AccessRemovePolicyIdentityResponse {
-}
+message AccessRemovePolicyIdentityResponse {}

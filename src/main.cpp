@@ -36,11 +36,12 @@ int main() {
 	grpc::ServerBuilder builder;
 	builder.AddListeningPort(std::string{conf["tcp.address"]}, grpc::InsecureServerCredentials());
 
-	std::array<std::unique_ptr<grpc::Service>, 6> services = {
+	std::array<std::unique_ptr<grpc::Service>, 7> services = {
 		std::make_unique<svc::Access>(),
 		std::make_unique<svc::Collections>(),
 		std::make_unique<svc::Events>(),
 		std::make_unique<svc::Identities>(),
+		std::make_unique<svc::Permissions>(),
 		std::make_unique<svc::Rbac>(),
 		std::make_unique<svc::Roles>(),
 	};

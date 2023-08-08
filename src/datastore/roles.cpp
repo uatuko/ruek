@@ -70,7 +70,7 @@ void Role::addPermission(const std::string &pid) const {
 	try {
 		pg::exec(qry, _data.id, pid);
 	} catch (pg::fkey_violation_t &e) {
-		throw e;
+		throw err::DatastoreInvalidRoleOrPermission();
 	} catch (pg::unique_violation_t &) {
 		throw err::DatastoreDuplicateRoleOrPermission();
 	}

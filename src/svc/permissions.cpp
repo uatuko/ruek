@@ -1,14 +1,29 @@
 #include "permissions.h"
 
+#include "err/errors.h"
+
 namespace svc {
 grpc::ServerUnaryReactor *Permissions::Create(
 	grpc::CallbackServerContext *context, const gk::v1::PermissionsCreateRequest *request,
 	gk::v1::Permission *response) {
 	auto *reactor = context->DefaultReactor();
 
-	// TODO: error handling
+	if (request->id() == "") {
+		reactor->Finish(
+			grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Permission id cannot be empty"));
+		return reactor;
+	}
+
 	auto permission = map(request);
-	permission.store();
+	try {
+		permission.store();
+	} catch (const err::DatastoreDuplicatePermission &e) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::ALREADY_EXISTS, e.what()));
+		return reactor;
+	} catch (...) {
+		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to store data"));
+		return reactor;
+	}
 
 	map(permission, response);
 
