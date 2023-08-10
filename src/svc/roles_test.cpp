@@ -19,6 +19,52 @@ protected:
 	static void TearDownTestSuite() { datastore::testing::teardown(); }
 };
 
+TEST_F(svc_RolesTest, AddPermission) {
+	svc::Roles svc;
+
+	// Success: add permission
+	{
+		datastore::Permission permission1({
+			.id = "permissions[0].id:svc_RolesTest.AddPermission",
+		});
+		datastore::Permission permission2({
+			.id = "permissions[1].id:svc_RolesTest.AddPermission",
+		});
+		ASSERT_NO_THROW(permission1.store());
+		ASSERT_NO_THROW(permission2.store());
+		const datastore::Role role({
+			.id   = "id:GatekeeperTest.AddPermission",
+			.name = "name:GatekeeperTest.AddPermission",
+
+		});
+		ASSERT_NO_THROW(role.store());
+		ASSERT_NO_THROW(role.addPermission(permission1.id()));
+
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::Role                          response;
+
+		gk::v1::RolesAddPermissionRequest request;
+		request.set_role_id(role.id());
+		request.set_id(permission2.id());
+
+		auto reactor = svc.AddPermission(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_EQ(role.id(), response.id());
+		EXPECT_EQ(role.name(), response.name());
+		EXPECT_EQ(2, response.permissions().size());
+
+		const auto &perms = datastore::RetrievePermissionsByRole(role.id());
+		ASSERT_EQ(perms.size(), response.permissions_size());
+		ASSERT_EQ(perms[0].id(), response.permissions(0).id());
+		ASSERT_EQ(perms[1].id(), response.permissions(1).id());
+	}
+}
+
+
 TEST_F(svc_RolesTest, Create) {
 	svc::Roles svc;
 
