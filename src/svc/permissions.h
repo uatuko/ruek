@@ -10,8 +10,13 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::PermissionsCreateRequest *request,
 		gk::v1::Permission *response) override;
 
+	grpc::ServerUnaryReactor *List(
+		grpc::CallbackServerContext *context, const gk::v1::PermissionsListRequest *request,
+		gk::v1::PermissionsListResponse *response) override;
+
 	static datastore::Permission map(const gk::v1::PermissionsCreateRequest *from);
 
 	static void map(const datastore::Permission &from, gk::v1::Permission *to);
+	static void map(const datastore::Permissions &from, gk::v1::PermissionsListResponse *to);
 };
 } // namespace svc

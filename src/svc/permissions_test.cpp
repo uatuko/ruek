@@ -72,3 +72,29 @@ TEST_F(svc_PermissionsTest, Create) {
 		EXPECT_EQ("Duplicate permission", peer.test_status().error_message());
 	}
 }
+
+TEST_F(svc_PermissionsTest, List) {
+	svc::Permissions svc;
+
+	// Success: list permission
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::PermissionsListResponse       response;
+
+		gk::v1::PermissionsListRequest request;
+
+		datastore::Permission permission({
+			.id = "id:svc_PermissionsTest.List",
+		});
+		ASSERT_NO_THROW(permission.store());
+
+		auto reactor = svc.List(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_EQ(response.data().size(), 1);
+		EXPECT_EQ(response.data()[0].id(), permission.id());
+	}
+}
