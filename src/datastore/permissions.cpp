@@ -31,6 +31,23 @@ void Permission::store() const {
 	}
 }
 
+Permissions ListPermissions() {
+	std::string_view qry = R"(
+		select
+			_id
+		from permissions;
+	)";
+
+	auto res = pg::exec(qry);
+
+	Permissions permissions;
+	for (const auto &r : res) {
+		permissions.push_back(Permission(r));
+	}
+
+	return permissions;
+}
+
 Permission RetrievePermission(const std::string &id) {
 	std::string_view qry = R"(
 		select
