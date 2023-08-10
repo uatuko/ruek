@@ -12,6 +12,7 @@ service Permissions {
 			body : "*"
 		};
 	}
+
 	rpc List(PermissionsListRequest) returns (PermissionsListResponse) {
 		option (google.api.http) = {
 			get : "/v1/permissions?_limit={page.limit}&_offset={page.offset}"

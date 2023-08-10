@@ -14,7 +14,7 @@ service Roles {
 		};
 	}
 
-	rpc List(RolesListRequest) returns (ListRolesResponse) {
+	rpc List(RolesListRequest) returns (RolesListResponse) {
 		option (google.api.http) = {
 			get : "/v1/roles?_limit={page.limit}&_offset={page.offset}"
 		};
@@ -52,7 +52,7 @@ message RolesListRequest {
 	optional Page page = 1;
 }
 
-message ListRolesResponse {
+message RolesListResponse {
 	repeated Role data = 1;
 	Meta          meta = 2;
 }
