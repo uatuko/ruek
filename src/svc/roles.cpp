@@ -7,14 +7,15 @@ grpc::ServerUnaryReactor *Roles::AddPermission(
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
-	auto role = datastore::RetrieveRole(request->role_id());
+	auto role     = datastore::RetrieveRole(request->role_id());
 	auto policies = datastore::ListRbacPoliciesContainingRole(role.id());
 
 	role.addPermission(request->id());
 
 	// NOTE: there is a more efficient way of doing this (retrieve only changed rules).
-	// Given this operation is uncommon we keep it simple by updating cache for all rules and making more requests.
-	for (const auto &policy: policies) {
+	// Given this operation is uncommon we keep it simple by updating cache for all rules and making
+	// more requests.
+	for (const auto &policy : policies) {
 		for (const auto &identity : policy.identities(true)) {
 			for (const auto &rule : policy.rules()) {
 				const auto role = datastore::RetrieveRole(rule.roleId);

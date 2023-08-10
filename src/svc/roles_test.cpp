@@ -64,7 +64,6 @@ TEST_F(svc_RolesTest, AddPermission) {
 	}
 }
 
-
 TEST_F(svc_RolesTest, Create) {
 	svc::Roles svc;
 
