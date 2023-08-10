@@ -2,12 +2,19 @@ syntax = "proto3";
 
 package gk.v1;
 
+import "gk/v1/common.proto";
 import "google/api/annotations.proto";
 
 service Permissions {
 	rpc Create(PermissionsCreateRequest) returns (Permission) {
 		option (google.api.http) = {
 			post : "/v1/permissions"
+			body : "*"
+		};
+	}
+	rpc List(PermissionsListRequest) returns (PermissionsListResponse) {
+		option (google.api.http) = {
+			get : "/v1/permissions?_limit={page.limit}&_offset={page.offset}"
 			body : "*"
 		};
 	}
@@ -19,4 +26,13 @@ message Permission {
 
 message PermissionsCreateRequest {
 	string id = 1;
+}
+
+message PermissionsListRequest {
+	optional Page page = 1;
+}
+
+message PermissionsListResponse {
+	repeated Permission data = 1;
+	Meta                meta = 2;
 }
