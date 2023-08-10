@@ -30,6 +30,7 @@ private:
 
 using Permissions = std::vector<Permission>;
 
+Permissions ListPermissions();
 Permissions RetrievePermissionsByRole(const std::string &rid);
 Permission  RetrievePermission(const std::string &id);
 } // namespace datastore

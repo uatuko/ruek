@@ -31,6 +31,20 @@ grpc::ServerUnaryReactor *Permissions::Create(
 	return reactor;
 }
 
+grpc::ServerUnaryReactor *Permissions::List(
+	grpc::CallbackServerContext *context, const gk::v1::PermissionsListRequest *request,
+	gk::v1::PermissionsListResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto permissions = datastore::ListPermissions();
+
+	map(permissions, response);
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 datastore::Permission Permissions::map(const gk::v1::PermissionsCreateRequest *from) {
 	datastore::Permission permission({
 		.id = from->id(),
@@ -41,5 +55,12 @@ datastore::Permission Permissions::map(const gk::v1::PermissionsCreateRequest *f
 
 void Permissions::map(const datastore::Permission &from, gk::v1::Permission *to) {
 	to->set_id(from.id());
+}
+
+void Permissions::map(const datastore::Permissions &from, gk::v1::PermissionsListResponse *to) {
+	for (const auto &perm : from) {
+		auto p = to->add_data();
+		Permissions::map(perm, p);
+	}
 }
 } // namespace svc
