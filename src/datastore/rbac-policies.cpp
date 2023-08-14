@@ -178,7 +178,8 @@ const RbacPolicy::Rules RbacPolicy::rules() const {
 	std::string_view qry = R"(
 		select
 			attrs,
-			role_id
+			role_id,
+			policy_id
 		from "rbac-policies_roles"
 		where
 			policy_id = $1::text;
@@ -189,8 +190,9 @@ const RbacPolicy::Rules RbacPolicy::rules() const {
 	Rules rules;
 	for (const auto &r : res) {
 		rules.push_back(Rule({
-			.attrs  = r["attrs"].as<Rule::attrs_t>(),
-			.roleId = r["role_id"].as<std::string>(),
+			.attrs    = r["attrs"].as<Rule::attrs_t>(),
+			.roleId   = r["role_id"].as<std::string>(),
+			.policyId = r["policy_id"].as<std::string>(),
 		}));
 	}
 
@@ -254,28 +256,29 @@ void RbacPolicy::Cache::store() const {
 	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), rule.attrs.value_or("").c_str());
 }
 
-RbacPolicies ListRbacPoliciesContainingRole(const std::string &rid) {
+RbacPolicy::Rules ListRbacPolicyRulesByRole(const std::string &id) {
 	std::string_view qry = R"(
 		select
-			_id,
-			_rev,
-			name
-		from
-			"rbac-policies_roles"
-		inner join "rbac-policies" on _id = policy_id
+			attrs,
+			policy_id,
+			role_id
+		from "rbac-policies_roles"
 		where
 			role_id = $1::text;
 	)";
 
-	auto res = pg::exec(qry, rid);
+	auto res = pg::exec(qry, id);
 
-	RbacPolicies policies;
+	RbacPolicy::Rules rules;
 	for (const auto &r : res) {
-		auto policy = RbacPolicy(r);
-		policies.push_back(policy);
+		rules.push_back(RbacPolicy::Rule({
+			.attrs    = r["attrs"].as<RbacPolicy::Rule::attrs_t>(),
+			.policyId = r["policy_id"].as<std::string>(),
+			.roleId   = r["role_id"].as<std::string>(),
+		}));
 	}
 
-	return policies;
+	return rules;
 }
 
 RbacPolicy RetrieveRbacPolicy(const std::string &id) {

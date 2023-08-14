@@ -7,29 +7,24 @@ grpc::ServerUnaryReactor *Roles::AddPermission(
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
-	auto role     = datastore::RetrieveRole(request->role_id());
-	auto policies = datastore::ListRbacPoliciesContainingRole(role.id());
+	auto role  = datastore::RetrieveRole(request->role_id());
+	auto rules = datastore::ListRbacPolicyRulesByRole(role.id());
 
-	role.addPermission(request->id());
+	auto permissionId = request->id();
+	role.addPermission(permissionId);
 
-	// NOTE: there is a more efficient way of doing this (retrieve only changed rules).
-	// Given this operation is uncommon we keep it simple by updating cache for all rules and making
-	// more requests.
-	for (const auto &policy : policies) {
-		for (const auto &identity : policy.identities(true)) {
-			for (const auto &rule : policy.rules()) {
-				const auto role = datastore::RetrieveRole(rule.roleId);
-				for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
-					datastore::RbacPolicy::Cache cache({
-						.identity   = identity,
-						.permission = perm.id(),
-						.policy     = policy.id(),
-						.rule       = rule,
-					});
+	for (const auto &rule : rules) {
+		const auto policy = datastore::RetrieveRbacPolicy(rule.policyId);
+		for (const auto &iden : policy.identities()) {
+			datastore::RbacPolicy::Cache cache({
+				.identity   = iden,
+				.permission = permissionId,
+				.policy     = policy.id(),
+				.rule       = rule,
+			});
+			std::cout << iden << std::endl;
 
-					cache.store();
-				}
-			}
+			cache.store();
 		}
 	}
 

@@ -1,6 +1,7 @@
 #include <grpcpp/test/default_reactor_test_peer.h>
 #include <gtest/gtest.h>
 
+#include "datastore/identities.h"
 #include "datastore/permissions.h"
 #include "datastore/roles.h"
 #include "datastore/testing.h"
@@ -24,21 +25,37 @@ TEST_F(svc_RolesTest, AddPermission) {
 
 	// Success: add permission
 	{
+		// Create Identity
+		const datastore::Identity identity({
+			.id  = "identity_id:svc_RolesTest.AddPermission",
+			.sub = "identity_sub:svc_RolesTest.AddPermission",
+		});
+		ASSERT_NO_THROW(identity.store());
+
+		// Create permission
 		datastore::Permission permission1({
 			.id = "permissions[0].id:svc_RolesTest.AddPermission",
 		});
-		datastore::Permission permission2({
-			.id = "permissions[1].id:svc_RolesTest.AddPermission",
-		});
 		ASSERT_NO_THROW(permission1.store());
-		ASSERT_NO_THROW(permission2.store());
+
+		// Create role
 		const datastore::Role role({
 			.id   = "id:GatekeeperTest.AddPermission",
 			.name = "name:GatekeeperTest.AddPermission",
 
 		});
 		ASSERT_NO_THROW(role.store());
-		ASSERT_NO_THROW(role.addPermission(permission1.id()));
+
+		// Create policy
+		const datastore::RbacPolicy policy({
+			.name = "policy_name:svc_RolesTest.AddPermission",
+		});
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addIdentity(identity.id()));
+		ASSERT_NO_THROW(policy.addRule({
+			.roleId = role.id(),
+		}));
+		ASSERT_EQ(policy.rules().size(), 1);
 
 		grpc::CallbackServerContext           ctx;
 		grpc::testing::DefaultReactorTestPeer peer(&ctx);
@@ -46,21 +63,30 @@ TEST_F(svc_RolesTest, AddPermission) {
 
 		gk::v1::RolesAddPermissionRequest request;
 		request.set_role_id(role.id());
-		request.set_id(permission2.id());
+		request.set_id(permission1.id());
 
+		// Add new permission
 		auto reactor = svc.AddPermission(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
 		EXPECT_TRUE(peer.test_status().ok());
 		EXPECT_EQ(peer.reactor(), reactor);
 
+		// Check response
 		EXPECT_EQ(role.id(), response.id());
 		EXPECT_EQ(role.name(), response.name());
-		EXPECT_EQ(2, response.permissions().size());
+		EXPECT_EQ(1, response.permissions().size());
 
+		// Ensure permissions included
 		const auto &perms = datastore::RetrievePermissionsByRole(role.id());
 		ASSERT_EQ(perms.size(), response.permissions_size());
 		ASSERT_EQ(perms[0].id(), response.permissions(0).id());
-		ASSERT_EQ(perms[1].id(), response.permissions(1).id());
+
+		// Expect to find single policy when checking RBAC
+		{
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission1.id());
+			EXPECT_EQ(1, policies.size());
+		}
 	}
 }
 

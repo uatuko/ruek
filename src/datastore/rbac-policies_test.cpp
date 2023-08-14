@@ -299,8 +299,8 @@ TEST_F(RbacPoliciesTest, roles) {
 			EXPECT_EQ(2, actualRoles.size());
 
 			const datastore::RbacPolicy::Rules expected({
-				{.roleId = roles[0].id()},
-				{.roleId = roles[1].id()},
+				{.roleId = roles[0].id(), .policyId = policies[0].id()},
+				{.roleId = roles[1].id(), .policyId = policies[0].id()},
 			});
 
 			EXPECT_EQ(expected, actualRoles);
