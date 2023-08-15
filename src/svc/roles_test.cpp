@@ -121,6 +121,32 @@ TEST_F(svc_RolesTest, Create) {
 	}
 }
 
+TEST_F(svc_RolesTest, List) {
+	svc::Roles svc;
+
+	// Success: list roles
+	{
+		grpc::CallbackServerContext           ctx;
+		grpc::testing::DefaultReactorTestPeer peer(&ctx);
+		gk::v1::RolesListResponse             response;
+
+		gk::v1::RolesListRequest request;
+
+		datastore::Role role({
+			.id = "id:svc_RolesTest.List",
+		});
+		ASSERT_NO_THROW(role.store());
+
+		auto reactor = svc.List(&ctx, &request, &response);
+		EXPECT_TRUE(peer.test_status_set());
+		EXPECT_TRUE(peer.test_status().ok());
+		EXPECT_EQ(peer.reactor(), reactor);
+
+		EXPECT_EQ(response.data().size(), 1);
+		EXPECT_EQ(response.data()[0].id(), role.id());
+	}
+}
+
 TEST_F(svc_RolesTest, Retrieve) {
 	svc::Roles svc;
 
