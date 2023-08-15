@@ -19,7 +19,6 @@ public:
 		using attrs_t = std::optional<std::string>;
 
 		const attrs_t     attrs;
-		const std::string policyId;
 		const std::string roleId;
 
 		bool operator<(const Rule &rhs) const noexcept { return roleId < rhs.roleId; }
@@ -85,7 +84,7 @@ private:
 
 using RbacPolicies = std::vector<RbacPolicy>;
 
-RbacPolicy::Rules ListRbacPolicyRulesByRole(const std::string &id);
-RbacPolicy        RetrieveRbacPolicy(const std::string &id);
-RbacPolicies      RetrieveRbacPoliciesByCollection(const std::string &cid);
+std::map<std::string, RbacPolicy::Rule::attrs_t> ListRbacPolicyAttrsByRole(const std::string &id);
+RbacPolicy                                       RetrieveRbacPolicy(const std::string &id);
+RbacPolicies RetrieveRbacPoliciesByCollection(const std::string &cid);
 } // namespace datastore

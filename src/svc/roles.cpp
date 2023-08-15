@@ -7,23 +7,27 @@ grpc::ServerUnaryReactor *Roles::AddPermission(
 	auto *reactor = context->DefaultReactor();
 
 	// TODO: error handling
-	auto role  = datastore::RetrieveRole(request->role_id());
-	auto rules = datastore::ListRbacPolicyRulesByRole(role.id());
+	auto role        = datastore::RetrieveRole(request->role_id());
+	auto policyAttrs = datastore::ListRbacPolicyAttrsByRole(role.id());
 
 	auto permissionId = request->id();
 	role.addPermission(permissionId);
 
-	for (const auto &rule : rules) {
-		const auto policy = datastore::RetrieveRbacPolicy(rule.policyId);
+	for (const auto &row : policyAttrs) {
+		const auto                        policyId = row.first;
+		const auto                        attrs    = row.second;
+		const datastore::RbacPolicy::Rule rule({
+			.attrs  = attrs,
+			.roleId = role.id(),
+		});
+		const auto                        policy = datastore::RetrieveRbacPolicy(policyId);
 		for (const auto &iden : policy.identities()) {
 			datastore::RbacPolicy::Cache cache({
 				.identity   = iden,
 				.permission = permissionId,
-				.policy     = policy.id(),
+				.policy     = policyId,
 				.rule       = rule,
 			});
-			std::cout << iden << std::endl;
-
 			cache.store();
 		}
 	}
