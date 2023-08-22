@@ -10,12 +10,10 @@ grpc::ServerUnaryReactor *Roles::AddPermission(
 	auto role        = datastore::RetrieveRole(request->role_id());
 	auto policyAttrs = datastore::ListRbacPolicyAttrsByRole(role.id());
 
-	auto permissionId = request->id();
+	auto permissionId = request->permission_id();
 	role.addPermission(permissionId);
 
-	for (const auto &row : policyAttrs) {
-		const auto                        policyId = row.first;
-		const auto                        attrs    = row.second;
+	for (const auto &[policyId, attrs] : policyAttrs) {
 		const datastore::RbacPolicy::Rule rule({
 			.attrs  = attrs,
 			.roleId = role.id(),

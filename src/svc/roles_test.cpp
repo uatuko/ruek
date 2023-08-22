@@ -63,7 +63,7 @@ TEST_F(svc_RolesTest, AddPermission) {
 
 		gk::v1::RolesAddPermissionRequest request;
 		request.set_role_id(role.id());
-		request.set_id(permission1.id());
+		request.set_permission_id(permission1.id());
 
 		// Add new permission
 		auto reactor = svc.AddPermission(&ctx, &request, &response);
