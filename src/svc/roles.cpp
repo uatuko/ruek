@@ -1,6 +1,41 @@
 #include "roles.h"
 
 namespace svc {
+grpc::ServerUnaryReactor *Roles::AddPermission(
+	grpc::CallbackServerContext *context, const gk::v1::RolesAddPermissionRequest *request,
+	gk::v1::Role *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto role        = datastore::RetrieveRole(request->role_id());
+	auto policyAttrs = datastore::ListRbacPolicyAttrsByRole(role.id());
+
+	auto permissionId = request->permission_id();
+	role.addPermission(permissionId);
+
+	for (const auto &[policyId, attrs] : policyAttrs) {
+		const datastore::RbacPolicy::Rule rule({
+			.attrs  = attrs,
+			.roleId = role.id(),
+		});
+		const auto                        policy = datastore::RetrieveRbacPolicy(policyId);
+		for (const auto &iden : policy.identities()) {
+			datastore::RbacPolicy::Cache cache({
+				.identity   = iden,
+				.permission = permissionId,
+				.policy     = policyId,
+				.rule       = rule,
+			});
+			cache.store();
+		}
+	}
+
+	map(role, response);
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 grpc::ServerUnaryReactor *Roles::Create(
 	grpc::CallbackServerContext *context, const gk::v1::RolesCreateRequest *request,
 	gk::v1::Role *response) {

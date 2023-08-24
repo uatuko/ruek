@@ -7,6 +7,13 @@ import "gk/v1/permissions.proto";
 import "google/api/annotations.proto";
 
 service Roles {
+	rpc AddPermission(RolesAddPermissionRequest) returns (Role) {
+		option (google.api.http) = {
+			put : "/v1/roles/{role_id}/permissions/{permission_id}"
+			body : "*"
+		};
+	}
+
 	rpc Create(RolesCreateRequest) returns (Role) {
 		option (google.api.http) = {
 			post : "/v1/roles"
@@ -39,6 +46,11 @@ message Role {
 	string name = 2;
 
 	repeated Permission permissions = 3;
+}
+
+message RolesAddPermissionRequest {
+	string role_id       = 1;
+	string permission_id = 2;
 }
 
 message RolesCreateRequest {

@@ -254,6 +254,26 @@ void RbacPolicy::Cache::store() const {
 	conn.cmd("hset %s %s %s", key().c_str(), policy.c_str(), rule.attrs.value_or("").c_str());
 }
 
+std::map<std::string, RbacPolicy::Rule::attrs_t> ListRbacPolicyAttrsByRole(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			attrs,
+			policy_id
+		from "rbac-policies_roles"
+		where
+			role_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+
+	std::map<std::string, RbacPolicy::Rule::attrs_t> m;
+	for (const auto &r : res) {
+		m[r["policy_id"].as<std::string>()] = r["attrs"].as<RbacPolicy::Rule::attrs_t>();
+	}
+
+	return m;
+}
+
 RbacPolicy RetrieveRbacPolicy(const std::string &id) {
 	std::string_view qry = R"(
 		select
