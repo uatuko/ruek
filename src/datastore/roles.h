@@ -40,5 +40,6 @@ private:
 
 using Roles = std::vector<Role>;
 
-Role RetrieveRole(const std::string &id);
+Roles ListRoles();
+Role  RetrieveRole(const std::string &id);
 } // namespace datastore

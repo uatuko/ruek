@@ -55,6 +55,19 @@ grpc::ServerUnaryReactor *Roles::Create(
 	return reactor;
 }
 
+grpc::ServerUnaryReactor *Roles::List(
+	grpc::CallbackServerContext *context, const gk::v1::RolesListRequest *request,
+	gk::v1::RolesListResponse *response) {
+	auto *reactor = context->DefaultReactor();
+
+	// TODO: error handling
+	auto roles = datastore::ListRoles();
+	map(roles, response);
+
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
 grpc::ServerUnaryReactor *Roles::Retrieve(
 	grpc::CallbackServerContext *context, const gk::v1::RolesRetrieveRequest *request,
 	gk::v1::Role *response) {
@@ -84,6 +97,13 @@ void Roles::map(const datastore::Role &from, gk::v1::Role *to) {
 	for (const auto &perm : datastore::RetrievePermissionsByRole(from.id())) {
 		auto p = to->add_permissions();
 		Permissions::map(perm, p);
+	}
+}
+
+void Roles::map(const datastore::Roles &from, gk::v1::RolesListResponse *to) {
+	for (const auto &role : from) {
+		auto r = to->add_data();
+		Roles::map(role, r);
 	}
 }
 } // namespace svc

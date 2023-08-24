@@ -18,6 +18,10 @@ public:
 		grpc::CallbackServerContext *context, const gk::v1::RolesCreateRequest *request,
 		gk::v1::Role *response) override;
 
+	grpc::ServerUnaryReactor *List(
+		grpc::CallbackServerContext *context, const gk::v1::RolesListRequest *request,
+		gk::v1::RolesListResponse *response) override;
+
 	grpc::ServerUnaryReactor *Retrieve(
 		grpc::CallbackServerContext *context, const gk::v1::RolesRetrieveRequest *request,
 		gk::v1::Role *response) override;
@@ -25,5 +29,6 @@ public:
 	static datastore::Role map(const gk::v1::RolesCreateRequest *from);
 
 	static void map(const datastore::Role &from, gk::v1::Role *to);
+	static void map(const datastore::Roles &from, gk::v1::RolesListResponse *to);
 };
 } // namespace svc

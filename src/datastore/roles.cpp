@@ -76,6 +76,25 @@ void Role::addPermission(const std::string &pid) const {
 	}
 }
 
+Roles ListRoles() {
+	std::string_view qry = R"(
+		select
+			_id,
+			_rev,
+			name
+		from roles
+	)";
+
+	auto res = pg::exec(qry);
+
+	Roles roles;
+	for (const auto &r : res) {
+		roles.push_back(Role(r));
+	}
+
+	return roles;
+}
+
 Role RetrieveRole(const std::string &id) {
 	std::string_view qry = R"(
 		select
