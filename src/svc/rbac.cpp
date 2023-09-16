@@ -1,6 +1,7 @@
 #include "rbac.h"
 
 #include "err/errors.h"
+#include "logger/logger.h"
 
 namespace svc {
 grpc::ServerUnaryReactor *Rbac::Check(
@@ -18,6 +19,10 @@ grpc::ServerUnaryReactor *Rbac::Check(
 		const auto policies =
 			datastore::RbacPolicy::Cache::check(request->identity_id(), request->permission());
 		map(policies, response);
+	} catch (const std::exception &e) {
+		// FIXME: added to help debug unhandled exceptions, should be removed.
+		logger::critical("svc", "exception", e.what());
+		return reactor;
 	} catch (...) {
 		reactor->Finish(grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to check rbac"));
 		return reactor;
