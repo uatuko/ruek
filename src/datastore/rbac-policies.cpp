@@ -158,7 +158,7 @@ const RbacPolicy::identities_t RbacPolicy::identities(bool expand) const {
 			from
 				"rbac-policies_collections" p
 				join "collections_identities" c on p.collection_id = c.collection_id
-				where p.policy_id = $1:text
+				where p.policy_id = $1::text
 			;
 		)";
 	} else {
