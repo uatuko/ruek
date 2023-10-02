@@ -31,8 +31,10 @@ TEST_F(AccessPoliciesTest, identities) {
 	{
 		// Create background noise
 		const datastore::Identities randomIdentities({
-			datastore::Identity::Data{.sub = "sub:AccessPoliciesTest.retrieveIdentities.randomIdentities[0]"},
-			datastore::Identity::Data{.sub = "sub:AccessPoliciesTest.retrieveIdentities.randomIdentities[1]"},
+			datastore::Identity::Data{
+				.sub = "sub:AccessPoliciesTest.retrieveIdentities.randomIdentities[0]"},
+			datastore::Identity::Data{
+				.sub = "sub:AccessPoliciesTest.retrieveIdentities.randomIdentities[1]"},
 		});
 
 		for (const auto &idn : randomIdentities) {
