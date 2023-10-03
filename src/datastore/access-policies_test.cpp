@@ -29,6 +29,32 @@ protected:
 TEST_F(AccessPoliciesTest, identities) {
 	// Success: retrieve identities
 	{
+		// Create background noise
+		const datastore::Identities randomIdentities({
+			datastore::Identity::Data{
+				.sub = "sub:AccessPoliciesTest.retrieveIdentities.randomIdentities[0]"},
+			datastore::Identity::Data{
+				.sub = "sub:AccessPoliciesTest.retrieveIdentities.randomIdentities[1]"},
+		});
+
+		for (const auto &idn : randomIdentities) {
+			ASSERT_NO_THROW(idn.store());
+		}
+
+		const datastore::Collection randomCollection({
+			.name = "name:AccessPoliciesTest.retrieveIdentities.randomCollection",
+		});
+		ASSERT_NO_THROW(randomCollection.store());
+		ASSERT_NO_THROW(randomCollection.add(randomIdentities[0].id()));
+
+		const datastore::AccessPolicy randomPolicy({
+			.name = "name:AccessPoliciesTest.retrieveIdentities.randomPolicy",
+		});
+		ASSERT_NO_THROW(randomPolicy.store());
+		ASSERT_NO_THROW(randomPolicy.addCollection(randomCollection.id()));
+		ASSERT_NO_THROW(randomPolicy.addIdentity(randomIdentities[1].id()));
+
+		// Setup real tests
 		const datastore::Identities identities({
 			datastore::Identity::Data{.sub = "sub:AccessPoliciesTest.retrieveIdentities[0]"},
 			datastore::Identity::Data{.sub = "sub:AccessPoliciesTest.retrieveIdentities[1]"},
