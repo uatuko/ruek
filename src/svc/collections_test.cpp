@@ -301,8 +301,31 @@ TEST_F(svc_CollectionsTest, RemoveMember) {
 		datastore::Identity identity({
 			.sub = "sub:svc_CollectionsTest.RemoveMember",
 		});
+
 		ASSERT_NO_THROW(identity.store());
 		ASSERT_NO_THROW(collection.add(identity.id()));
+
+		const datastore::RbacPolicy policy({
+			.name = "name:svc_CollectionsTest.RemoveMember-rbac",
+		});
+		ASSERT_NO_THROW(policy.store());
+
+		datastore::Permission permission({
+			.id = "permission_id:svc_CollectionsTest.RemoveMember-rbac",
+		});
+		ASSERT_NO_THROW(permission.store());
+
+		const datastore::Role role({
+			.name = "name:svc_CollectionsTest.RemoveMember-rbac",
+		});
+		EXPECT_NO_THROW(role.store());
+		EXPECT_NO_THROW(role.addPermission(permission.id()));
+
+		auto rule = datastore::RbacPolicy::Rule({.roleId = role.id()});
+
+		ASSERT_NO_THROW(policy.addRule(rule));
+		ASSERT_NO_THROW(policy.store());
+		ASSERT_NO_THROW(policy.addCollection(collection.id()));
 
 		grpc::CallbackServerContext             ctx;
 		grpc::testing::DefaultReactorTestPeer   peer(&ctx);
@@ -311,6 +334,13 @@ TEST_F(svc_CollectionsTest, RemoveMember) {
 		gk::v1::CollectionsRemoveMemberRequest request;
 		request.set_collection_id(collection.id());
 		request.set_identity_id(identity.id());
+
+		// expect to find single policy before removal
+		{
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
+			EXPECT_EQ(1, policies.size());
+		}
 
 		auto reactor = svc.RemoveMember(&ctx, &request, &response);
 		EXPECT_TRUE(peer.test_status_set());
@@ -331,6 +361,13 @@ TEST_F(svc_CollectionsTest, RemoveMember) {
 
 			auto [count] = res[0].as<int>();
 			EXPECT_EQ(0, count);
+		}
+
+		// expect to find no policies after removal
+		{
+			const auto policies =
+				datastore::RbacPolicy::Cache::check(identity.id(), permission.id());
+			EXPECT_EQ(0, policies.size());
 		}
 	}
 }
