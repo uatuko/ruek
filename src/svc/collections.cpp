@@ -17,7 +17,22 @@ grpc::ServerUnaryReactor *Collections::AddMember(
 
 	// TODO: error handling
 	auto collection = datastore::RetrieveCollection(request->collection_id());
-	collection.add(request->identity_id());
+
+	try {
+		collection.add(request->identity_id());
+	} catch (const err::DatastoreInvalidCollectionOrMember &) {
+		reactor->Finish(
+			grpc::Status(grpc::StatusCode::FAILED_PRECONDITION, "Invalid collection or member"));
+		return reactor;
+	} catch (const err::DatastoreDuplicateCollectionMember &) {
+		reactor->Finish(
+			grpc::Status(grpc::StatusCode::ALREADY_EXISTS, "Member already in the collection"));
+		return reactor;
+	} catch (...) {
+		reactor->Finish(
+			grpc::Status(grpc::StatusCode::UNAVAILABLE, "Failed to add identity to collection"));
+		return reactor;
+	}
 
 	// Update access policies
 	auto access = datastore::RetrieveAccessPoliciesByCollection(collection.id());
