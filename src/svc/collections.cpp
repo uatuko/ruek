@@ -135,6 +135,38 @@ grpc::ServerUnaryReactor *Collections::RemoveMember(
 	auto collection = datastore::RetrieveCollection(request->collection_id());
 	collection.remove(request->identity_id());
 
+	// Update access policies
+	auto access = datastore::RetrieveAccessPoliciesByCollection(collection.id());
+	for (const auto &policy : access) {
+		for (const auto &rule : policy.rules()) {
+			datastore::AccessPolicy::Cache cache({
+				.identity = request->identity_id(),
+				.policy   = policy.id(),
+				.rule     = rule,
+			});
+
+			cache.discard();
+		}
+	}
+
+	// Update rbac rules
+	auto rbac = datastore::RetrieveRbacPoliciesByCollection(collection.id());
+	for (const auto &policy : rbac) {
+		for (const auto &rule : policy.rules()) {
+			const auto role = datastore::RetrieveRole(rule.roleId);
+			for (const auto &perm : datastore::RetrievePermissionsByRole(role.id())) {
+				datastore::RbacPolicy::Cache cache({
+					.identity   = request->identity_id(),
+					.permission = perm.id(),
+					.policy     = policy.id(),
+					.rule       = rule,
+				});
+
+				cache.discard();
+			}
+		}
+	}
+
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
