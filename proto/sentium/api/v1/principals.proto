@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package sentium.api.v1;
+
+import "google/api/annotations.proto";
+
+service Principals {
+	rpc Create(PrincipalsCreateRequest) returns (Principal) {
+		option (google.api.http) = {
+			post : "/v1/principals"
+			body : "*"
+		};
+	}
+}
+
+message Principal {}
+
+message PrincipalsCreateRequest {}
