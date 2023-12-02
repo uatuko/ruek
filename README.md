@@ -62,3 +62,35 @@ In hindsight, it's the wrong choice.
 A fresh implementation, which should be much simpler and avoid/solve the problems mentioned above, is in the works.
 
 It'll also have a new name 😉.
+
+
+
+# Appendix A1. Terminology
+
+## A1.1 Identity
+
+An identity represents a user or a service account that is unique.
+
+## A1.2 Collection
+
+A collection is a hierarchical resource (i.e. a parent collection inherits from all child, grandchild etc. collections) that groups identities. Collection resources can only have one (or no) parent but can have many children.
+
+## A1.3 Principal
+
+A principal is a term used to refer to _Identities_ and _Collections_. _Principal_ term is mainly used in policies to describe entities that are granted access/permissions to.
+
+## A1.4 Resource
+
+A resource is a uniquely identifiable entity that's used to manage access to in  _Access Policies_.
+
+## A1.4 Access Policy
+
+An access policy describes the explicit _Resource_ access granted to _Principals_.
+
+## A1.5 Roles and Permissions
+
+A role is a collection of permissions. Permissions describe what operations are allowed.
+
+## A1.6 RBAC Policy
+
+**R**ole **B**ased **A**ccess **C**control (RBAC) Policy describe the _Roles_ assigned to _Principals_ granting explicit permissions.
