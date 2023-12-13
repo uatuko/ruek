@@ -16,6 +16,16 @@ target_link_libraries(db
 		pqxx
 )
 
+if (SENTIUM_ENABLE_COVERAGE)
+	target_compile_options(db
+		PRIVATE -fprofile-instr-generate -fcoverage-mapping
+	)
+
+	target_link_options(db
+		INTERFACE -fprofile-instr-generate
+	)
+endif()
+
 # tests
 if (SENTIUM_BUILD_TESTING)
 	target_sources(db
@@ -37,6 +47,16 @@ if (SENTIUM_BUILD_TESTING)
 			gtest_main
 			${PROJECT_NAME}::err
 	)
+
+	if (SENTIUM_ENABLE_COVERAGE)
+		target_compile_options(db_tests
+			PRIVATE -fprofile-instr-generate -fcoverage-mapping
+		)
+
+		target_link_options(db_tests
+			INTERFACE -fprofile-instr-generate
+		)
+	endif()
 
 	include(GoogleTest)
 	gtest_discover_tests(db_tests)

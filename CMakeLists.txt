@@ -12,6 +12,20 @@ cmake_dependent_option(SENTIUM_BUILD_TESTING
 	"CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
 )
 
+cmake_dependent_option(SENTIUM_ENABLE_COVERAGE
+	"Enable code coverage when SENTIUM_BUILD_TESTING is enabled and this is the root project" ON
+	"SENTIUM_BUILD_TESTING;CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
+)
+
+if (SENTIUM_ENABLE_COVERAGE)
+	if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+		message(FATAL_ERROR
+			"Code coverage is only available with clang. "
+			"Can't continue with SENTIUM_ENABLE_COVERAGE=ON."
+		)
+	endif()
+endif()
+
 include(cmake/dependencies.cmake)
 include(cmake/googleapis.cmake)
 

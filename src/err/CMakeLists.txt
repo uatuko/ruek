@@ -21,6 +21,16 @@ if (SENTIUM_BUILD_TESTING)
 			gtest_main
 	)
 
+	if (SENTIUM_ENABLE_COVERAGE)
+		target_compile_options(err_tests
+			PRIVATE -fprofile-instr-generate -fcoverage-mapping
+		)
+
+		target_link_options(err_tests
+			PRIVATE -fprofile-instr-generate
+		)
+	endif()
+
 	include(GoogleTest)
 	gtest_discover_tests(err_tests)
 endif()
