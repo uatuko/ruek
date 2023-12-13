@@ -8,7 +8,7 @@
 #include "testing.h"
 
 TEST(pg, concurrency) {
-	if (std::thread::hardware_concurrency() < 2) {
+	if (std::thread::hardware_concurrency() < 3) {
 		GTEST_SKIP() << "Not enough hardware support to run concurrency tests";
 	}
 
