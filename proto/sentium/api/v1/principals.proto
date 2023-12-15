@@ -3,6 +3,7 @@ syntax = "proto3";
 package sentium.api.v1;
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 
 service Principals {
 	rpc Create(PrincipalsCreateRequest) returns (Principal) {
@@ -13,6 +14,16 @@ service Principals {
 	}
 }
 
-message Principal {}
+message Principal {
+	string id = 1;
 
-message PrincipalsCreateRequest {}
+	optional google.protobuf.Struct attrs     = 2;
+	optional string                 parent_id = 3;
+}
+
+message PrincipalsCreateRequest {
+	optional string id = 1;
+
+	optional google.protobuf.Struct attrs     = 2;
+	optional string                 parent_id = 3;
+}
