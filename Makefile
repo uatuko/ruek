@@ -25,7 +25,7 @@ ifeq (, $(llvm-profdata))
 endif
 
 
-.PHONY: $(binary) all clean lint lint\:ci lint\:fix
+.PHONY: $(binary) clean lint lint\:ci lint\:fix
 .SILENT: coverage lint lint\:fix
 
 all: $(binary)
