@@ -26,6 +26,13 @@ FetchContent_Declare(libpqxx
 set(SKIP_BUILD_TEST ON) # Not defined as `option()`, no need to set as a cache entry (Ref: CMP0077)
 FetchContent_MakeAvailable(libpqxx)
 
+#libxid
+FetchContent_Declare(libxid
+	URL      https://github.com/uditha-atukorala/libxid/archive/refs/tags/v0.1.0.tar.gz
+	URL_HASH SHA256=31589bb5274c9d25a8b6c49ee04a6c76151f10082e7feb13314be02a4b2d58c8
+)
+FetchContent_MakeAvailable(libxid)
+
 
 if (SENTIUM_BUILD_TESTING)
 	# googletest

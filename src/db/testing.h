@@ -1,10 +1,11 @@
 #pragma once
 
 #include "config.h"
+#include "db.h"
 
 namespace db {
 namespace testing {
-config conf() {
+inline config conf() {
 	const char *v = std::getenv("PGDATABASE");
 
 	auto dbname = std::string(v == nullptr ? "" : v);
@@ -16,5 +17,11 @@ config conf() {
 		.opts = "dbname=" + dbname,
 	};
 }
+
+inline void setup() {
+	init(conf());
+}
+
+inline void teardown() {}
 } // namespace testing
 } // namespace db
