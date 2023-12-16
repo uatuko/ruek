@@ -6,7 +6,8 @@
 
 namespace svc {
 template <>
-rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(const rpcCreate::request_type &req) {
+rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(
+	grpcxx::context &ctx, const rpcCreate::request_type &req) {
 	auto p = map(req);
 	p.store();
 
