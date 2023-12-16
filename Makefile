@@ -9,8 +9,24 @@ srcdir   = src
 sources := $(shell find $(protodir) -type f -name '*.proto')
 sources += $(shell find $(srcdir) -type f -name '*.h' -o -name '*.cpp')
 
-.PHONY: $(binary) all clean lint lint\:ci lint\:fix
-.SILENT: lint lint\:fix
+lcov_output       = $(builddir)/coverage.out
+profdata_output   = $(builddir)/coverage.profdata
+testing_binaries := $(shell find $(bindir) -type f -perm +ugo+x -name "*_tests")
+
+llvm-cov      = $(shell which llvm-cov)
+llvm-profdata = $(shell which llvm-profdata)
+
+ifeq (, $(llvm-cov))
+	llvm-cov = $(shell xcrun --find llvm-cov)
+endif
+
+ifeq (, $(llvm-profdata))
+	llvm-profdata = $(shell xcrun --find llvm-profdata)
+endif
+
+
+.PHONY: $(binary) clean lint lint\:ci lint\:fix
+.SILENT: coverage lint lint\:fix
 
 all: $(binary)
 
@@ -22,6 +38,21 @@ $(buildfile):
 
 clean:
 	cmake --build $(builddir) --target clean
+
+coverage: $(binary)
+	find $(builddir)/$(sourcedir) -type f -name "*.profraw" -exec rm {} +
+	LLVM_PROFILE_FILE="%p.profraw" ctest --test-dir $(builddir) --output-on-failure
+
+	echo '' # Empty line to separate outputs
+	-rm $(profdata_output)
+	find $(builddir)/$(sourcedir) -type f -name "*.profraw" -exec $(llvm-profdata) merge --sparse=true --output=$(profdata_output) {} +
+	$(llvm-cov) report -ignore-filename-regex='$(builddir)\/' -instr-profile=$(profdata_output) $(foreach bin, $(testing_binaries), -object=$(bin))
+
+coverage\:lcov: coverage
+	$(llvm-cov) export -format=lcov -ignore-filename-regex='$(builddir)\/' -ignore-filename-regex='.*_test\.cpp' -instr-profile=$(profdata_output) $(foreach bin, $(testing_binaries), -object=$(bin)) > $(lcov_output)
+
+	@echo '' # Empty line to separate outputs
+	lcov --list $(lcov_output)
 
 lint:
 ifeq (, $(shell which clang-format))
@@ -38,3 +69,6 @@ lint\:fix:
 
 run: $(binary)
 	$(binary)
+
+test: $(binary)
+	ctest --test-dir $(builddir) --output-on-failure

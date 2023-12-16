@@ -1,55 +1,67 @@
-add_library(svc)
-target_sources(svc
+add_library(db)
+target_sources(db
 	PRIVATE
+		pg.cpp
 		principals.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
+			config.h
+			pg.h
 			principals.h
-			svc.h
-			wrapper.h
 )
 
-target_link_libraries(svc
+target_link_libraries(db
+	PRIVATE
+		${PROJECT_NAME}::err
+		libxid::xid
 	PUBLIC
-		${PROJECT_NAME}::db
-		${PROJECT_NAME}::libproto
+		pqxx
 )
 
 if (SENTIUM_ENABLE_COVERAGE)
-	target_compile_options(svc
+	target_compile_options(db
 		PRIVATE -fprofile-instr-generate -fcoverage-mapping
 	)
 
-	target_link_options(svc
+	target_link_options(db
 		INTERFACE -fprofile-instr-generate
 	)
 endif()
 
 # tests
 if (SENTIUM_BUILD_TESTING)
-	add_executable(svc_tests)
-	target_sources(svc_tests
+	target_sources(db
+		PUBLIC
+			FILE_SET headers TYPE HEADERS
+			FILES
+				testing.h
+	)
+
+	add_executable(db_tests)
+	target_sources(db_tests
 		PRIVATE
+			pg_test.cpp
 			principals_test.cpp
 	)
 
-	target_link_libraries(svc_tests
+	target_link_libraries(db_tests
 		PRIVATE
-			svc
+			db
 			gtest_main
+			${PROJECT_NAME}::err
 	)
 
 	if (SENTIUM_ENABLE_COVERAGE)
-		target_compile_options(svc_tests
+		target_compile_options(db_tests
 			PRIVATE -fprofile-instr-generate -fcoverage-mapping
 		)
 
-		target_link_options(svc_tests
+		target_link_options(db_tests
 			INTERFACE -fprofile-instr-generate
 		)
 	endif()
 
 	include(GoogleTest)
-	gtest_discover_tests(svc_tests)
+	gtest_discover_tests(db_tests)
 endif()
