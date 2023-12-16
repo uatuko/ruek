@@ -3,7 +3,7 @@
 #include <grpcxx/server.h>
 
 #include "db/db.h"
-#include "svc/principals.h"
+#include "svc/svc.h"
 
 int main() {
 	try {
@@ -16,7 +16,7 @@ int main() {
 	grpcxx::server server;
 
 	svc::Principals p;
-	server.add(p.svc());
+	server.add(p.service());
 
 	std::printf("Listening on [127.0.0.1:7000] ...\n");
 	server.run("127.0.0.1", 7000);

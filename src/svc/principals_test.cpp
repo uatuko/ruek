@@ -3,7 +3,7 @@
 
 #include "db/testing.h"
 
-#include "principals.h"
+#include "svc.h"
 
 using namespace sentium::api::v1::Principals;
 
@@ -63,5 +63,17 @@ TEST_F(svc_PrincipalsTest, Create) {
 		std::string responseAttrs;
 		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
 		EXPECT_EQ(attrs, responseAttrs);
+	}
+
+	// Error: invalid `parent_id`
+	{
+		rpcCreate::request_type request;
+		request.set_parent_id("dummy");
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(request));
+
+		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
+		EXPECT_FALSE(result.response);
 	}
 }

@@ -6,6 +6,8 @@ target_sources(svc
 		FILE_SET headers TYPE HEADERS
 		FILES
 			principals.h
+			svc.h
+			wrapper.h
 )
 
 target_link_libraries(svc

@@ -2,17 +2,32 @@
 
 #include <google/protobuf/util/json_util.h>
 
-namespace svc {
-Principals::Principals() : _svc(*this) {}
+#include "err/errors.h"
 
-template <> rpcCreate::result_type Principals::call<rpcCreate>(const rpcCreate::request_type &req) {
+namespace svc {
+template <>
+rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(const rpcCreate::request_type &req) {
 	auto p = map(req);
 	p.store();
 
 	return {grpcxx::status::code_t::ok, map(p)};
 }
 
-db::Principal Principals::map(const rpcCreate::request_type &from) const noexcept {
+grpcxx::status PrincipalsImpl::exception() noexcept {
+	try {
+		std::rethrow_exception(std::current_exception());
+	} catch (const err::DbInvalidPrincipalData &) {
+		return grpcxx::status::code_t::invalid_argument;
+	} catch (const err::DbInvalidPrincipalParentId &) {
+		return grpcxx::status::code_t::invalid_argument;
+	} catch (...) {
+		return grpcxx::status::code_t::internal;
+	}
+
+	return grpcxx::status::code_t::unknown;
+}
+
+db::Principal PrincipalsImpl::map(const rpcCreate::request_type &from) const noexcept {
 	db::Principal to({
 		.id = from.id(),
 	});
@@ -31,7 +46,7 @@ db::Principal Principals::map(const rpcCreate::request_type &from) const noexcep
 	return to;
 }
 
-rpcCreate::response_type Principals::map(const db::Principal &from) const noexcept {
+rpcCreate::response_type PrincipalsImpl::map(const db::Principal &from) const noexcept {
 	rpcCreate::response_type to;
 	to.set_id(from.id());
 
