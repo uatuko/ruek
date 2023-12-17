@@ -44,6 +44,50 @@ TEST_F(PrincipalsTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
+TEST_F(PrincipalsTest, retrieve) {
+	// Success: retrieve data
+	{
+		std::string_view qry = R"(
+			insert into principals (
+				_rev,
+				id
+			) values (
+				$1::integer,
+				$2::text
+			);
+		)";
+
+		ASSERT_NO_THROW(db::pg::exec(qry, 1232, "id:PrincipalsTest.retrieve"));
+
+		auto principal = db::RetrievePrincipal("id:PrincipalsTest.retrieve");
+		EXPECT_EQ(1232, principal.rev());
+		EXPECT_FALSE(principal.parentId());
+		EXPECT_FALSE(principal.attrs());
+	}
+
+	// Success: retrieve optional attrs
+	{
+		std::string_view qry = R"(
+			insert into principals (
+				_rev,
+				id,
+				attrs
+			) values (
+				$1::integer,
+				$2::text,
+				$3::jsonb
+			);
+		)";
+
+		ASSERT_NO_THROW(
+			db::pg::exec(qry, 1237, "id:PrincipalsTest.retrieve-optional", R"({"foo": "bar"})"));
+
+		auto principal = db::RetrievePrincipal("id:PrincipalsTest.retrieve-optional");
+		EXPECT_EQ(1237, principal.rev());
+		EXPECT_EQ(R"({"foo": "bar"})", principal.attrs());
+	}
+}
+
 TEST_F(PrincipalsTest, rev) {
 	// Success: revision increment
 	{

@@ -10,4 +10,5 @@ using DbRevisionMismatch = basic_error<"sentium:1.1.1.409", "Revision mismatch">
 
 using DbInvalidPrincipalData     = basic_error<"sentium:1.2.1.400", "Invalid principal data">;
 using DbInvalidPrincipalParentId = basic_error<"sentium:1.2.2.400", "Invalid parent for principal">;
+using DbPrincipalNotFound        = basic_error<"sentium:1.2.3.404", "Principal not found">;
 } // namespace err

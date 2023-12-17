@@ -47,4 +47,6 @@ private:
 };
 
 using Principals = std::vector<Principal>;
+
+Principal RetrievePrincipal(const std::string &id);
 } // namespace db

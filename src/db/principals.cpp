@@ -79,4 +79,24 @@ void Principal::store() {
 
 	_rev = res.at(0, 0).as<int>();
 }
+
+Principal RetrievePrincipal(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			_rev,
+			id,
+			parent_id,
+			attrs
+		from principals
+		where
+			id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+	if (res.empty()) {
+		throw err::DbPrincipalNotFound();
+	}
+
+	return Principal(res[0]);
+}
 } // namespace db
