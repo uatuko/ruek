@@ -6,19 +6,33 @@ cmake_path(SET googleapis_http_proto ${googleapis_SOURCE_DIR}/google/api/http.pr
 cmake_path(SET googleapis_http_header ${CMAKE_CURRENT_BINARY_DIR}/google/api/http.pb.h)
 cmake_path(SET googleapis_http_source ${CMAKE_CURRENT_BINARY_DIR}/google/api/http.pb.cc)
 
+cmake_path(SET googleapis_rpc_code_proto ${googleapis_SOURCE_DIR}/google/rpc/code.proto)
+cmake_path(SET googleapis_rpc_code_header ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/code.pb.h)
+cmake_path(SET googleapis_rpc_code_source ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/code.pb.cc)
+
+cmake_path(SET googleapis_rpc_status_proto ${googleapis_SOURCE_DIR}/google/rpc/status.proto)
+cmake_path(SET googleapis_rpc_status_header ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/status.pb.h)
+cmake_path(SET googleapis_rpc_status_source ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/status.pb.cc)
+
 set(googleapis_protos
 	${googleapis_annotations_proto}
 	${googleapis_http_proto}
+	${googleapis_rpc_code_proto}
+	${googleapis_rpc_status_proto}
 )
 
 set(googleapis_headers
 	${googleapis_annotations_header}
 	${googleapis_http_header}
+	${googleapis_rpc_code_header}
+	${googleapis_rpc_status_header}
 )
 
 set(googleapis_sources
 	${googleapis_annotations_source}
 	${googleapis_http_source}
+	${googleapis_rpc_code_source}
+	${googleapis_rpc_status_source}
 )
 
 add_custom_command(

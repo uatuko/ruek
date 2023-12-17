@@ -1,5 +1,7 @@
 #pragma once
 
+#include <google/rpc/status.pb.h>
+
 #include "db/principals.h"
 #include "sentium/api/v1/principals.grpcxx.pb.h"
 
@@ -19,7 +21,7 @@ public:
 	rpcCreate::result_type call<rpcCreate>(
 		grpcxx::context &ctx, const rpcCreate::request_type &req);
 
-	grpcxx::status exception() noexcept;
+	google::rpc::Status exception() noexcept;
 
 private:
 	db::Principal            map(const rpcCreate::request_type &from) const noexcept;
