@@ -9,7 +9,6 @@ namespace svc {
 template <>
 rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
-
 	if (req.has_id()) {
 		try {
 			db::RetrievePrincipal(req.id());
