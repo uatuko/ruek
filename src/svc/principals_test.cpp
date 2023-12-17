@@ -77,4 +77,21 @@ TEST_F(svc_PrincipalsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
 		EXPECT_FALSE(result.response);
 	}
+
+	// Error: duplicate `id`
+	{
+		db::Principal p({
+			.id = "id:svc_PrincipalsTest.Create-duplicate_id",
+		});
+		ASSERT_NO_THROW(p.store());
+
+		rpcCreate::request_type request;
+		request.set_id(p.id());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::already_exists, result.status.code());
+		EXPECT_FALSE(result.response);
+	}
 }
