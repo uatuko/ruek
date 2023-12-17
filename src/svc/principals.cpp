@@ -9,6 +9,17 @@ namespace svc {
 template <>
 rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
+
+	if (req.has_id()) {
+		try {
+			db::RetrievePrincipal(req.id());
+
+			throw err::RpcPrincipalsAlreadyExists();
+		} catch (const err::DbPrincipalNotFound &) {
+			// Principal doesn't exist, can continue
+		}
+	}
+
 	auto p = map(req);
 	p.store();
 
@@ -28,6 +39,9 @@ google::rpc::Status PrincipalsImpl::exception() noexcept {
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbRevisionMismatch &e) {
 		status.set_code(google::rpc::INTERNAL);
+		status.set_message(std::string(e.str()));
+	} catch (const err::RpcPrincipalsAlreadyExists &e) {
+		status.set_code(google::rpc::ALREADY_EXISTS);
 		status.set_message(std::string(e.str()));
 	} catch (...) {
 		status.set_code(google::rpc::INTERNAL);
