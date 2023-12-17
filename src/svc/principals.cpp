@@ -43,8 +43,11 @@ google::rpc::Status PrincipalsImpl::exception() noexcept {
 	} catch (const err::RpcPrincipalsAlreadyExists &e) {
 		status.set_code(google::rpc::ALREADY_EXISTS);
 		status.set_message(std::string(e.str()));
-	} catch (...) {
+	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);
+		status.set_message(e.what());
+	} catch (...) {
+		status.set_code(google::rpc::UNKNOWN);
 	}
 
 	return status;
