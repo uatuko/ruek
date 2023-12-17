@@ -31,10 +31,10 @@ google::rpc::Status PrincipalsImpl::exception() noexcept {
 
 	try {
 		std::rethrow_exception(std::current_exception());
-	} catch (const err::DbInvalidPrincipalData &e) {
+	} catch (const err::DbPrincipalInvalidData &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
-	} catch (const err::DbInvalidPrincipalParentId &e) {
+	} catch (const err::DbPrincipalInvalidParentId &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbRevisionMismatch &e) {

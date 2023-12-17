@@ -194,7 +194,7 @@ TEST_F(PrincipalsTest, store) {
 			.parentId = "id:PrincipalsTest.store-invalid-parentId",
 		});
 
-		EXPECT_THROW(principal.store(), err::DbInvalidPrincipalParentId);
+		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidParentId);
 	}
 
 	// Error: invalid `attrs`
@@ -204,6 +204,6 @@ TEST_F(PrincipalsTest, store) {
 			.id    = "id:PrincipalsTest.store-invalid-attrs",
 		});
 
-		EXPECT_THROW(principal.store(), err::DbInvalidPrincipalData);
+		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidData);
 	}
 }

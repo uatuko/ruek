@@ -68,9 +68,9 @@ void Principal::store() {
 	try {
 		res = pg::exec(qry, _rev, _data.id, _data.parentId, _data.attrs);
 	} catch (pqxx::check_violation &) {
-		throw err::DbInvalidPrincipalData();
+		throw err::DbPrincipalInvalidData();
 	} catch (pg::fkey_violation_t &) {
-		throw err::DbInvalidPrincipalParentId();
+		throw err::DbPrincipalInvalidParentId();
 	}
 
 	if (res.empty()) {
