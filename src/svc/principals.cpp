@@ -28,6 +28,7 @@ rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(
 
 google::rpc::Status PrincipalsImpl::exception() noexcept {
 	google::rpc::Status status;
+	status.set_code(google::rpc::UNKNOWN);
 
 	try {
 		std::rethrow_exception(std::current_exception());
@@ -46,8 +47,6 @@ google::rpc::Status PrincipalsImpl::exception() noexcept {
 	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);
 		status.set_message(e.what());
-	} catch (...) {
-		status.set_code(google::rpc::UNKNOWN);
 	}
 
 	return status;
