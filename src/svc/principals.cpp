@@ -1,30 +1,54 @@
 #include "principals.h"
 
 #include <google/protobuf/util/json_util.h>
+#include <google/rpc/code.pb.h>
 
 #include "err/errors.h"
 
 namespace svc {
 template <>
-rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(const rpcCreate::request_type &req) {
+rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(
+	grpcxx::context &ctx, const rpcCreate::request_type &req) {
+	if (req.has_id()) {
+		try {
+			db::RetrievePrincipal(req.id());
+
+			throw err::RpcPrincipalsAlreadyExists();
+		} catch (const err::DbPrincipalNotFound &) {
+			// Principal doesn't exist, can continue
+		}
+	}
+
 	auto p = map(req);
 	p.store();
 
 	return {grpcxx::status::code_t::ok, map(p)};
 }
 
-grpcxx::status PrincipalsImpl::exception() noexcept {
+google::rpc::Status PrincipalsImpl::exception() noexcept {
+	google::rpc::Status status;
+	status.set_code(google::rpc::UNKNOWN);
+
 	try {
 		std::rethrow_exception(std::current_exception());
-	} catch (const err::DbInvalidPrincipalData &) {
-		return grpcxx::status::code_t::invalid_argument;
-	} catch (const err::DbInvalidPrincipalParentId &) {
-		return grpcxx::status::code_t::invalid_argument;
-	} catch (...) {
-		return grpcxx::status::code_t::internal;
+	} catch (const err::DbPrincipalInvalidData &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
+	} catch (const err::DbPrincipalInvalidParentId &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
+	} catch (const err::DbRevisionMismatch &e) {
+		status.set_code(google::rpc::INTERNAL);
+		status.set_message(std::string(e.str()));
+	} catch (const err::RpcPrincipalsAlreadyExists &e) {
+		status.set_code(google::rpc::ALREADY_EXISTS);
+		status.set_message(std::string(e.str()));
+	} catch (const std::exception &e) {
+		status.set_code(google::rpc::INTERNAL);
+		status.set_message(e.what());
 	}
 
-	return grpcxx::status::code_t::unknown;
+	return status;
 }
 
 db::Principal PrincipalsImpl::map(const rpcCreate::request_type &from) const noexcept {

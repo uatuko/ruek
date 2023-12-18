@@ -20,6 +20,7 @@ protected:
 };
 
 TEST_F(svc_PrincipalsTest, Create) {
+	grpcxx::context ctx;
 	svc::Principals svc;
 
 	// Success: create principal
@@ -27,7 +28,7 @@ TEST_F(svc_PrincipalsTest, Create) {
 		rpcCreate::request_type request;
 
 		rpcCreate::result_type result;
-		EXPECT_NO_THROW(result = svc.call<rpcCreate>(request));
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
@@ -40,7 +41,7 @@ TEST_F(svc_PrincipalsTest, Create) {
 		request.set_id("id:svc_PrincipalsTest.Create-with_id");
 
 		rpcCreate::result_type result;
-		EXPECT_NO_THROW(result = svc.call<rpcCreate>(request));
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
@@ -55,7 +56,7 @@ TEST_F(svc_PrincipalsTest, Create) {
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
 
 		rpcCreate::result_type result;
-		EXPECT_NO_THROW(result = svc.call<rpcCreate>(request));
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
@@ -71,9 +72,26 @@ TEST_F(svc_PrincipalsTest, Create) {
 		request.set_parent_id("dummy");
 
 		rpcCreate::result_type result;
-		EXPECT_NO_THROW(result = svc.call<rpcCreate>(request));
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
+		EXPECT_FALSE(result.response);
+	}
+
+	// Error: duplicate `id`
+	{
+		db::Principal p({
+			.id = "id:svc_PrincipalsTest.Create-duplicate_id",
+		});
+		ASSERT_NO_THROW(p.store());
+
+		rpcCreate::request_type request;
+		request.set_id(p.id());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::already_exists, result.status.code());
 		EXPECT_FALSE(result.response);
 	}
 }

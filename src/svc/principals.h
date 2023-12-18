@@ -1,5 +1,7 @@
 #pragma once
 
+#include <google/rpc/status.pb.h>
+
 #include "db/principals.h"
 #include "sentium/api/v1/principals.grpcxx.pb.h"
 
@@ -10,13 +12,16 @@ class PrincipalsImpl {
 public:
 	using service_type = Service;
 
-	template <typename T> typename T::result_type call(const typename T::request_type &) {
+	template <typename T>
+	typename T::result_type call(grpcxx::context &, const typename T::request_type &) {
 		return {grpcxx::status::code_t::unimplemented, std::nullopt};
 	}
 
-	template <> rpcCreate::result_type call<rpcCreate>(const rpcCreate::request_type &req);
+	template <>
+	rpcCreate::result_type call<rpcCreate>(
+		grpcxx::context &ctx, const rpcCreate::request_type &req);
 
-	grpcxx::status exception() noexcept;
+	google::rpc::Status exception() noexcept;
 
 private:
 	db::Principal            map(const rpcCreate::request_type &from) const noexcept;
