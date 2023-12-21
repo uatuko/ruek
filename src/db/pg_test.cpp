@@ -7,7 +7,7 @@
 #include "pg.h"
 #include "testing.h"
 
-TEST(pg, concurrency) {
+TEST(db_pg, concurrency) {
 	if (std::thread::hardware_concurrency() < 3) {
 		GTEST_SKIP() << "Not enough hardware support to run concurrency tests";
 	}
@@ -33,12 +33,12 @@ TEST(pg, concurrency) {
 	}
 }
 
-TEST(pg, conn) {
+TEST(db_pg, conn) {
 	// Error: connection unavailable
 	{ EXPECT_THROW(db::pg::conn(), err::DbConnectionUnavailable); }
 }
 
-TEST(pg, reconnect) {
+TEST(db_pg, reconnect) {
 	auto conf = db::testing::conf();
 	ASSERT_NO_THROW(db::pg::init(conf));
 

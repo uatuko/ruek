@@ -2,7 +2,7 @@
 
 #include "basic_error.h"
 
-TEST(error, str) {
+TEST(err_basic_error, str) {
 	using E  = err::basic_error<"7000:0.0.0", "This is an error">;
 	auto err = E();
 
