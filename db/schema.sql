@@ -8,5 +8,5 @@ create table if not exists principals (
 	constraint "principals.fkey-parent_id" foreign key (parent_id)
 		references principals(id)
 		on delete set null,
-	constraint "principals.check-attrs" check(jsonb_typeof(attrs) = 'object')
+	constraint "principals.check-attrs" check (jsonb_typeof(attrs) = 'object')
 );
