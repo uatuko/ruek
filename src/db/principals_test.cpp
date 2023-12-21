@@ -144,7 +144,7 @@ TEST_F(db_PrincipalsTest, store) {
 		)";
 
 		auto res = db::pg::exec(qry, principal.id());
-		EXPECT_EQ(1, res.size());
+		ASSERT_EQ(1, res.size());
 
 		auto [_rev, id, parentId, attrs] =
 			res[0].as<int, std::string, db::Principal::Data::pid_t, db::Principal::Data::attrs_t>();
