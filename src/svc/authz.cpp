@@ -35,6 +35,9 @@ google::rpc::Status Impl::exception() noexcept {
 
 	try {
 		std::rethrow_exception(std::current_exception());
+	} catch (const err::DbRecordInvalidData &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
 	} catch (const err::DbRecordInvalidPrincipalId &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));

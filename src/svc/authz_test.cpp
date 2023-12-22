@@ -72,6 +72,18 @@ TEST_F(svc_Authz, Grant) {
 		EXPECT_EQ(R"({"foo": "bar"})", actual->attrs());
 	}
 
+	// Error: invalid data
+	{
+		rpcGrant::request_type request;
+		request.set_principal_id(principal.id());
+
+		rpcGrant::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcGrant>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
+		ASSERT_FALSE(result.response);
+	}
+
 	// Error: invalid `principal_id`
 	{
 		rpcGrant::request_type request;
