@@ -3,6 +3,8 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
+#include "err/errors.h"
+
 namespace svc {
 namespace authz {
 template <>
@@ -20,6 +22,12 @@ google::rpc::Status Impl::exception() noexcept {
 
 	try {
 		std::rethrow_exception(std::current_exception());
+	} catch (const err::DbRecordInvalidPrincipalId &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
+	} catch (const err::DbRevisionMismatch &e) {
+		status.set_code(google::rpc::INTERNAL);
+		status.set_message(std::string(e.str()));
 	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);
 		status.set_message(e.what());

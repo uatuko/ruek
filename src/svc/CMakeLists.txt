@@ -33,6 +33,7 @@ if (SENTIUM_BUILD_TESTING)
 	add_executable(svc_tests)
 	target_sources(svc_tests
 		PRIVATE
+			authz_test.cpp
 			principals_test.cpp
 	)
 
