@@ -8,6 +8,13 @@
 namespace svc {
 namespace authz {
 template <>
+rpcCheck::result_type Impl::call<rpcCheck>(
+	grpcxx::context &ctx, const rpcCheck::request_type &req) {
+	auto r = db::Record::lookup(req.principal_id(), req.resource_type(), req.resource_id());
+	return {grpcxx::status::code_t::ok, map(r)};
+}
+
+template <>
 rpcGrant::result_type Impl::call<rpcGrant>(
 	grpcxx::context &ctx, const rpcGrant::request_type &req) {
 	// Upsert if exists
@@ -72,6 +79,21 @@ db::Record Impl::map(const rpcGrant::request_type &from) const noexcept {
 		google::protobuf::util::MessageToJsonString(from.attrs(), &attrs);
 
 		to.attrs(std::move(attrs));
+	}
+
+	return to;
+}
+
+rpcCheck::response_type Impl::map(const std::optional<db::Record> &from) const noexcept {
+	rpcCheck::response_type to;
+	if (!from) {
+		to.set_ok(false);
+		return to;
+	}
+
+	to.set_ok(true);
+	if (from->attrs()) {
+		google::protobuf::util::JsonStringToMessage(*from->attrs(), to.mutable_attrs());
 	}
 
 	return to;

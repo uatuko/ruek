@@ -18,6 +18,9 @@ public:
 	}
 
 	template <>
+	rpcCheck::result_type call<rpcCheck>(grpcxx::context &ctx, const rpcCheck::request_type &req);
+
+	template <>
 	rpcGrant::result_type call<rpcGrant>(grpcxx::context &ctx, const rpcGrant::request_type &req);
 
 	template <>
@@ -27,6 +30,8 @@ public:
 	google::rpc::Status exception() noexcept;
 
 private:
+	rpcCheck::response_type map(const std::optional<db::Record> &from) const noexcept;
+
 	db::Record              map(const rpcGrant::request_type &from) const noexcept;
 	rpcGrant::response_type map(const db::Record &from) const noexcept;
 };

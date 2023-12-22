@@ -6,6 +6,13 @@ import "google/protobuf/struct.proto";
 import "google/api/annotations.proto";
 
 service Authz {
+	rpc Check(AuthzCheckRequest) returns (AuthzCheckResponse) {
+		option (google.api.http) = {
+			post : "/v1/authz:check"
+			body : "*"
+		};
+	}
+
 	rpc Grant(AuthzGrantRequest) returns (AuthzGrantResponse) {
 		option (google.api.http) = {
 			post : "/v1/authz:grant"
@@ -19,6 +26,18 @@ service Authz {
 			body : "*"
 		};
 	}
+}
+
+message AuthzCheckRequest {
+	string principal_id  = 1;
+	string resource_id   = 3;
+	string resource_type = 2;
+}
+
+message AuthzCheckResponse {
+	bool ok = 1;
+
+	optional google.protobuf.Struct attrs = 2;
 }
 
 message AuthzGrantRequest {
