@@ -5,8 +5,8 @@ find_package(Protobuf REQUIRED)
 
 # grpcxx
 FetchContent_Declare(grpcxx
-	URL      https://github.com/uatuko/grpcxx/archive/refs/tags/v0.1.0.tar.gz
-	URL_HASH SHA256=0069925a1db15e9d0601458063ec752513e66ff721eac53cb7e0a1b9f780b0db
+	URL      https://github.com/uatuko/grpcxx/archive/refs/tags/v0.1.1.tar.gz
+	URL_HASH SHA256=43c3954bd34a42ab77e201e13755c50c03c5fb00ecf1b356bb6b83a7d76d52df
 )
 FetchContent_MakeAvailable(grpcxx)
 
