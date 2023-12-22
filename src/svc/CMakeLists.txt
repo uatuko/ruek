@@ -1,10 +1,12 @@
 add_library(svc)
 target_sources(svc
 	PRIVATE
+		authz.cpp
 		principals.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
+			authz.h
 			principals.h
 			svc.h
 			wrapper.h

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package sentium.api.v1;
+
+import "google/protobuf/struct.proto";
+import "google/api/annotations.proto";
+
+service Authz {
+	rpc Grant(AuthzGrantRequest) returns (AuthzGrantResponse) {
+		option (google.api.http) = {
+			post : "/v1/authz:grant"
+			body : "*"
+		};
+	}
+}
+
+message AuthzGrantRequest {
+	string principal_id  = 1;
+	string resource_id   = 3;
+	string resource_type = 2;
+
+	optional google.protobuf.Struct attrs = 4;
+}
+
+message AuthzGrantResponse {}
