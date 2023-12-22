@@ -30,6 +30,13 @@ rpcGrant::result_type Impl::call<rpcGrant>(
 	return {grpcxx::status::code_t::ok, map(r)};
 }
 
+template <>
+rpcRevoke::result_type Impl::call<rpcRevoke>(
+	grpcxx::context &ctx, const rpcRevoke::request_type &req) {
+	db::Record::discard(req.principal_id(), req.resource_type(), req.resource_id());
+	return {grpcxx::status::code_t::ok, rpcRevoke::response_type()};
+}
+
 google::rpc::Status Impl::exception() noexcept {
 	google::rpc::Status status;
 	status.set_code(google::rpc::UNKNOWN);

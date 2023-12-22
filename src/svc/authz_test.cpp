@@ -98,3 +98,37 @@ TEST_F(svc_AuthzTest, Grant) {
 		ASSERT_FALSE(result.response);
 	}
 }
+
+TEST_F(svc_AuthzTest, Revoke) {
+	grpcxx::context ctx;
+	svc::Authz      svc;
+
+	db::Principal principal({
+		.id = "id:svc_AuthzTest.Revoke",
+	});
+	ASSERT_NO_THROW(principal.store());
+
+	// Success: revoke
+	{
+		db::Record record({
+			.principalId  = principal.id(),
+			.resourceId   = "Revoke",
+			.resourceType = "svc_AuthzTest",
+		});
+		ASSERT_NO_THROW(record.store());
+
+		rpcRevoke::request_type request;
+		request.set_principal_id(record.principalId());
+		request.set_resource_type(record.resourceType());
+		request.set_resource_id(record.resourceId());
+
+		rpcRevoke::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcRevoke>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+
+		EXPECT_FALSE(
+			db::Record::lookup(record.principalId(), record.resourceType(), record.resourceId()));
+	}
+}

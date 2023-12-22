@@ -20,6 +20,10 @@ public:
 	template <>
 	rpcGrant::result_type call<rpcGrant>(grpcxx::context &ctx, const rpcGrant::request_type &req);
 
+	template <>
+	rpcRevoke::result_type call<rpcRevoke>(
+		grpcxx::context &ctx, const rpcRevoke::request_type &req);
+
 	google::rpc::Status exception() noexcept;
 
 private:

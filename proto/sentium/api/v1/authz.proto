@@ -12,6 +12,13 @@ service Authz {
 			body : "*"
 		};
 	}
+
+	rpc Revoke(AuthzRevokeRequest) returns (AuthzRevokeResponse) {
+		option (google.api.http) = {
+			post : "/v1/authz:revoke"
+			body : "*"
+		};
+	}
 }
 
 message AuthzGrantRequest {
@@ -23,3 +30,11 @@ message AuthzGrantRequest {
 }
 
 message AuthzGrantResponse {}
+
+message AuthzRevokeRequest {
+	string principal_id  = 1;
+	string resource_id   = 3;
+	string resource_type = 2;
+}
+
+message AuthzRevokeResponse {}
