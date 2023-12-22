@@ -57,6 +57,35 @@ TEST_F(db_RecordsTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
+TEST_F(db_RecordsTest, lookup) {
+	db::Principal principal({
+		.id = "id:db_RecordsTest.lookup",
+	});
+	ASSERT_NO_THROW(principal.store());
+
+	db::Record record({
+		.principalId  = principal.id(),
+		.resourceId   = "lookup",
+		.resourceType = "db_RecordsTest",
+	});
+	ASSERT_NO_THROW(record.store());
+
+	// Success: lookup record
+	{
+		auto result =
+			db::LookupRecord(record.principalId(), record.resourceType(), record.resourceId());
+		ASSERT_TRUE(result);
+
+		EXPECT_EQ(record, result.value());
+	}
+
+	// Success: lookup non-existent record
+	{
+		auto result = db::LookupRecord(record.principalId(), record.resourceType(), "non-existent");
+		EXPECT_EQ(std::nullopt, result);
+	}
+}
+
 TEST_F(db_RecordsTest, rev) {
 	db::Principal principal({
 		.id = "id:db_RecordsTest.rev",

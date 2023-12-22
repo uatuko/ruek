@@ -16,10 +16,16 @@ public:
 		std::string principalId;
 		std::string resourceId;
 		std::string resourceType;
+
+		bool operator==(const Data &) const noexcept = default;
 	};
 
 	Record(const Data &data) noexcept;
 	Record(Data &&data) noexcept;
+
+	Record(const pg::row_t &r);
+
+	bool operator==(const Record &) const noexcept = default;
 
 	const Data::attrs_t &attrs() const noexcept { return _data.attrs; }
 	void                 attrs(const Data::attrs_t &attrs) noexcept { _data.attrs = attrs; }
@@ -42,4 +48,7 @@ private:
 };
 
 using Records = std::vector<Record>;
+
+std::optional<Record> LookupRecord(
+	const std::string &principalId, const std::string &resourceType, const std::string &resourceId);
 } // namespace db

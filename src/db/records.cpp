@@ -7,6 +7,15 @@ Record::Record(const Record::Data &data) noexcept : _data(data), _rev(0) {}
 
 Record::Record(Record::Data &&data) noexcept : _data(std::move(data)), _rev(0) {}
 
+Record::Record(const pg::row_t &r) :
+	_data({
+		.attrs        = r["attrs"].as<Data::attrs_t>(),
+		.principalId  = r["principal_id"].as<std::string>(),
+		.resourceId   = r["resource_id"].as<std::string>(),
+		.resourceType = r["resource_type"].as<std::string>(),
+	}),
+	_rev(r["_rev"].as<int>()) {}
+
 void Record::discard() {
 	std::string_view qry = R"(
 		delete from records
@@ -64,5 +73,31 @@ void Record::store() {
 	}
 
 	_rev = res.at(0, 0).as<int>();
+}
+
+std::optional<Record> LookupRecord(
+	const std::string &principalId, const std::string &resourceType,
+	const std::string &resourceId) {
+	std::string_view qry = R"(
+		select
+			_rev,
+			principal_id,
+			resource_type,
+			resource_id,
+			attrs
+		from records
+		where
+			principal_id = $1::text
+			and resource_type = $2::text
+			and resource_id = $3::text
+		;
+	)";
+
+	auto res = pg::exec(qry, principalId, resourceType, resourceId);
+	if (res.empty()) {
+		return std::nullopt;
+	}
+
+	return Record(res[0]);
 }
 } // namespace db
