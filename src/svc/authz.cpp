@@ -10,6 +10,19 @@ namespace authz {
 template <>
 rpcGrant::result_type Impl::call<rpcGrant>(
 	grpcxx::context &ctx, const rpcGrant::request_type &req) {
+	// Upsert if exists
+	if (auto r = db::LookupRecord(req.principal_id(), req.resource_type(), req.resource_id()); r) {
+		if (req.has_attrs()) {
+			std::string attrs;
+			google::protobuf::util::MessageToJsonString(req.attrs(), &attrs);
+
+			r->attrs(std::move(attrs));
+			r->store();
+		}
+
+		return {grpcxx::status::code_t::ok, map(r.value())};
+	}
+
 	auto r = map(req);
 	r.store();
 

@@ -43,12 +43,19 @@ TEST_F(svc_Authz, Grant) {
 		ASSERT_TRUE(result.response);
 	}
 
-	// Success: grant with `attrs`
+	// Success: upsert
 	{
+		db::Record record({
+			.principalId  = principal.id(),
+			.resourceId   = "Grant-upsert",
+			.resourceType = "svc_Authz",
+		});
+		ASSERT_NO_THROW(record.store());
+
 		rpcGrant::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type("svc_Authz");
-		request.set_resource_id("Grant-with_attrs");
+		request.set_resource_type(record.resourceType());
+		request.set_resource_id(record.resourceId());
 
 		const std::string attrs(R"({"foo":"bar"})");
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
@@ -58,6 +65,11 @@ TEST_F(svc_Authz, Grant) {
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
+
+		auto actual =
+			db::LookupRecord(record.principalId(), record.resourceType(), record.resourceId());
+		EXPECT_EQ(record.rev() + 1, actual->rev());
+		EXPECT_EQ(R"({"foo": "bar"})", actual->attrs());
 	}
 
 	// Error: invalid `principal_id`
