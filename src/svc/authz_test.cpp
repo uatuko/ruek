@@ -7,7 +7,7 @@
 
 using namespace sentium::api::v1::Authz;
 
-class svc_Authz : public testing::Test {
+class svc_AuthzTest : public testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		db::testing::setup();
@@ -20,12 +20,12 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
-TEST_F(svc_Authz, Grant) {
+TEST_F(svc_AuthzTest, Grant) {
 	grpcxx::context ctx;
 	svc::Authz      svc;
 
 	db::Principal principal({
-		.id = "id:svc_Authz.Grant",
+		.id = "id:svc_AuthzTest.Grant",
 	});
 	ASSERT_NO_THROW(principal.store());
 
@@ -33,7 +33,7 @@ TEST_F(svc_Authz, Grant) {
 	{
 		rpcGrant::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type("svc_Authz");
+		request.set_resource_type("svc_AuthzTest");
 		request.set_resource_id("Grant");
 
 		rpcGrant::result_type result;
@@ -48,12 +48,12 @@ TEST_F(svc_Authz, Grant) {
 		db::Record record({
 			.principalId  = principal.id(),
 			.resourceId   = "Grant-upsert",
-			.resourceType = "svc_Authz",
+			.resourceType = "svc_AuthzTest",
 		});
 		ASSERT_NO_THROW(record.store());
 
 		rpcGrant::request_type request;
-		request.set_principal_id(principal.id());
+		request.set_principal_id(record.principalId());
 		request.set_resource_type(record.resourceType());
 		request.set_resource_id(record.resourceId());
 
@@ -67,7 +67,7 @@ TEST_F(svc_Authz, Grant) {
 		ASSERT_TRUE(result.response);
 
 		auto actual =
-			db::LookupRecord(record.principalId(), record.resourceType(), record.resourceId());
+			db::Record::lookup(record.principalId(), record.resourceType(), record.resourceId());
 		EXPECT_EQ(record.rev() + 1, actual->rev());
 		EXPECT_EQ(R"({"foo": "bar"})", actual->attrs());
 	}
@@ -88,7 +88,7 @@ TEST_F(svc_Authz, Grant) {
 	{
 		rpcGrant::request_type request;
 		request.set_principal_id("invalid");
-		request.set_resource_type("svc_Authz");
+		request.set_resource_type("svc_AuthzTest");
 		request.set_resource_id("Grant-invalid:principal_id");
 
 		rpcGrant::result_type result;

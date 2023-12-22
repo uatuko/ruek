@@ -39,8 +39,15 @@ public:
 
 	const int &rev() const noexcept { return _rev; }
 
-	void discard();
 	void store();
+
+	static bool discard(
+		const std::string &principalId, const std::string &resourceType,
+		const std::string &resourceId);
+
+	static std::optional<Record> lookup(
+		const std::string &principalId, const std::string &resourceType,
+		const std::string &resourceId);
 
 private:
 	Data _data;
@@ -48,7 +55,4 @@ private:
 };
 
 using Records = std::vector<Record>;
-
-std::optional<Record> LookupRecord(
-	const std::string &principalId, const std::string &resourceType, const std::string &resourceId);
 } // namespace db

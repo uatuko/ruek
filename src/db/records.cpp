@@ -16,7 +16,9 @@ Record::Record(const pg::row_t &r) :
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
-void Record::discard() {
+bool Record::discard(
+	const std::string &principalId, const std::string &resourceType,
+	const std::string &resourceId) {
 	std::string_view qry = R"(
 		delete from records
 		where
@@ -26,8 +28,34 @@ void Record::discard() {
 		;
 	)";
 
-	pg::exec(qry, _data.principalId, _data.resourceType, _data.resourceId);
-	_rev = -1;
+	auto res = pg::exec(qry, principalId, resourceType, resourceId);
+	return (res.affected_rows() == 1);
+}
+
+std::optional<Record> Record::lookup(
+	const std::string &principalId, const std::string &resourceType,
+	const std::string &resourceId) {
+	std::string_view qry = R"(
+		select
+			_rev,
+			principal_id,
+			resource_type,
+			resource_id,
+			attrs
+		from records
+		where
+			principal_id = $1::text
+			and resource_type = $2::text
+			and resource_id = $3::text
+		;
+	)";
+
+	auto res = pg::exec(qry, principalId, resourceType, resourceId);
+	if (res.empty()) {
+		return std::nullopt;
+	}
+
+	return Record(res[0]);
 }
 
 void Record::store() {
@@ -73,31 +101,5 @@ void Record::store() {
 	}
 
 	_rev = res.at(0, 0).as<int>();
-}
-
-std::optional<Record> LookupRecord(
-	const std::string &principalId, const std::string &resourceType,
-	const std::string &resourceId) {
-	std::string_view qry = R"(
-		select
-			_rev,
-			principal_id,
-			resource_type,
-			resource_id,
-			attrs
-		from records
-		where
-			principal_id = $1::text
-			and resource_type = $2::text
-			and resource_id = $3::text
-		;
-	)";
-
-	auto res = pg::exec(qry, principalId, resourceType, resourceId);
-	if (res.empty()) {
-		return std::nullopt;
-	}
-
-	return Record(res[0]);
 }
 } // namespace db

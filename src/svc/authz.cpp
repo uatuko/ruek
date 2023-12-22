@@ -11,7 +11,8 @@ template <>
 rpcGrant::result_type Impl::call<rpcGrant>(
 	grpcxx::context &ctx, const rpcGrant::request_type &req) {
 	// Upsert if exists
-	if (auto r = db::LookupRecord(req.principal_id(), req.resource_type(), req.resource_id()); r) {
+	if (auto r = db::Record::lookup(req.principal_id(), req.resource_type(), req.resource_id());
+		r) {
 		if (req.has_attrs()) {
 			std::string attrs;
 			google::protobuf::util::MessageToJsonString(req.attrs(), &attrs);

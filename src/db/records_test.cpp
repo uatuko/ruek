@@ -35,9 +35,13 @@ TEST_F(db_RecordsTest, discard) {
 		.resourceId   = "discard",
 		.resourceType = "db_RecordsTest",
 	});
-
 	ASSERT_NO_THROW(record.store());
-	ASSERT_NO_THROW(record.discard());
+
+	bool result = false;
+	ASSERT_NO_THROW(
+		result =
+			db::Record::discard(record.principalId(), record.resourceType(), record.resourceId()));
+	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(
 		select
@@ -73,7 +77,7 @@ TEST_F(db_RecordsTest, lookup) {
 	// Success: lookup record
 	{
 		auto result =
-			db::LookupRecord(record.principalId(), record.resourceType(), record.resourceId());
+			db::Record::lookup(record.principalId(), record.resourceType(), record.resourceId());
 		ASSERT_TRUE(result);
 
 		EXPECT_EQ(record, result.value());
@@ -81,7 +85,8 @@ TEST_F(db_RecordsTest, lookup) {
 
 	// Success: lookup non-existent record
 	{
-		auto result = db::LookupRecord(record.principalId(), record.resourceType(), "non-existent");
+		auto result =
+			db::Record::lookup(record.principalId(), record.resourceType(), "non-existent");
 		EXPECT_EQ(std::nullopt, result);
 	}
 }
