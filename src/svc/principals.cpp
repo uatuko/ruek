@@ -6,8 +6,10 @@
 #include "err/errors.h"
 
 namespace svc {
+namespace principals {
+
 template <>
-rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(
+rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
 	if (req.has_id()) {
 		try {
@@ -25,7 +27,7 @@ rpcCreate::result_type PrincipalsImpl::call<rpcCreate>(
 	return {grpcxx::status::code_t::ok, map(p)};
 }
 
-google::rpc::Status PrincipalsImpl::exception() noexcept {
+google::rpc::Status Impl::exception() noexcept {
 	google::rpc::Status status;
 	status.set_code(google::rpc::UNKNOWN);
 
@@ -51,7 +53,7 @@ google::rpc::Status PrincipalsImpl::exception() noexcept {
 	return status;
 }
 
-db::Principal PrincipalsImpl::map(const rpcCreate::request_type &from) const noexcept {
+db::Principal Impl::map(const rpcCreate::request_type &from) const noexcept {
 	db::Principal to({
 		.id = from.id(),
 	});
@@ -70,7 +72,7 @@ db::Principal PrincipalsImpl::map(const rpcCreate::request_type &from) const noe
 	return to;
 }
 
-rpcCreate::response_type PrincipalsImpl::map(const db::Principal &from) const noexcept {
+rpcCreate::response_type Impl::map(const db::Principal &from) const noexcept {
 	rpcCreate::response_type to;
 	to.set_id(from.id());
 
@@ -84,4 +86,5 @@ rpcCreate::response_type PrincipalsImpl::map(const db::Principal &from) const no
 
 	return to;
 }
+} // namespace principals
 } // namespace svc

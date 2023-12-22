@@ -4,5 +4,5 @@
 #include "wrapper.h"
 
 namespace svc {
-using Principals = Wrapper<PrincipalsImpl>;
-}
+using Principals = Wrapper<principals::Impl>;
+} // namespace svc

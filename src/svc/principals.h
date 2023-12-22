@@ -6,9 +6,10 @@
 #include "sentium/api/v1/principals.grpcxx.pb.h"
 
 namespace svc {
+namespace principals {
 using namespace sentium::api::v1::Principals;
 
-class PrincipalsImpl {
+class Impl {
 public:
 	using service_type = Service;
 
@@ -27,4 +28,5 @@ private:
 	db::Principal            map(const rpcCreate::request_type &from) const noexcept;
 	rpcCreate::response_type map(const db::Principal &from) const noexcept;
 };
+} // namespace principals
 } // namespace svc
