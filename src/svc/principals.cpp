@@ -29,8 +29,8 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 template <>
 rpcRetrieve::result_type Impl::call<rpcRetrieve>(
 	grpcxx::context &ctx, const rpcRetrieve::request_type &req) {
-	auto r = db::Principal::retrieve(req.id());
-	return {grpcxx::status::code_t::ok, map(r)};
+	auto p = db::Principal::retrieve(req.id());
+	return {grpcxx::status::code_t::ok, map(p)};
 }
 
 template <>

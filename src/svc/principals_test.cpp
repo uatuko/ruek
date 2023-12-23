@@ -118,6 +118,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_FALSE(actual.has_attrs());
+		EXPECT_FALSE(actual.has_parent_id());
 	}
 
 	// Success: retrieve with `attrs`
@@ -139,6 +140,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_TRUE(actual.has_attrs());
+		EXPECT_FALSE(actual.has_parent_id());
 
 		std::string responseAttrs;
 		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
