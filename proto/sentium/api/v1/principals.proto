@@ -13,6 +13,13 @@ service Principals {
 		};
 	}
 
+	rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse) {
+		option (google.api.http) = {
+			delete : "/v1/principals/{id}"
+			body : "*"
+		};
+	}
+
 	rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
 		option (google.api.http) = {
 			get : "/v1/principals/{id}"
@@ -40,6 +47,12 @@ message PrincipalsCreateRequest {
 	optional google.protobuf.Struct attrs     = 2;
 	optional string                 parent_id = 3;
 }
+
+message PrincipalsDeleteRequest {
+	string id = 1;
+}
+
+message PrincipalsDeleteResponse {}
 
 message PrincipalsRetrieveRequest {
 	string id = 1;

@@ -96,6 +96,38 @@ TEST_F(svc_PrincipalsTest, Create) {
 	}
 }
 
+TEST_F(svc_PrincipalsTest, Delete) {
+	grpcxx::context ctx;
+	svc::Principals svc;
+
+	// Success: delete
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest-Delete",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		rpcDelete::request_type request;
+		request.set_id(principal.id());
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+	}
+
+	// Error: not found
+	{
+		rpcDelete::request_type request;
+		request.set_id("id:svc_PrincipalsTest-Delete-non_existent");
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::not_found, result.status.code());
+		EXPECT_FALSE(result.response);
+	}
+}
+
 TEST_F(svc_PrincipalsTest, Retrieve) {
 	grpcxx::context ctx;
 	svc::Principals svc;

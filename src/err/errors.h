@@ -16,4 +16,5 @@ using DbRecordInvalidData        = basic_error<"sentium:1.3.1.400", "Invalid pri
 using DbRecordInvalidPrincipalId = basic_error<"sentium:1.3.2.400", "Invalid principal for record">;
 
 using RpcPrincipalsAlreadyExists = basic_error<"sentium:2.1.1.409", "Principal already exists">;
+using RpcPrincipalsNotFound      = basic_error<"sentium:2.1.2.404", "Principal not found">;
 } // namespace err

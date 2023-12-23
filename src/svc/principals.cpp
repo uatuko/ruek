@@ -27,6 +27,16 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 }
 
 template <>
+rpcDelete::result_type Impl::call<rpcDelete>(
+	grpcxx::context &ctx, const rpcDelete::request_type &req) {
+	if (auto r = db::Principal::discard(req.id()); r == false) {
+		throw err::RpcPrincipalsNotFound();
+	}
+
+	return {grpcxx::status::code_t::ok, rpcDelete::response_type()};
+}
+
+template <>
 rpcRetrieve::result_type Impl::call<rpcRetrieve>(
 	grpcxx::context &ctx, const rpcRetrieve::request_type &req) {
 	auto p = db::Principal::retrieve(req.id());
@@ -77,6 +87,9 @@ google::rpc::Status Impl::exception() noexcept {
 		status.set_message(std::string(e.str()));
 	} catch (const err::RpcPrincipalsAlreadyExists &e) {
 		status.set_code(google::rpc::ALREADY_EXISTS);
+		status.set_message(std::string(e.str()));
+	} catch (const err::RpcPrincipalsNotFound &e) {
+		status.set_code(google::rpc::NOT_FOUND);
 		status.set_message(std::string(e.str()));
 	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);

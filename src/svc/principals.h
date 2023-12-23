@@ -23,6 +23,10 @@ public:
 		grpcxx::context &ctx, const rpcCreate::request_type &req);
 
 	template <>
+	rpcDelete::result_type call<rpcDelete>(
+		grpcxx::context &ctx, const rpcDelete::request_type &req);
+
+	template <>
 	rpcRetrieve::result_type call<rpcRetrieve>(
 		grpcxx::context &ctx, const rpcRetrieve::request_type &req);
 
