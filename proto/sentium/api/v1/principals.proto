@@ -18,6 +18,13 @@ service Principals {
 			get : "/v1/principals/{id}"
 		};
 	}
+
+	rpc Update(PrincipalsUpdateRequest) returns (Principal) {
+		option (google.api.http) = {
+			put : "/v1/principals/{id}"
+			body : "*"
+		};
+	}
 }
 
 message Principal {
@@ -36,4 +43,11 @@ message PrincipalsCreateRequest {
 
 message PrincipalsRetrieveRequest {
 	string id = 1;
+}
+
+message PrincipalsUpdateRequest {
+	string id = 1;
+
+	optional google.protobuf.Struct attrs     = 2;
+	optional string                 parent_id = 3;
 }

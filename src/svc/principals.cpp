@@ -33,6 +33,30 @@ rpcRetrieve::result_type Impl::call<rpcRetrieve>(
 	return {grpcxx::status::code_t::ok, map(r)};
 }
 
+template <>
+rpcUpdate::result_type Impl::call<rpcUpdate>(
+	grpcxx::context &ctx, const rpcUpdate::request_type &req) {
+	auto p = db::Principal::retrieve(req.id());
+	if (!req.has_attrs() && !req.has_parent_id()) {
+		// Nothing to update
+		return {grpcxx::status::code_t::ok, map(p)};
+	}
+
+	if (req.has_attrs()) {
+		std::string attrs;
+		google::protobuf::util::MessageToJsonString(req.attrs(), &attrs);
+
+		p.attrs(std::move(attrs));
+	}
+
+	if (req.has_parent_id()) {
+		p.parentId(req.parent_id());
+	}
+
+	p.store();
+	return {grpcxx::status::code_t::ok, map(p)};
+}
+
 google::rpc::Status Impl::exception() noexcept {
 	google::rpc::Status status;
 	status.set_code(google::rpc::UNKNOWN);

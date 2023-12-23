@@ -156,3 +156,66 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		EXPECT_FALSE(result.response);
 	}
 }
+
+TEST_F(svc_PrincipalsTest, Update) {
+	grpcxx::context ctx;
+	svc::Principals svc;
+
+	// Success: update
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest-Update",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Principal parent({
+			.id = "id:svc_PrincipalsTest-Update(parent)",
+		});
+		ASSERT_NO_THROW(parent.store());
+
+		rpcUpdate::request_type request;
+		request.set_id(principal.id());
+		request.set_parent_id(parent.id());
+
+		const std::string attrs(R"({"foo":"bar"})");
+		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
+
+		rpcUpdate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcUpdate>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		auto &actual = result.response.value();
+		EXPECT_EQ(principal.id(), actual.id());
+		EXPECT_EQ(parent.id(), actual.parent_id());
+		EXPECT_TRUE(actual.has_attrs());
+
+		std::string responseAttrs;
+		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
+		EXPECT_EQ(attrs, responseAttrs);
+	}
+
+	// Success: short-circuit where nothing to update
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest-Update-short_circuit",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		rpcUpdate::request_type request;
+		request.set_id(principal.id());
+
+		rpcUpdate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcUpdate>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		auto &actual = result.response.value();
+		EXPECT_EQ(principal.id(), actual.id());
+		EXPECT_FALSE(actual.has_parent_id());
+		EXPECT_FALSE(actual.has_attrs());
+
+		auto p = db::Principal::retrieve(principal.id());
+		EXPECT_EQ(principal.rev(), p.rev());
+	}
+}
