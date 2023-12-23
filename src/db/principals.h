@@ -29,14 +29,14 @@ public:
 	void                 attrs(Data::attrs_t &&attrs) noexcept { _data.attrs = std::move(attrs); }
 	void                 attrs(std::string &&attrs) noexcept { _data.attrs = std::move(attrs); }
 
-	const std::string &id() const noexcept { return _data.id; }
-	const int         &rev() const noexcept { return _rev; }
-
 	const Data::pid_t &parentId() const noexcept { return _data.parentId; }
 	void               parentId(const Data::pid_t &parentId) noexcept { _data.parentId = parentId; }
 	void               parentId(const std::string &parentId) noexcept { _data.parentId = parentId; }
 	void parentId(Data::pid_t &&parentId) noexcept { _data.parentId = std::move(parentId); }
 	void parentId(std::string &&parentId) noexcept { _data.parentId = std::move(parentId); }
+
+	const std::string &id() const noexcept { return _data.id; }
+	const int         &rev() const noexcept { return _rev; }
 
 	void discard();
 	void store();

@@ -5,7 +5,7 @@
 #include "principals.h"
 #include "testing.h"
 
-class PrincipalsTest : public ::testing::Test {
+class db_PrincipalsTest : public ::testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		db::testing::setup();
@@ -22,9 +22,9 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
-TEST_F(PrincipalsTest, discard) {
+TEST_F(db_PrincipalsTest, discard) {
 	db::Principal principal({
-		.id = "id:PrincipalsTest.discard",
+		.id = "id:db_PrincipalsTest.discard",
 	});
 
 	ASSERT_NO_THROW(principal.store());
@@ -44,7 +44,7 @@ TEST_F(PrincipalsTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
-TEST_F(PrincipalsTest, retrieve) {
+TEST_F(db_PrincipalsTest, retrieve) {
 	// Success: retrieve data
 	{
 		std::string_view qry = R"(
@@ -57,9 +57,9 @@ TEST_F(PrincipalsTest, retrieve) {
 			);
 		)";
 
-		ASSERT_NO_THROW(db::pg::exec(qry, 1232, "id:PrincipalsTest.retrieve"));
+		ASSERT_NO_THROW(db::pg::exec(qry, 1232, "id:db_PrincipalsTest.retrieve"));
 
-		auto principal = db::RetrievePrincipal("id:PrincipalsTest.retrieve");
+		auto principal = db::RetrievePrincipal("id:db_PrincipalsTest.retrieve");
 		EXPECT_EQ(1232, principal.rev());
 		EXPECT_FALSE(principal.parentId());
 		EXPECT_FALSE(principal.attrs());
@@ -80,19 +80,19 @@ TEST_F(PrincipalsTest, retrieve) {
 		)";
 
 		ASSERT_NO_THROW(
-			db::pg::exec(qry, 1237, "id:PrincipalsTest.retrieve-optional", R"({"foo": "bar"})"));
+			db::pg::exec(qry, 1237, "id:db_PrincipalsTest.retrieve-optional", R"({"foo": "bar"})"));
 
-		auto principal = db::RetrievePrincipal("id:PrincipalsTest.retrieve-optional");
+		auto principal = db::RetrievePrincipal("id:db_PrincipalsTest.retrieve-optional");
 		EXPECT_EQ(1237, principal.rev());
 		EXPECT_EQ(R"({"foo": "bar"})", principal.attrs());
 	}
 }
 
-TEST_F(PrincipalsTest, rev) {
+TEST_F(db_PrincipalsTest, rev) {
 	// Success: revision increment
 	{
 		db::Principal principal({
-			.id = "id:PrincipalsTest.rev",
+			.id = "id:db_PrincipalsTest.rev",
 		});
 
 		ASSERT_NO_THROW(principal.store());
@@ -105,7 +105,7 @@ TEST_F(PrincipalsTest, rev) {
 	// Error: revision mismatch
 	{
 		db::Principal principal({
-			.id = "id:PrincipalsTest.rev-mismatch",
+			.id = "id:db_PrincipalsTest.rev-mismatch",
 		});
 
 		std::string_view qry = R"(
@@ -124,9 +124,9 @@ TEST_F(PrincipalsTest, rev) {
 	}
 }
 
-TEST_F(PrincipalsTest, store) {
+TEST_F(db_PrincipalsTest, store) {
 	db::Principal principal({
-		.id = "id:PrincipalsTest.store",
+		.id = "id:db_PrincipalsTest.store",
 	});
 
 	// Success: persist data
@@ -144,7 +144,7 @@ TEST_F(PrincipalsTest, store) {
 		)";
 
 		auto res = db::pg::exec(qry, principal.id());
-		EXPECT_EQ(1, res.size());
+		ASSERT_EQ(1, res.size());
 
 		auto [_rev, id, parentId, attrs] =
 			res[0].as<int, std::string, db::Principal::Data::pid_t, db::Principal::Data::attrs_t>();
@@ -166,7 +166,7 @@ TEST_F(PrincipalsTest, store) {
 					]
 				}
 			)",
-			.id    = "id:PrincipalsTest.store-optional",
+			.id    = "id:db_PrincipalsTest.store-optional",
 		});
 		ASSERT_NO_THROW(principal.store());
 
@@ -191,7 +191,7 @@ TEST_F(PrincipalsTest, store) {
 	// Error: invalid `parentId`
 	{
 		db::Principal principal({
-			.parentId = "id:PrincipalsTest.store-invalid-parentId",
+			.parentId = "id:db_PrincipalsTest.store-invalid-parentId",
 		});
 
 		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidParentId);
@@ -201,7 +201,7 @@ TEST_F(PrincipalsTest, store) {
 	{
 		db::Principal principal({
 			.attrs = R"("string")",
-			.id    = "id:PrincipalsTest.store-invalid-attrs",
+			.id    = "id:db_PrincipalsTest.store-invalid-attrs",
 		});
 
 		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidData);
