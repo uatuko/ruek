@@ -26,9 +26,11 @@ TEST_F(db_PrincipalsTest, discard) {
 	db::Principal principal({
 		.id = "id:db_PrincipalsTest.discard",
 	});
-
 	ASSERT_NO_THROW(principal.store());
-	ASSERT_NO_THROW(principal.discard());
+
+	bool result = false;
+	ASSERT_NO_THROW(result = db::Principal::discard(principal.id()));
+	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(
 		select
@@ -59,7 +61,7 @@ TEST_F(db_PrincipalsTest, retrieve) {
 
 		ASSERT_NO_THROW(db::pg::exec(qry, 1232, "id:db_PrincipalsTest.retrieve"));
 
-		auto principal = db::RetrievePrincipal("id:db_PrincipalsTest.retrieve");
+		auto principal = db::Principal::retrieve("id:db_PrincipalsTest.retrieve");
 		EXPECT_EQ(1232, principal.rev());
 		EXPECT_FALSE(principal.parentId());
 		EXPECT_FALSE(principal.attrs());
@@ -82,7 +84,7 @@ TEST_F(db_PrincipalsTest, retrieve) {
 		ASSERT_NO_THROW(
 			db::pg::exec(qry, 1237, "id:db_PrincipalsTest.retrieve-optional", R"({"foo": "bar"})"));
 
-		auto principal = db::RetrievePrincipal("id:db_PrincipalsTest.retrieve-optional");
+		auto principal = db::Principal::retrieve("id:db_PrincipalsTest.retrieve-optional");
 		EXPECT_EQ(1237, principal.rev());
 		EXPECT_EQ(R"({"foo": "bar"})", principal.attrs());
 	}

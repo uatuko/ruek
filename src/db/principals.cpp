@@ -25,15 +25,35 @@ Principal::Principal(const pg::row_t &r) :
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
-void Principal::discard() {
+bool Principal::discard(const std::string &id) {
 	std::string_view qry = R"(
 		delete from principals
 		where
 			id = $1::text;
 	)";
 
-	pg::exec(qry, _data.id);
-	_rev = -1;
+	auto res = pg::exec(qry, id);
+	return (res.affected_rows() == 1);
+}
+
+Principal Principal::retrieve(const std::string &id) {
+	std::string_view qry = R"(
+		select
+			_rev,
+			id,
+			parent_id,
+			attrs
+		from principals
+		where
+			id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+	if (res.empty()) {
+		throw err::DbPrincipalNotFound();
+	}
+
+	return Principal(res[0]);
 }
 
 void Principal::store() {
@@ -78,25 +98,5 @@ void Principal::store() {
 	}
 
 	_rev = res.at(0, 0).as<int>();
-}
-
-Principal RetrievePrincipal(const std::string &id) {
-	std::string_view qry = R"(
-		select
-			_rev,
-			id,
-			parent_id,
-			attrs
-		from principals
-		where
-			id = $1::text;
-	)";
-
-	auto res = pg::exec(qry, id);
-	if (res.empty()) {
-		throw err::DbPrincipalNotFound();
-	}
-
-	return Principal(res[0]);
 }
 } // namespace db

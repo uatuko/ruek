@@ -13,7 +13,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
 	if (req.has_id()) {
 		try {
-			db::RetrievePrincipal(req.id());
+			db::Principal::retrieve(req.id());
 
 			throw err::RpcPrincipalsAlreadyExists();
 		} catch (const err::DbPrincipalNotFound &) {

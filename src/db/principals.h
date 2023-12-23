@@ -38,8 +38,10 @@ public:
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
 
-	void discard();
 	void store();
+
+	static bool      discard(const std::string &id);
+	static Principal retrieve(const std::string &id);
 
 private:
 	Data _data;
@@ -47,6 +49,4 @@ private:
 };
 
 using Principals = std::vector<Principal>;
-
-Principal RetrievePrincipal(const std::string &id);
 } // namespace db
