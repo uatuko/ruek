@@ -15,6 +15,9 @@ int main() {
 
 	grpcxx::server server;
 
+	svc::Authz a;
+	server.add(a.service());
+
 	svc::Principals p;
 	server.add(p.service());
 

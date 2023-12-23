@@ -1,17 +1,25 @@
+cmake_path(SET authz_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/authz.proto)
+cmake_path(SET authz_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/authz.grpcxx.pb.h)
+cmake_path(SET authz_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/authz.pb.h)
+cmake_path(SET authz_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/authz.pb.cc)
+
 cmake_path(SET principals_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/principals.proto)
 cmake_path(SET principals_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/principals.grpcxx.pb.h)
 cmake_path(SET principals_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/principals.pb.h)
 cmake_path(SET principals_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/principals.pb.cc)
 
 set(protos
+	${authz_proto}
 	${principals_proto}
 )
 
 set(headers
+	${authz_header} ${authz_grpcxx_header}
 	${principals_header} ${principals_grpcxx_header}
 )
 
 set(sources
+	${authz_source}
 	${principals_source}
 )
 

@@ -3,12 +3,14 @@ target_sources(db
 	PRIVATE
 		pg.cpp
 		principals.cpp
+		records.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
 			config.h
 			pg.h
 			principals.h
+			records.h
 )
 
 target_link_libraries(db
@@ -43,6 +45,7 @@ if (SENTIUM_BUILD_TESTING)
 		PRIVATE
 			pg_test.cpp
 			principals_test.cpp
+			records_test.cpp
 	)
 
 	target_link_libraries(db_tests

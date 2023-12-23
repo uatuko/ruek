@@ -21,7 +21,7 @@ public:
 	Principal(const Data &data) noexcept;
 	Principal(Data &&data) noexcept;
 
-	Principal(const pg::row_t &t);
+	Principal(const pg::row_t &r);
 
 	const Data::attrs_t &attrs() const noexcept { return _data.attrs; }
 	void                 attrs(const Data::attrs_t &attrs) noexcept { _data.attrs = attrs; }
