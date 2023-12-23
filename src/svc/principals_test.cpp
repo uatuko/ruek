@@ -132,7 +132,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 	grpcxx::context ctx;
 	svc::Principals svc;
 
-	// Sucess: retrieve
+	// Success: retrieve
 	{
 		db::Principal principal({
 			.id = "id:svc_PrincipalsTest-Retrieve",
