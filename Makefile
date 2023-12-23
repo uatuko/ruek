@@ -11,7 +11,7 @@ sources += $(shell find $(srcdir) -type f -name '*.h' -o -name '*.cpp')
 
 lcov_output       = $(builddir)/coverage.out
 profdata_output   = $(builddir)/coverage.profdata
-testing_binaries := $(shell find $(bindir) -type f -perm +ugo+x -name "*_tests")
+testing_binaries := $(shell find $(bindir) -type f -perm -a=x -name "*_tests")
 
 llvm-cov      = $(shell which llvm-cov)
 llvm-profdata = $(shell which llvm-profdata)

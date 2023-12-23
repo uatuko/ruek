@@ -1,0 +1,78 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  coverage:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow_ref }}-${{ github.job }}
+    # Can't use 23.10 due to lcov-2.0-1 issue (ref: https://bugs.launchpad.net/ubuntu/+source/lcov/+bug/2029924)
+    container: ubuntu:23.04
+    services:
+      postgres:
+        env:
+          POSTGRES_DB: test-sentium
+          POSTGRES_PASSWORD: sentium
+          POSTGRES_USER: sentium
+        image: postgres:15
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apt update
+          apt install -y --no-install-recommends \
+            clang cmake libclang-rt-dev make ninja-build \
+            libprotobuf-dev libprotoc-dev protobuf-compiler \
+            libpq-dev postgresql-client \
+            lcov llvm
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: .build
+          key: ${{ runner.arch }}_${{ github.job }}-${{ hashFiles('cmake/dependencies.cmake') }}
+      - name: Setup Postgres
+        run: psql < db/schema.sql
+        env:
+          PGDATABASE: test-sentium
+          PGHOST: postgres
+          PGPASSWORD: sentium
+          PGUSER: sentium
+      - name: Build
+        run: make
+      - name: Generate code coverage reports
+        run: make coverage:lcov
+        env:
+          PGDATABASE: test-sentium
+          PGHOST: postgres
+          PGPASSWORD: sentium
+          PGUSER: sentium
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ${{ github.workspace }}/.build
+          fail_ci_if_error: true
+          files: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    container: ubuntu:23.10
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            clang-format make
+
+      - uses: actions/checkout@v3
+      - run: make lint:ci

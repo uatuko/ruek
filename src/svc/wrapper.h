@@ -66,7 +66,7 @@ private:
 		return out;
 	}
 
-	Impl               _impl;
-	Impl::service_type _service;
+	Impl                        _impl;
+	typename Impl::service_type _service;
 };
 } // namespace svc
