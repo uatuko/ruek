@@ -7,7 +7,6 @@
 
 namespace svc {
 namespace principals {
-
 template <>
 rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
@@ -27,6 +26,13 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	return {grpcxx::status::code_t::ok, map(p)};
 }
 
+template <>
+rpcRetrieve::result_type Impl::call<rpcRetrieve>(
+	grpcxx::context &ctx, const rpcRetrieve::request_type &req) {
+	auto r = db::Principal::retrieve(req.id());
+	return {grpcxx::status::code_t::ok, map(r)};
+}
+
 google::rpc::Status Impl::exception() noexcept {
 	google::rpc::Status status;
 	status.set_code(google::rpc::UNKNOWN);
@@ -38,6 +44,9 @@ google::rpc::Status Impl::exception() noexcept {
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbPrincipalInvalidParentId &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
+	} catch (const err::DbPrincipalNotFound &e) {
+		status.set_code(google::rpc::NOT_FOUND);
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbRevisionMismatch &e) {
 		status.set_code(google::rpc::INTERNAL);

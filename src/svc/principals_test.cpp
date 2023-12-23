@@ -95,3 +95,64 @@ TEST_F(svc_PrincipalsTest, Create) {
 		EXPECT_FALSE(result.response);
 	}
 }
+
+TEST_F(svc_PrincipalsTest, Retrieve) {
+	grpcxx::context ctx;
+	svc::Principals svc;
+
+	// Sucess: retrieve
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest-Retrieve",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		rpcRetrieve::request_type request;
+		request.set_id(principal.id());
+
+		rpcRetrieve::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		auto &actual = result.response.value();
+		EXPECT_EQ(principal.id(), actual.id());
+		EXPECT_FALSE(actual.has_attrs());
+	}
+
+	// Success: retrieve with `attrs`
+	{
+		db::Principal principal({
+			.attrs = R"({"foo":"bar"})",
+			.id    = "id:svc_PrincipalsTest-Retrieve-with_attrs",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		rpcRetrieve::request_type request;
+		request.set_id(principal.id());
+
+		rpcRetrieve::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		auto &actual = result.response.value();
+		EXPECT_EQ(principal.id(), actual.id());
+		EXPECT_TRUE(actual.has_attrs());
+
+		std::string responseAttrs;
+		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
+		EXPECT_EQ(principal.attrs(), responseAttrs);
+	}
+
+	// Error: not found
+	{
+		rpcRetrieve::request_type request;
+		request.set_id("id:svc_PrincipalsTest-Retrieve-non_existent");
+
+		rpcRetrieve::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::not_found, result.status.code());
+		EXPECT_FALSE(result.response);
+	}
+}

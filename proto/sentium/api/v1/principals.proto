@@ -12,6 +12,12 @@ service Principals {
 			body : "*"
 		};
 	}
+
+	rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
+		option (google.api.http) = {
+			get : "/v1/principals/{id}"
+		};
+	}
 }
 
 message Principal {
@@ -26,4 +32,8 @@ message PrincipalsCreateRequest {
 
 	optional google.protobuf.Struct attrs     = 2;
 	optional string                 parent_id = 3;
+}
+
+message PrincipalsRetrieveRequest {
+	string id = 1;
 }

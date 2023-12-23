@@ -22,6 +22,10 @@ public:
 	rpcCreate::result_type call<rpcCreate>(
 		grpcxx::context &ctx, const rpcCreate::request_type &req);
 
+	template <>
+	rpcRetrieve::result_type call<rpcRetrieve>(
+		grpcxx::context &ctx, const rpcRetrieve::request_type &req);
+
 	google::rpc::Status exception() noexcept;
 
 private:
