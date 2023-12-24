@@ -19,9 +19,9 @@ Principal::Principal(Data &&data) noexcept : _data(std::move(data)), _rev(0) {
 
 Principal::Principal(const pg::row_t &r) :
 	_data({
-		.attrs    = r["attrs"].as<Data::attrs_t>(),
-		.id       = r["id"].as<std::string>(),
-		.parentId = r["parent_id"].as<Data::pid_t>(),
+		.attrs   = r["attrs"].as<Data::attrs_t>(),
+		.id      = r["id"].as<std::string>(),
+		.segment = r["segment"].as<Data::segment_t>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
@@ -41,7 +41,7 @@ Principal Principal::retrieve(const std::string &id) {
 		select
 			_rev,
 			id,
-			parent_id,
+			segment,
 			attrs
 		from principals
 		where
@@ -61,7 +61,7 @@ void Principal::store() {
 		insert into principals as t (
 			_rev,
 			id,
-			parent_id,
+			segment,
 			attrs
 		) values (
 			$1::integer,
@@ -73,7 +73,7 @@ void Principal::store() {
 		do update
 			set (
 				_rev,
-				parent_id,
+				segment,
 				attrs
 			) = (
 				excluded._rev + 1,
@@ -86,11 +86,9 @@ void Principal::store() {
 
 	pg::result_t res;
 	try {
-		res = pg::exec(qry, _rev, _data.id, _data.parentId, _data.attrs);
+		res = pg::exec(qry, _rev, _data.id, _data.segment, _data.attrs);
 	} catch (pqxx::check_violation &) {
 		throw err::DbPrincipalInvalidData();
-	} catch (pg::fkey_violation_t &) {
-		throw err::DbPrincipalInvalidParentId();
 	}
 
 	if (res.empty()) {

@@ -37,15 +37,15 @@ service Principals {
 message Principal {
 	string id = 1;
 
-	optional google.protobuf.Struct attrs     = 2;
-	optional string                 parent_id = 3;
+	optional google.protobuf.Struct attrs   = 2;
+	optional string                 segment = 3;
 }
 
 message PrincipalsCreateRequest {
 	optional string id = 1;
 
-	optional google.protobuf.Struct attrs     = 2;
-	optional string                 parent_id = 3;
+	optional google.protobuf.Struct attrs   = 2;
+	optional string                 segment = 3;
 }
 
 message PrincipalsDeleteRequest {
@@ -61,6 +61,6 @@ message PrincipalsRetrieveRequest {
 message PrincipalsUpdateRequest {
 	string id = 1;
 
-	optional google.protobuf.Struct attrs     = 2;
-	optional string                 parent_id = 3;
+	optional google.protobuf.Struct attrs   = 2;
+	optional string                 segment = 3;
 }

@@ -66,10 +66,23 @@ TEST_F(svc_PrincipalsTest, Create) {
 		EXPECT_EQ(attrs, responseAttrs);
 	}
 
-	// Error: invalid `parent_id`
+	// Success: create principal with `segment`
 	{
 		rpcCreate::request_type request;
-		request.set_parent_id("dummy");
+		request.set_segment("segment:svc_PrincipalsTest.Create-with_segment");
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ("segment:svc_PrincipalsTest.Create-with_segment", result.response->segment());
+	}
+
+	// Error: invalid `segment`
+	{
+		rpcCreate::request_type request;
+		request.set_segment("");
 
 		rpcCreate::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
@@ -150,7 +163,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_parent_id());
+		EXPECT_FALSE(actual.has_segment());
 	}
 
 	// Success: retrieve with `attrs`
@@ -172,7 +185,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_TRUE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_parent_id());
+		EXPECT_FALSE(actual.has_segment());
 
 		std::string responseAttrs;
 		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
@@ -202,14 +215,9 @@ TEST_F(svc_PrincipalsTest, Update) {
 		});
 		ASSERT_NO_THROW(principal.store());
 
-		db::Principal parent({
-			.id = "id:svc_PrincipalsTest-Update(parent)",
-		});
-		ASSERT_NO_THROW(parent.store());
-
 		rpcUpdate::request_type request;
 		request.set_id(principal.id());
-		request.set_parent_id(parent.id());
+		request.set_segment("segment:svc_PrincipalsTest-Update");
 
 		const std::string attrs(R"({"foo":"bar"})");
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
@@ -221,7 +229,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
-		EXPECT_EQ(parent.id(), actual.parent_id());
+		EXPECT_EQ("segment:svc_PrincipalsTest-Update", actual.segment());
 		EXPECT_TRUE(actual.has_attrs());
 
 		std::string responseAttrs;
@@ -246,7 +254,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
-		EXPECT_FALSE(actual.has_parent_id());
+		EXPECT_FALSE(actual.has_segment());
 		EXPECT_FALSE(actual.has_attrs());
 
 		auto p = db::Principal::retrieve(principal.id());

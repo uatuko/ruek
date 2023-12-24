@@ -63,7 +63,7 @@ TEST_F(db_PrincipalsTest, retrieve) {
 
 		auto principal = db::Principal::retrieve("id:db_PrincipalsTest.retrieve");
 		EXPECT_EQ(1232, principal.rev());
-		EXPECT_FALSE(principal.parentId());
+		EXPECT_FALSE(principal.segment());
 		EXPECT_FALSE(principal.attrs());
 	}
 
@@ -139,7 +139,7 @@ TEST_F(db_PrincipalsTest, store) {
 			select
 				_rev,
 				id,
-				parent_id,
+				segment,
 				attrs
 			from principals
 			where id = $1::text;
@@ -148,11 +148,16 @@ TEST_F(db_PrincipalsTest, store) {
 		auto res = db::pg::exec(qry, principal.id());
 		ASSERT_EQ(1, res.size());
 
-		auto [_rev, id, parentId, attrs] =
-			res[0].as<int, std::string, db::Principal::Data::pid_t, db::Principal::Data::attrs_t>();
+		auto [_rev, id, segment, attrs] =
+			res[0]
+				.as<int,
+					std::string,
+					db::Principal::Data::segment_t,
+					db::Principal::Data::attrs_t>();
+
 		EXPECT_EQ(principal.rev(), _rev);
 		EXPECT_EQ(principal.id(), id);
-		EXPECT_FALSE(parentId);
+		EXPECT_FALSE(segment);
 		EXPECT_FALSE(attrs);
 	}
 
@@ -190,13 +195,13 @@ TEST_F(db_PrincipalsTest, store) {
 		EXPECT_EQ(R"(["test"])", tags);
 	}
 
-	// Error: invalid `parentId`
+	// Error: invalid `segment`
 	{
 		db::Principal principal({
-			.parentId = "id:db_PrincipalsTest.store-invalid-parentId",
+			.segment = "",
 		});
 
-		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidParentId);
+		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidData);
 	}
 
 	// Error: invalid `attrs`

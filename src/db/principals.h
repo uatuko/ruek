@@ -10,12 +10,12 @@ namespace db {
 class Principal {
 public:
 	struct Data {
-		using attrs_t = std::optional<std::string>;
-		using pid_t   = std::optional<std::string>;
+		using attrs_t   = std::optional<std::string>;
+		using segment_t = std::optional<std::string>;
 
 		attrs_t     attrs;
 		std::string id;
-		pid_t       parentId;
+		segment_t   segment;
 	};
 
 	Principal(const Data &data) noexcept;
@@ -29,11 +29,11 @@ public:
 	void                 attrs(Data::attrs_t &&attrs) noexcept { _data.attrs = std::move(attrs); }
 	void                 attrs(std::string &&attrs) noexcept { _data.attrs = std::move(attrs); }
 
-	const Data::pid_t &parentId() const noexcept { return _data.parentId; }
-	void               parentId(const Data::pid_t &parentId) noexcept { _data.parentId = parentId; }
-	void               parentId(const std::string &parentId) noexcept { _data.parentId = parentId; }
-	void parentId(Data::pid_t &&parentId) noexcept { _data.parentId = std::move(parentId); }
-	void parentId(std::string &&parentId) noexcept { _data.parentId = std::move(parentId); }
+	const Data::segment_t &segment() const noexcept { return _data.segment; }
+	void segment(const Data::segment_t &segment) noexcept { _data.segment = segment; }
+	void segment(const std::string &segment) noexcept { _data.segment = segment; }
+	void segment(Data::segment_t &&segment) noexcept { _data.segment = std::move(segment); }
+	void segment(std::string &&segment) noexcept { _data.segment = std::move(segment); }
 
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }

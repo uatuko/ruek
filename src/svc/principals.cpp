@@ -47,7 +47,7 @@ template <>
 rpcUpdate::result_type Impl::call<rpcUpdate>(
 	grpcxx::context &ctx, const rpcUpdate::request_type &req) {
 	auto p = db::Principal::retrieve(req.id());
-	if (!req.has_attrs() && !req.has_parent_id()) {
+	if (!req.has_attrs() && !req.has_segment()) {
 		// Nothing to update
 		return {grpcxx::status::code_t::ok, map(p)};
 	}
@@ -59,8 +59,8 @@ rpcUpdate::result_type Impl::call<rpcUpdate>(
 		p.attrs(std::move(attrs));
 	}
 
-	if (req.has_parent_id()) {
-		p.parentId(req.parent_id());
+	if (req.has_segment()) {
+		p.segment(req.segment());
 	}
 
 	p.store();
@@ -74,9 +74,6 @@ google::rpc::Status Impl::exception() noexcept {
 	try {
 		std::rethrow_exception(std::current_exception());
 	} catch (const err::DbPrincipalInvalidData &e) {
-		status.set_code(google::rpc::INVALID_ARGUMENT);
-		status.set_message(std::string(e.str()));
-	} catch (const err::DbPrincipalInvalidParentId &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbPrincipalNotFound &e) {
@@ -111,8 +108,8 @@ db::Principal Impl::map(const rpcCreate::request_type &from) const noexcept {
 		to.attrs(std::move(attrs));
 	}
 
-	if (from.has_parent_id()) {
-		to.parentId(from.parent_id());
+	if (from.has_segment()) {
+		to.segment(from.segment());
 	}
 
 	return to;
@@ -126,8 +123,8 @@ rpcCreate::response_type Impl::map(const db::Principal &from) const noexcept {
 		google::protobuf::util::JsonStringToMessage(*from.attrs(), to.mutable_attrs());
 	}
 
-	if (from.parentId()) {
-		to.set_parent_id(*from.parentId());
+	if (from.segment()) {
+		to.set_segment(*from.segment());
 	}
 
 	return to;
