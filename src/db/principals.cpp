@@ -1,5 +1,6 @@
 #include "principals.h"
 
+#include <fmt/core.h>
 #include <xid/xid.h>
 
 #include "err/errors.h"
@@ -96,5 +97,57 @@ void Principal::store() {
 	}
 
 	_rev = res.at(0, 0).as<int>();
+}
+
+Principals ListPrincipals(
+	Principal::Data::segment_t segment, std::string_view lastId, uint16_t count) {
+	std::string where;
+	if (segment) {
+		where = "where segment = $1::text";
+	} else {
+		where = "where segment is null";
+	}
+
+	if (!lastId.empty()) {
+		if (segment) {
+			where += " and id < $2::text";
+		} else {
+			where += " and id < $1::text";
+		}
+	}
+
+	const std::string qry = fmt::format(
+		R"(
+			select
+				_rev,
+				id,
+				segment,
+				attrs
+			from principals
+			{}
+			order by id desc
+			limit {};
+		)",
+		where,
+		count);
+
+	db::pg::result_t res;
+	if (segment && !lastId.empty()) {
+		res = pg::exec(qry, segment, lastId);
+	} else if (segment) {
+		res = pg::exec(qry, segment);
+	} else if (!lastId.empty()) {
+		res = pg::exec(qry, lastId);
+	} else {
+		res = pg::exec(qry);
+	}
+
+	Principals principals;
+	principals.reserve(res.affected_rows());
+	for (const auto &r : res) {
+		principals.emplace_back(r);
+	}
+
+	return principals;
 }
 } // namespace db

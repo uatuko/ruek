@@ -16,12 +16,16 @@ public:
 		attrs_t     attrs;
 		std::string id;
 		segment_t   segment;
+
+		bool operator==(const Data &) const noexcept = default;
 	};
 
 	Principal(const Data &data) noexcept;
 	Principal(Data &&data) noexcept;
 
 	Principal(const pg::row_t &r);
+
+	bool operator==(const Principal &) const noexcept = default;
 
 	const Data::attrs_t &attrs() const noexcept { return _data.attrs; }
 	void                 attrs(const Data::attrs_t &attrs) noexcept { _data.attrs = attrs; }
@@ -49,4 +53,8 @@ private:
 };
 
 using Principals = std::vector<Principal>;
+
+Principals ListPrincipals(
+	Principal::Data::segment_t segment = std::nullopt, std::string_view lastId = "",
+	uint16_t count = 10);
 } // namespace db

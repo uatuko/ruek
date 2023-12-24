@@ -46,6 +46,104 @@ TEST_F(db_PrincipalsTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
+TEST_F(db_PrincipalsTest, list) {
+	// Success: list
+	{
+		db::Principal principal({
+			.id = "id:db_PrincipalsTest.list",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals());
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principal, results[0]);
+	}
+
+	// Success: list with segment
+	{
+		db::Principal principal({
+			.id      = "id:db_PrincipalsTest.list-with_segment",
+			.segment = "segment:db_PrincipalsTest.list-with_segment",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principal.segment()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principal, results[0]);
+	}
+
+	// Success: list with last id
+	// WARNING: this test can break depending on other tests
+	{
+		db::Principals principals({
+			{{.id = "a_id:db_PrincipalsTest.list-with_last_id[0]"}},
+			{{.id = "a_id:db_PrincipalsTest.list-with_last_id[1]"}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(std::nullopt, principals[1].id()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principals[0], results[0]);
+	}
+
+	// Success: list with segment and last id
+	{
+		db::Principals principals({
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_segment_and_last_id[0]",
+				.segment = "segment:db_PrincipalsTest.list-with_segment_and_last_id",
+			}},
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_segment_and_last_id[1]",
+				.segment = "segment:db_PrincipalsTest.list-with_segment_and_last_id",
+			}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principals[0].segment(), principals[1].id()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principals[0], results[0]);
+	}
+
+	// Success: list with count (and segment id)
+	{
+		db::Principals principals({
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_count[0]",
+				.segment = "segment:db_PrincipalsTest.list-with_count",
+			}},
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_count[1]",
+				.segment = "segment:db_PrincipalsTest.list-with_count",
+			}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principals[0].segment(), "", 1));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principals[1], results[0]);
+	}
+}
+
 TEST_F(db_PrincipalsTest, retrieve) {
 	// Success: retrieve data
 	{
