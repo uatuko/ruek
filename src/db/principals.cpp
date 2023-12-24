@@ -126,7 +126,7 @@ Principals ListPrincipals(
 			from principals
 			{}
 			order by id desc
-			limit {};
+			limit {:d};
 		)",
 		where,
 		count);
