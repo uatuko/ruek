@@ -1,4 +1,5 @@
 add_subdirectory(db)
+add_subdirectory(encoding)
 add_subdirectory(err)
 add_subdirectory(svc)
 
@@ -13,6 +14,18 @@ target_include_directories(libdb
 )
 
 add_library(${PROJECT_NAME}::db ALIAS libdb)
+
+# encoding
+add_library(libencoding INTERFACE)
+target_link_libraries(libencoding
+	INTERFACE encoding
+)
+
+target_include_directories(libencoding
+	INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+add_library(${PROJECT_NAME}::encoding ALIAS libencoding)
 
 # err
 add_library(liberr INTERFACE)
