@@ -141,6 +141,32 @@ TEST_F(svc_PrincipalsTest, Delete) {
 	}
 }
 
+TEST_F(svc_PrincipalsTest, List) {
+	grpcxx::context ctx;
+	svc::Principals svc;
+
+	// Success: list
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest-List",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		rpcList::request_type request;
+		rpcList::result_type  result;
+		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->principals();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(principal.id(), actual[0].id());
+		EXPECT_FALSE(actual[0].has_attrs());
+		EXPECT_FALSE(actual[0].has_segment());
+	}
+}
+
 TEST_F(svc_PrincipalsTest, Retrieve) {
 	grpcxx::context ctx;
 	svc::Principals svc;

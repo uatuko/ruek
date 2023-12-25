@@ -27,6 +27,9 @@ public:
 		grpcxx::context &ctx, const rpcDelete::request_type &req);
 
 	template <>
+	rpcList::result_type call<rpcList>(grpcxx::context &ctx, const rpcList::request_type &req);
+
+	template <>
 	rpcRetrieve::result_type call<rpcRetrieve>(
 		grpcxx::context &ctx, const rpcRetrieve::request_type &req);
 
@@ -37,8 +40,10 @@ public:
 	google::rpc::Status exception() noexcept;
 
 private:
-	db::Principal            map(const rpcCreate::request_type &from) const noexcept;
+	db::Principal map(const rpcCreate::request_type &from) const noexcept;
+
 	rpcCreate::response_type map(const db::Principal &from) const noexcept;
+	rpcList::response_type   map(const db::Principals &from) const noexcept;
 };
 } // namespace principals
 } // namespace svc

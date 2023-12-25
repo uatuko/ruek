@@ -37,6 +37,29 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 }
 
 template <>
+rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::request_type &req) {
+	db::Principal::Data::segment_t segment;
+	if (req.has_segment()) {
+		segment = req.segment();
+	}
+
+	std::string lastId;
+	if (req.has_pagination_token()) {
+		// FIXME: decode token
+		lastId = req.pagination_token();
+	}
+
+	uint16_t limit = 30;
+	if (req.has_pagination_limit() && req.pagination_limit() < 30) {
+		limit = req.pagination_limit();
+	}
+
+	auto r = db::ListPrincipals(segment, lastId, limit);
+	// FIXME: set pagination_token in response if r.size() == limit
+	return {grpcxx::status::code_t::ok, map(r)};
+}
+
+template <>
 rpcRetrieve::result_type Impl::call<rpcRetrieve>(
 	grpcxx::context &ctx, const rpcRetrieve::request_type &req) {
 	auto p = db::Principal::retrieve(req.id());
@@ -125,6 +148,18 @@ rpcCreate::response_type Impl::map(const db::Principal &from) const noexcept {
 
 	if (from.segment()) {
 		to.set_segment(*from.segment());
+	}
+
+	return to;
+}
+
+rpcList::response_type Impl::map(const db::Principals &from) const noexcept {
+	rpcList::response_type to;
+
+	auto *arr = to.mutable_principals();
+	arr->Reserve(from.size());
+	for (const auto &p : from) {
+		arr->Add(map(p));
 	}
 
 	return to;

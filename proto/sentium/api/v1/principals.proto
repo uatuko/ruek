@@ -20,6 +20,12 @@ service Principals {
 		};
 	}
 
+	rpc List(PrincipalsListRequest) returns (PrincipalsListResponse) {
+		option (google.api.http) = {
+			get : "/v1/principals?segment={segment}&_limit={pagination_limit}&_start={pagination_token}"
+		};
+	}
+
 	rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
 		option (google.api.http) = {
 			get : "/v1/principals/{id}"
@@ -53,6 +59,19 @@ message PrincipalsDeleteRequest {
 }
 
 message PrincipalsDeleteResponse {}
+
+message PrincipalsListRequest {
+	optional string segment = 1;
+
+	optional uint32 pagination_limit = 2;
+	optional string pagination_token = 3;
+}
+
+message PrincipalsListResponse {
+	repeated Principal principals = 1;
+
+	optional string pagination_token = 2;
+}
 
 message PrincipalsRetrieveRequest {
 	string id = 1;
