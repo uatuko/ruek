@@ -100,7 +100,7 @@ void Principal::store() {
 }
 
 Principals ListPrincipals(
-	Principal::Data::segment_t segment, std::string_view lastId, uint16_t count) {
+	Principal::Data::segment_t segment, std::string_view lastId, std::uint16_t count) {
 	std::string where;
 	if (segment) {
 		where = "where segment = $1::text";

@@ -49,7 +49,7 @@ inline std::string decode(std::string_view in) noexcept {
 	return out;
 }
 
-inline std::string encode(std::string_view in) {
+inline std::string encode(std::string_view in) noexcept {
 	std::string out;
 	out.reserve(
 		((in.size() * 8) + 4) / 5); // Encoding 5 bytes will result in 8 bytes (less padding)

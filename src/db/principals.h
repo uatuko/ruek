@@ -56,5 +56,5 @@ using Principals = std::vector<Principal>;
 
 Principals ListPrincipals(
 	Principal::Data::segment_t segment = std::nullopt, std::string_view lastId = "",
-	uint16_t count = 10);
+	std::uint16_t count = 10);
 } // namespace db
