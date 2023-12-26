@@ -156,7 +156,7 @@ TEST_F(svc_PrincipalsTest, List) {
 		rpcList::result_type  result;
 		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		ASSERT_TRUE(result.response);
 		EXPECT_FALSE(result.response->has_pagination_token());
 
 		auto &actual = result.response->principals();
