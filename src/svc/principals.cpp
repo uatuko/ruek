@@ -3,7 +3,9 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
+#include "encoding/b32.h"
 #include "err/errors.h"
+#include "sentium/detail/pagination.pb.h"
 
 namespace svc {
 namespace principals {
@@ -45,8 +47,10 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 
 	std::string lastId;
 	if (req.has_pagination_token()) {
-		// FIXME: decode token
-		lastId = req.pagination_token();
+		sentium::detail::PaginationToken pbToken;
+		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
+			lastId = pbToken.last_id();
+		}
 	}
 
 	std::uint16_t limit = 30;
@@ -54,9 +58,18 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 		limit = req.pagination_limit();
 	}
 
-	auto r = db::ListPrincipals(segment, lastId, limit);
-	// FIXME: set pagination_token in response if r.size() == limit
-	return {grpcxx::status::code_t::ok, map(r)};
+	auto results  = db::ListPrincipals(segment, lastId, limit);
+	auto response = map(results);
+
+	if (results.size() == limit) {
+		sentium::detail::PaginationToken pbToken;
+		pbToken.set_last_id(results.back().id());
+
+		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());
+		response.set_pagination_token(strToken);
+	}
+
+	return {grpcxx::status::code_t::ok, response};
 }
 
 template <>

@@ -165,6 +165,84 @@ TEST_F(svc_PrincipalsTest, List) {
 		EXPECT_FALSE(actual[0].has_attrs());
 		EXPECT_FALSE(actual[0].has_segment());
 	}
+
+	// Success: list with pagination
+	{
+		db::Principals principals({
+			{{.id = "id:svc_PrincipalsTest-list[0]", .segment = "with_pagination"}},
+			{{.id = "id:svc_PrincipalsTest-list[1]", .segment = "with_pagination"}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		rpcList::request_type request;
+		request.set_segment(principals[0].segment().value());
+		request.set_pagination_limit(1);
+
+		rpcList::result_type result;
+
+		// Page 1
+		{
+			EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+
+			EXPECT_TRUE(result.response->has_pagination_token());
+			EXPECT_EQ(
+				"18emip1qedr66nqge9kmsor9e1gmosqkclpn8bbcd5pn8mphbk",
+				result.response->pagination_token());
+
+			auto &actual = result.response->principals();
+			ASSERT_EQ(1, actual.size());
+			EXPECT_EQ(principals[1].id(), actual[0].id());
+		}
+
+		// Use pagination token to get the next page of results
+		request.set_pagination_token(result.response->pagination_token());
+
+		// Page 2
+		{
+			EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+
+			EXPECT_TRUE(result.response->has_pagination_token());
+			EXPECT_EQ(
+				"18emip1qedr66nqge9kmsor9e1gmosqkclpn8bbcd5pn8mpgbk",
+				result.response->pagination_token());
+
+			auto &actual = result.response->principals();
+			ASSERT_EQ(1, actual.size());
+			EXPECT_EQ(principals[0].id(), actual[0].id());
+		}
+	}
+
+	// Success: list with invalid pagination token
+	{
+		db::Principal principal({
+			.id      = "id:svc_PrincipalsTest-List",
+			.segment = "with_invalid_pagination_token",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		rpcList::request_type request;
+		request.set_segment(principal.segment().value());
+		request.set_pagination_token("invalid");
+
+		rpcList::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->principals();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(principal.id(), actual[0].id());
+		EXPECT_EQ(principal.segment().value(), actual[0].segment());
+		EXPECT_FALSE(actual[0].has_attrs());
+	}
 }
 
 TEST_F(svc_PrincipalsTest, Retrieve) {

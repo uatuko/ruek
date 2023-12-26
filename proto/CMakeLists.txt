@@ -37,8 +37,38 @@ add_custom_command(
 		${protos}
 )
 
+
+cmake_path(SET detail_pagination_proto ${CMAKE_CURRENT_SOURCE_DIR}/sentium/detail/pagination.proto)
+cmake_path(SET detail_pagination_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/detail/pagination.pb.h)
+cmake_path(SET detail_pagination_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/detail/pagination.pb.cc)
+
+set(detail_protos
+	${detail_pagination_proto}
+)
+
+set(detail_headers
+	${detail_pagination_header}
+)
+
+set(detail_sources
+	${detail_pagination_source}
+)
+
+add_custom_command(
+	OUTPUT  ${detail_headers} ${detail_sources}
+	DEPENDS ${detail_protos}
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE}
+	ARGS
+		--proto_path=${CMAKE_CURRENT_SOURCE_DIR}
+		--proto_path=${Protobuf_INCLUDE_DIR}
+		--cpp_out=${CMAKE_CURRENT_BINARY_DIR}
+		${detail_protos}
+)
+
+
 add_library(proto
 	${sources}
+	${detail_sources}
 )
 
 target_include_directories(proto
