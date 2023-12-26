@@ -169,8 +169,8 @@ TEST_F(svc_PrincipalsTest, List) {
 	// Success: list with pagination
 	{
 		db::Principals principals({
-			{{.id = "id:svc_PrincipalsTest-list[0]", .segment = "with_pagination"}},
-			{{.id = "id:svc_PrincipalsTest-list[1]", .segment = "with_pagination"}},
+			{{.id = "id:svc_PrincipalsTest-List_with_pagination[0]", .segment = "with_pagination"}},
+			{{.id = "id:svc_PrincipalsTest-List_with_pagination[1]", .segment = "with_pagination"}},
 		});
 
 		for (auto &p : principals) {
@@ -191,7 +191,7 @@ TEST_F(svc_PrincipalsTest, List) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18emip1qedr66nqge9kmsor9e1gmosqkclpn8bbcd5pn8mphbk",
+				"18mmip1qedr66nqge9kmsor9e1gmosqkclpn8bacd5pn8nrnd5q6gnrgc5jmirj1ehkmurir65eg",
 				result.response->pagination_token());
 
 			auto &actual = result.response->principals();
@@ -210,7 +210,7 @@ TEST_F(svc_PrincipalsTest, List) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18emip1qedr66nqge9kmsor9e1gmosqkclpn8bbcd5pn8mpgbk",
+				"18mmip1qedr66nqge9kmsor9e1gmosqkclpn8bacd5pn8nrnd5q6gnrgc5jmirj1ehkmurir61eg",
 				result.response->pagination_token());
 
 			auto &actual = result.response->principals();
@@ -222,7 +222,7 @@ TEST_F(svc_PrincipalsTest, List) {
 	// Success: list with invalid pagination token
 	{
 		db::Principal principal({
-			.id      = "id:svc_PrincipalsTest-List",
+			.id      = "id:svc_PrincipalsTest-List_with_invalid_pagination_token",
 			.segment = "with_invalid_pagination_token",
 		});
 		ASSERT_NO_THROW(principal.store());
@@ -262,7 +262,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		rpcRetrieve::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		ASSERT_TRUE(result.response);
 
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
@@ -284,7 +284,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		rpcRetrieve::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		ASSERT_TRUE(result.response);
 
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
@@ -329,7 +329,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 		rpcUpdate::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcUpdate>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		ASSERT_TRUE(result.response);
 
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
@@ -354,7 +354,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 		rpcUpdate::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcUpdate>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		ASSERT_TRUE(result.response);
 
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
