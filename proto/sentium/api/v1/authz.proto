@@ -15,14 +15,14 @@ service Authz {
 
 	rpc Grant(AuthzGrantRequest) returns (AuthzGrantResponse) {
 		option (google.api.http) = {
-			post : "/v1/authz:grant"
+			put : "/v1/authz:grant"
 			body : "*"
 		};
 	}
 
 	rpc Revoke(AuthzRevokeRequest) returns (AuthzRevokeResponse) {
 		option (google.api.http) = {
-			post : "/v1/authz:revoke"
+			put : "/v1/authz:revoke"
 			body : "*"
 		};
 	}
