@@ -16,6 +16,7 @@ target_sources(db
 target_link_libraries(db
 	PRIVATE
 		${PROJECT_NAME}::err
+		fmt::fmt
 		libxid::xid
 	PUBLIC
 		pqxx

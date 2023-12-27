@@ -26,9 +26,11 @@ TEST_F(db_PrincipalsTest, discard) {
 	db::Principal principal({
 		.id = "id:db_PrincipalsTest.discard",
 	});
-
 	ASSERT_NO_THROW(principal.store());
-	ASSERT_NO_THROW(principal.discard());
+
+	bool result = false;
+	ASSERT_NO_THROW(result = db::Principal::discard(principal.id()));
+	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(
 		select
@@ -42,6 +44,104 @@ TEST_F(db_PrincipalsTest, discard) {
 
 	auto count = res.at(0, 0).as<int>();
 	EXPECT_EQ(0, count);
+}
+
+TEST_F(db_PrincipalsTest, list) {
+	// Success: list
+	{
+		db::Principal principal({
+			.id = "id:db_PrincipalsTest.list",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals());
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principal, results[0]);
+	}
+
+	// Success: list with segment
+	{
+		db::Principal principal({
+			.id      = "id:db_PrincipalsTest.list-with_segment",
+			.segment = "segment:db_PrincipalsTest.list-with_segment",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principal.segment()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principal, results[0]);
+	}
+
+	// Success: list with last id
+	// WARNING: this test can break depending on other tests
+	{
+		db::Principals principals({
+			{{.id = "a_id:db_PrincipalsTest.list-with_last_id[0]"}},
+			{{.id = "a_id:db_PrincipalsTest.list-with_last_id[1]"}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(std::nullopt, principals[1].id()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principals[0], results[0]);
+	}
+
+	// Success: list with segment and last id
+	{
+		db::Principals principals({
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_segment_and_last_id[0]",
+				.segment = "segment:db_PrincipalsTest.list-with_segment_and_last_id",
+			}},
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_segment_and_last_id[1]",
+				.segment = "segment:db_PrincipalsTest.list-with_segment_and_last_id",
+			}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principals[0].segment(), principals[1].id()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principals[0], results[0]);
+	}
+
+	// Success: list with count (and segment id)
+	{
+		db::Principals principals({
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_count[0]",
+				.segment = "segment:db_PrincipalsTest.list-with_count",
+			}},
+			{{
+				.id      = "id:db_PrincipalsTest.list-with_count[1]",
+				.segment = "segment:db_PrincipalsTest.list-with_count",
+			}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principals[0].segment(), "", 1));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principals[1], results[0]);
+	}
 }
 
 TEST_F(db_PrincipalsTest, retrieve) {
@@ -59,9 +159,9 @@ TEST_F(db_PrincipalsTest, retrieve) {
 
 		ASSERT_NO_THROW(db::pg::exec(qry, 1232, "id:db_PrincipalsTest.retrieve"));
 
-		auto principal = db::RetrievePrincipal("id:db_PrincipalsTest.retrieve");
+		auto principal = db::Principal::retrieve("id:db_PrincipalsTest.retrieve");
 		EXPECT_EQ(1232, principal.rev());
-		EXPECT_FALSE(principal.parentId());
+		EXPECT_FALSE(principal.segment());
 		EXPECT_FALSE(principal.attrs());
 	}
 
@@ -82,7 +182,7 @@ TEST_F(db_PrincipalsTest, retrieve) {
 		ASSERT_NO_THROW(
 			db::pg::exec(qry, 1237, "id:db_PrincipalsTest.retrieve-optional", R"({"foo": "bar"})"));
 
-		auto principal = db::RetrievePrincipal("id:db_PrincipalsTest.retrieve-optional");
+		auto principal = db::Principal::retrieve("id:db_PrincipalsTest.retrieve-optional");
 		EXPECT_EQ(1237, principal.rev());
 		EXPECT_EQ(R"({"foo": "bar"})", principal.attrs());
 	}
@@ -137,7 +237,7 @@ TEST_F(db_PrincipalsTest, store) {
 			select
 				_rev,
 				id,
-				parent_id,
+				segment,
 				attrs
 			from principals
 			where id = $1::text;
@@ -146,11 +246,16 @@ TEST_F(db_PrincipalsTest, store) {
 		auto res = db::pg::exec(qry, principal.id());
 		ASSERT_EQ(1, res.size());
 
-		auto [_rev, id, parentId, attrs] =
-			res[0].as<int, std::string, db::Principal::Data::pid_t, db::Principal::Data::attrs_t>();
+		auto [_rev, id, segment, attrs] =
+			res[0]
+				.as<int,
+					std::string,
+					db::Principal::Data::segment_t,
+					db::Principal::Data::attrs_t>();
+
 		EXPECT_EQ(principal.rev(), _rev);
 		EXPECT_EQ(principal.id(), id);
-		EXPECT_FALSE(parentId);
+		EXPECT_FALSE(segment);
 		EXPECT_FALSE(attrs);
 	}
 
@@ -188,13 +293,13 @@ TEST_F(db_PrincipalsTest, store) {
 		EXPECT_EQ(R"(["test"])", tags);
 	}
 
-	// Error: invalid `parentId`
+	// Error: invalid `segment`
 	{
 		db::Principal principal({
-			.parentId = "id:db_PrincipalsTest.store-invalid-parentId",
+			.segment = "",
 		});
 
-		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidParentId);
+		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidData);
 	}
 
 	// Error: invalid `attrs`

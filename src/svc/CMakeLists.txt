@@ -15,6 +15,7 @@ target_sources(svc
 target_link_libraries(svc
 	PUBLIC
 		${PROJECT_NAME}::db
+		${PROJECT_NAME}::encoding
 		${PROJECT_NAME}::libproto
 )
 

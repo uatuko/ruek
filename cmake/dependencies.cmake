@@ -3,12 +3,12 @@ include(FetchContent)
 # protobuf
 find_package(Protobuf REQUIRED)
 
-# grpcxx
-FetchContent_Declare(grpcxx
-	URL      https://github.com/uatuko/grpcxx/archive/7fdb39cb5662f874cf496ab7ec14a7bbe216b0be.tar.gz
-	URL_HASH SHA256=44a8faf2fc1498736928e60ce282ff4f9c18b26ddfd93138a75f333747844591
+# fmt
+FetchContent_Declare(fmt
+	URL      https://github.com/fmtlib/fmt/archive/refs/tags/10.1.1.tar.gz
+	URL_HASH SHA256=78b8c0a72b1c35e4443a7e308df52498252d1cefc2b08c9a97bc9ee6cfe61f8b
 )
-FetchContent_MakeAvailable(grpcxx)
+FetchContent_MakeAvailable(fmt)
 
 # googleapis
 FetchContent_Declare(googleapis
@@ -16,6 +16,13 @@ FetchContent_Declare(googleapis
 	URL_HASH SHA256=44f3b9c73a5df760c4fad3cf0c5cc54732b881f00708308f7635ff75a13dcaa5
 )
 FetchContent_MakeAvailable(googleapis)
+
+# grpcxx
+FetchContent_Declare(grpcxx
+	URL      https://github.com/uatuko/grpcxx/archive/7fdb39cb5662f874cf496ab7ec14a7bbe216b0be.tar.gz
+	URL_HASH SHA256=44a8faf2fc1498736928e60ce282ff4f9c18b26ddfd93138a75f333747844591
+)
+FetchContent_MakeAvailable(grpcxx)
 
 # libpqxx
 FetchContent_Declare(libpqxx

@@ -40,6 +40,7 @@ IncludeCategories:
   Priority: 5
   SortPriority: 0
 InsertNewlineAtEOF: true
+PenaltyIndentedWhitespace: 10
 PenaltyReturnTypeOnItsOwnLine: 200
 RemoveSemicolon: true
 Standard: c++20
