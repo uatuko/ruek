@@ -1,3 +1,4 @@
+#include <google/protobuf/util/json_util.h>
 #include <gtest/gtest.h>
 
 #include "db/testing.h"
@@ -29,6 +30,7 @@ TEST_F(svc_ResourcesTest, List) {
 	// Success: list
 	{
 		db::Record record({
+			.attrs        = R"({"foo":"bar"})",
 			.principalId  = principal.id(),
 			.resourceId   = "List",
 			.resourceType = "svc_ResourcesTest",
@@ -49,7 +51,10 @@ TEST_F(svc_ResourcesTest, List) {
 		ASSERT_EQ(1, actual.size());
 		EXPECT_EQ(record.resourceId(), actual[0].id());
 		EXPECT_EQ(record.resourceType(), actual[0].type());
-		EXPECT_FALSE(actual[0].has_attrs());
+
+		std::string responseAttrs;
+		google::protobuf::util::MessageToJsonString(actual[0].attrs(), &responseAttrs);
+		EXPECT_EQ(record.attrs(), responseAttrs);
 	}
 
 	// Success: list with pagination
@@ -127,6 +132,7 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		ASSERT_NO_THROW(principal.store());
 
 		db::Record record({
+			.attrs        = R"({"foo":"bar"})",
 			.principalId  = principal.id(),
 			.resourceId   = "ListPrincipals",
 			.resourceType = "svc_ResourcesTest",
@@ -146,7 +152,10 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		auto &actual = result.response->principals();
 		ASSERT_EQ(1, actual.size());
 		EXPECT_EQ(principal.id(), actual[0].id());
-		EXPECT_FALSE(actual[0].has_attrs());
+
+		std::string responseAttrs;
+		google::protobuf::util::MessageToJsonString(actual[0].attrs(), &responseAttrs);
+		EXPECT_EQ(record.attrs(), responseAttrs);
 	}
 
 	// Success: list with pagination
