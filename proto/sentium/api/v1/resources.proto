@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package sentium.api.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+service Resources {
+	rpc List(ResourcesListRequest) returns (ResourcesListResponse) {
+		option (google.api.http) = {
+			get : "/v1/resources"
+		};
+	}
+
+	rpc ListPrincipals(ResourcesListPrincipalsRequest) returns (ResourcesListPrincipalsResponse) {
+		option (google.api.http) = {
+			get : "/v1/resources:principals"
+		};
+	}
+}
+
+message Resource {
+	string id   = 1;
+	string type = 2;
+
+	optional google.protobuf.Struct attrs = 3;
+}
+
+message ResourcesPrincipal {
+	string id = 1;
+
+	optional google.protobuf.Struct attrs = 2;
+}
+
+message ResourcesListRequest {
+	string principal_id  = 1;
+	string resource_type = 2;
+
+	optional uint32 pagination_limit = 3;
+	optional string pagination_token = 4;
+}
+
+message ResourcesListResponse {
+	repeated Resource resources = 1;
+
+	optional string pagination_token = 2;
+}
+
+message ResourcesListPrincipalsRequest {
+	string resource_id   = 2;
+	string resource_type = 1;
+
+	optional uint32 pagination_limit = 3;
+	optional string pagination_token = 4;
+}
+
+message ResourcesListPrincipalsResponse {
+	repeated ResourcesPrincipal principals = 1;
+
+	optional string pagination_token = 2;
+}
