@@ -61,6 +61,103 @@ TEST_F(db_RecordsTest, discard) {
 	EXPECT_EQ(0, count);
 }
 
+TEST_F(db_RecordsTest, list) {
+	db::Principal principal({
+		.id = "id:db_RecordsTest.list",
+	});
+	ASSERT_NO_THROW(principal.store());
+
+	db::Record record({
+		.principalId  = principal.id(),
+		.resourceId   = "list",
+		.resourceType = "db_RecordsTest",
+	});
+	ASSERT_NO_THROW(record.store());
+
+	// Success: list by principal
+	{
+		db::Records results;
+		ASSERT_NO_THROW(
+			results = db::ListRecordsByPrincipal(principal.id(), record.resourceType()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(record, results[0]);
+	}
+
+	// Success: list by resource
+	{
+		db::Records results;
+		ASSERT_NO_THROW(
+			results = db::ListRecordsByResource(record.resourceType(), record.resourceId()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(record, results[0]);
+	}
+
+	// Success: list with last id
+	{
+		db::Principals principals({
+			{{.id = "id:db_RecordsTest.list-with_last_id[0]"}},
+			{{.id = "id:db_RecordsTest.list-with_last_id[1]"}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Records records({
+			{{
+				.principalId  = principals[0].id(),
+				.resourceId   = "list-with_last_id[0]",
+				.resourceType = "db_RecordsTest",
+			}},
+			{{
+				.principalId  = principals[1].id(),
+				.resourceId   = "list-with_last_id[0]",
+				.resourceType = "db_RecordsTest",
+			}},
+			{{
+				.principalId  = principals[0].id(),
+				.resourceId   = "list-with_last_id[1]",
+				.resourceType = "db_RecordsTest",
+			}},
+			{{
+				.principalId  = principals[1].id(),
+				.resourceId   = "list-with_last_id[1]",
+				.resourceType = "db_RecordsTest",
+			}},
+		});
+
+		for (auto &r : records) {
+			ASSERT_NO_THROW(r.store());
+		}
+
+		// by principal
+		{
+			db::Records results;
+			ASSERT_NO_THROW({
+				results = db::ListRecordsByPrincipal(
+					principals[0].id(), records[0].resourceType(), records[2].resourceId());
+			});
+
+			ASSERT_EQ(1, results.size());
+			EXPECT_EQ(records[0], results[0]);
+		}
+
+		// by resource
+		{
+			db::Records results;
+			ASSERT_NO_THROW({
+				results = db::ListRecordsByResource(
+					records[2].resourceType(), records[3].resourceId(), principals[1].id());
+			});
+
+			ASSERT_EQ(1, results.size());
+			EXPECT_EQ(records[2], results[0]);
+		}
+	}
+}
+
 TEST_F(db_RecordsTest, lookup) {
 	db::Principal principal({
 		.id = "id:db_RecordsTest.lookup",

@@ -55,4 +55,12 @@ private:
 };
 
 using Records = std::vector<Record>;
+
+Records ListRecordsByPrincipal(
+	std::string_view principalId, std::string_view resourceType, std::string_view lastId = "",
+	std::uint16_t count = 10);
+
+Records ListRecordsByResource(
+	std::string_view resourceType, std::string_view resourceId, std::string_view lastId = "",
+	std::uint16_t count = 10);
 } // namespace db
