@@ -3,11 +3,13 @@ target_sources(svc
 	PRIVATE
 		authz.cpp
 		principals.cpp
+		resources.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
 			authz.h
 			principals.h
+			resources.h
 			svc.h
 			wrapper.h
 )
@@ -36,6 +38,7 @@ if (SENTIUM_BUILD_TESTING)
 		PRIVATE
 			authz_test.cpp
 			principals_test.cpp
+			resources_test.cpp
 	)
 
 	target_link_libraries(svc_tests
