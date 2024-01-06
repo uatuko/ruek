@@ -1,5 +1,7 @@
 #include "records.h"
 
+#include <fmt/core.h>
+
 #include "err/errors.h"
 
 namespace db {
@@ -101,5 +103,85 @@ void Record::store() {
 	}
 
 	_rev = res.at(0, 0).as<int>();
+}
+
+Records ListRecordsByPrincipal(
+	std::string_view principalId, std::string_view resourceType, std::string_view lastId,
+	std::uint16_t count) {
+	std::string where = "where principal_id = $1::text and resource_type = $2::text";
+	if (!lastId.empty()) {
+		where += " and resource_id < $3::text";
+	}
+
+	const std::string qry = fmt::format(
+		R"(
+			select
+				_rev,
+				principal_id,
+				resource_type,
+				resource_id,
+				attrs
+			from records
+			{}
+			order by resource_id desc
+			limit {:d}
+		)",
+		where,
+		count);
+
+	db::pg::result_t res;
+	if (!lastId.empty()) {
+		res = pg::exec(qry, principalId, resourceType, lastId);
+	} else {
+		res = pg::exec(qry, principalId, resourceType);
+	}
+
+	Records records;
+	records.reserve(res.affected_rows());
+	for (const auto &r : res) {
+		records.emplace_back(r);
+	}
+
+	return records;
+}
+
+Records ListRecordsByResource(
+	std::string_view resourceType, std::string_view resourceId, std::string_view lastId,
+	std::uint16_t count) {
+	std::string where = "where resource_type = $1::text and resource_id = $2::text";
+	if (!lastId.empty()) {
+		where += " and principal_id < $3::text";
+	}
+
+	const std::string qry = fmt::format(
+		R"(
+			select
+				_rev,
+				principal_id,
+				resource_type,
+				resource_id,
+				attrs
+			from records
+			{}
+			order by principal_id desc
+			limit {:d}
+		)",
+		where,
+		count);
+
+	db::pg::result_t res;
+	if (!lastId.empty()) {
+		res = pg::exec(qry, resourceType, resourceId, lastId);
+	} else {
+		res = pg::exec(qry, resourceType, resourceId);
+	}
+
+	Records records;
+	records.reserve(res.affected_rows());
+	for (const auto &r : res) {
+		records.emplace_back(r);
+	}
+
+	return records;
 }
 } // namespace db
