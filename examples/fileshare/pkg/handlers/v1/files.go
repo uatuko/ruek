@@ -18,7 +18,7 @@ type CreateFileRequest struct {
 	Type string `json:"type"`
 }
 
-type CreateFileResponse struct {
+type File struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
@@ -44,7 +44,6 @@ func createFile(c *gin.Context) {
 		return
 	}
 
-	// Grant access to file
 	authzGrantRequest := sentium_grpc.AuthzGrantRequest{
 		PrincipalId:  c.Request.Header["Userid"][0],
 		ResourceId:   resourceId,
@@ -52,6 +51,7 @@ func createFile(c *gin.Context) {
 		Attrs:        attrs,
 	}
 
+	// Grant access to file
 	authzClient, err := getAuthzClient()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -64,7 +64,7 @@ func createFile(c *gin.Context) {
 	}
 
 	// Map response
-	resp := CreateFileResponse{
+	resp := File{
 		Id:   resourceId,
 		Name: request.Name,
 		Type: request.Type,

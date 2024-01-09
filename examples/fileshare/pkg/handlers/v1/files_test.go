@@ -48,10 +48,6 @@ func TestCreateFileSuccess(t *testing.T) {
 		Type: "best-file-type",
 	}
 
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(fileReq)
-	require.NoError(t, err)
-
 	headers := map[string]string{
 		"Userid": "1234",
 	}
@@ -63,14 +59,14 @@ func TestCreateFileSuccess(t *testing.T) {
 	respBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
-	var fileResp CreateFileResponse
-	json.Unmarshal(respBody, &fileResp)
+	var file File
+	json.Unmarshal(respBody, &file)
 
-	expectedResp := CreateFileResponse{
-		Id:   fileResp.Id,
+	expectedResp := File{
+		Id:   file.Id,
 		Name: fileReq.Name,
 		Type: fileReq.Type,
 	}
 
-	require.Equal(t, expectedResp, fileResp)
+	require.Equal(t, expectedResp, file)
 }
