@@ -14,4 +14,5 @@ func Init(router *gin.RouterGroup) {
 	router.POST("/files/:file/_share", shareFile)
 
 	// User management
+	router.POST("/users", createUser)
 }
