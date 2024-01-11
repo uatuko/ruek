@@ -26,5 +26,5 @@ func main() {
 	handlers.Init(router)
 
 	// Serve HTTP in a goroutine
-	engine.Run(":3000")
+	engine.Run("localhost:3000")
 }
