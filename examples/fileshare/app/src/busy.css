@@ -1,0 +1,30 @@
+.busy {
+	width: 48px;
+	height: 48px;
+	display: inline-block;
+	position: relative;
+}
+.busy::after,
+.busy::before {
+	content: '';
+	box-sizing: border-box;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	border: 2px solid #FFF;
+	position: absolute;
+	left: 0;
+	top: 0;
+	animation: busyframes 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+@keyframes busyframes {
+	0% {
+		transform: scale(0);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 0;
+	}
+}
