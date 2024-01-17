@@ -7,8 +7,8 @@ import (
 func Init(router *gin.RouterGroup) {
 	router.DELETE("/files/:file", deleteFile)
 
-	router.GET("/files/:file", getFile)
 	router.GET("/files", listFiles)
+	router.GET("/files/:file", getFile)
 
 	router.POST("/files", createFile)
 	router.POST("/files/:file/user:share", shareFile)

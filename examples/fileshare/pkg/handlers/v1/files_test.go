@@ -152,3 +152,56 @@ func TestShareFileSuccess(t *testing.T) {
 
 	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
+
+func TestListFilesSuccessNoPaginationNoFiles(t *testing.T) {
+	router := gin.New()
+	router.GET("/files", listFiles)
+
+	headers := map[string]string{
+		"Userid": "unicorn",
+	}
+
+	resp, err := RouteHttp(router, "GET", "/files", ListFilesRequest{}, headers)
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	var listFilesResp ListFilesResponse
+	json.Unmarshal(respBody, &listFilesResp)
+
+	require.Equal(t, "", listFilesResp.PaginationToken)
+	require.Empty(t, listFilesResp.Files)
+}
+
+func TestListFilesSuccessWithLimitNoToken(t *testing.T) {
+	router := gin.New()
+	router.GET("/files", listFiles)
+
+	headers := map[string]string{
+		"Userid": "1234",
+	}
+
+	listFilesReq := ListFilesRequest{
+		PaginationLimit: 5,
+	}
+
+	resp, err := RouteHttp(router, "GET", "/files", listFilesReq, headers)
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	var files ListFilesResponse
+	json.Unmarshal(respBody, &files)
+
+	var listFilesResp ListFilesResponse
+	json.Unmarshal(respBody, &listFilesResp)
+
+	require.NotEqual(t, "", listFilesResp.PaginationToken)
+	require.Len(t, listFilesResp.Files, 5)
+}

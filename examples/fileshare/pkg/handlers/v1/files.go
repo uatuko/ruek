@@ -19,9 +19,20 @@ type CreateFileRequest struct {
 }
 
 type File struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Owner string `json:"owner"`
+	Type  string `json:"type"`
+}
+
+type ListFilesRequest struct {
+	PaginationLimit uint32 `json:"pagination_limit"`
+	PaginationToken string `json:"pagination_token"`
+}
+
+type ListFilesResponse struct {
+	Files           []File `json:"files"`
+	PaginationToken string `json:"pagination_token"                                                                                                                                                                                                                                `
 }
 
 type ShareFileRequest struct {
@@ -90,11 +101,86 @@ func getAuthzClient() (sentium_grpc.AuthzClient, error) {
 	return sentium_grpc.NewAuthzClient(conn), nil
 }
 
+func getResourcesClient() (sentium_grpc.ResourcesClient, error) {
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	conn, err := grpc.Dial("127.0.0.1:7000", opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return sentium_grpc.NewResourcesClient(conn), nil
+}
+
 func deleteFile(c *gin.Context) {}
 
 func getFile(c *gin.Context) {}
 
-func listFiles(c *gin.Context) {}
+func listFiles(c *gin.Context) {
+	// Read the request body
+	uid := c.Request.Header["Userid"][0]
+	var request ListFilesRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.Error(err).SetType(gin.ErrorTypePublic)
+		return
+	}
+
+	// Map request
+	resourcesListReq := sentium_grpc.ResourcesListRequest{
+		PrincipalId:     uid,
+		ResourceType:    "files",
+		PaginationLimit: &request.PaginationLimit,
+		PaginationToken: &request.PaginationToken,
+	}
+
+	resourcesClient, err := getResourcesClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resourcesListResp, err := resourcesClient.List(context.Background(), &resourcesListReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Map response
+	resp := ListFilesResponse{
+		Files: []File{},
+	}
+
+	if resourcesListResp.PaginationToken != nil {
+		resp.PaginationToken = *resourcesListResp.PaginationToken
+	}
+
+	for _, resource := range resourcesListResp.Resources {
+		attrs := resource.GetAttrs()
+		if attrs == nil {
+			continue
+		}
+
+		file := File{
+			Id:   resource.GetId(),
+			Name: attrs.Fields["name"].String(),
+			Type: resource.GetType(),
+		}
+
+		if attrs.Fields["name"] != nil {
+			file.Name = attrs.Fields["name"].GetStringValue()
+		}
+
+		if attrs.Fields["owner"] != nil {
+			file.Owner = attrs.Fields["owner"].GetStringValue()
+		}
+
+		resp.Files = append(resp.Files, file)
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
 
 func shareFile(c *gin.Context) {
 	var request ShareFileRequest
