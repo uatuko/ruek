@@ -19,7 +19,7 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 	}
 
 	std::uint16_t limit = 30;
-	if (req.has_pagination_limit() && req.pagination_limit() < 30) {
+	if (req.pagination_limit() > 0 && req.pagination_limit() < 30) {
 		limit = req.pagination_limit();
 	}
 
@@ -50,7 +50,7 @@ rpcListPrincipals::result_type Impl::call<rpcListPrincipals>(
 	}
 
 	std::uint16_t limit = 30;
-	if (req.has_pagination_limit() && req.pagination_limit() < 30) {
+	if (req.pagination_limit() > 0 && req.pagination_limit() < 30) {
 		limit = req.pagination_limit();
 	}
 
