@@ -19,9 +19,21 @@ type CreateUserRequest struct {
 	Name string `json:"name"`
 }
 
+type ListUsersRequest struct {
+	PaginationLimit uint32 `json:"pagination_limit"`
+	PaginationToken string `json:"pagination_token"`
+	Segment         string `json:"segment"`
+}
+
+type ListUsersResponse struct {
+	PaginationToken string `json:"pagination_token"`
+	Users           []User `json:"users"`
+}
+
 type User struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id      string `json:"id"`
+	Name    string `json:"name"`
+	Segment string `json:"segment"`
 }
 
 func createUser(c *gin.Context) {
@@ -85,4 +97,56 @@ func getPrincipalsClient() (sentium.PrincipalsClient, error) {
 
 	principalsClient = sentium.NewPrincipalsClient(conn)
 	return principalsClient, nil
+}
+
+func listUsers(c *gin.Context) {
+	var request ListUsersRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Map request
+	principalsListReq := sentium.PrincipalsListRequest{
+		PaginationLimit: &request.PaginationLimit,
+		PaginationToken: &request.PaginationToken,
+		Segment:         &request.Segment,
+	}
+
+	// List principals
+	principalClient, err := getPrincipalsClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	principalsList, err := principalClient.List(context.Background(), &principalsListReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Map response
+	resp := ListUsersResponse{
+		Users: []User{},
+	}
+
+	if principalsList.PaginationToken != nil {
+		resp.PaginationToken = *principalsList.PaginationToken
+	}
+
+	for _, principal := range principalsList.Principals {
+		attrs := principal.GetAttrs()
+		if attrs == nil || attrs.Fields["name"] == nil {
+			continue
+		}
+
+		resp.Users = append(resp.Users, User{
+			Id:      principal.Id,
+			Name:    attrs.Fields["name"].GetStringValue(),
+			Segment: *principal.Segment,
+		})
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
