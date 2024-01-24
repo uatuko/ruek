@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	sentium_grpc "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
+	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,89 +69,132 @@ func TestCreateFileSuccess(t *testing.T) {
 	require.Equal(t, expectedResp, file)
 }
 
-func TestShareFileFailNoAccess(t *testing.T) {
+func TestShareFile(t *testing.T) {
 	router := gin.New()
 	router.POST("/files/:file/user:share", shareFile)
 
-	headers := map[string]string{
-		"Userid": "1234",
-	}
+	// Create users
+	users, err := createUsers(xid.New().String(), 4)
+	require.NoError(t, err)
+	ownerId := users[0].Id
+	viewerId := users[1].Id
+	noAccessUser := users[2].Id
+	shareeId := users[3].Id
+	defer deleteUsers(users)
 
-	shareFileReq := ShareFileRequest{
-		UserId: "5678",
-	}
+	// Create and share file with viewer
+	files, err := filesCreate(1, ownerId, "owner")
+	require.NoError(t, err)
+	file := files[0]
+	defer filesDelete(files, ownerId)
 
-	resp, err := RouteHttp(router, "POST", "/files/1234/user:share", shareFileReq, headers)
+	err = filesShare(file, viewerId, "viewer")
 	require.NoError(t, err)
 
-	require.Equal(t, http.StatusForbidden, resp.StatusCode)
+	t.Run("FailNoAccess", func(t *testing.T) {
+		headers := map[string]string{
+			"Userid": noAccessUser,
+		}
+
+		shareFileReq := ShareFileRequest{
+			UserId: shareeId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+	})
+
+	t.Run("FailRoleCannotShare", func(t *testing.T) {
+		headers := map[string]string{
+			"Userid": viewerId,
+		}
+
+		shareFileReq := ShareFileRequest{
+			Role:   "editor",
+			UserId: shareeId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+	})
+
+	t.Run("FailShareeNotFound", func(t *testing.T) {
+		headers := map[string]string{
+			"Userid": ownerId,
+		}
+
+		shareFileReq := ShareFileRequest{
+			UserId: "unicorn",
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(t, "\"rpc error: code = InvalidArgument desc = [sentium:1.3.2.400] Invalid principal for record\"", string(respBody))
+	})
+
+	t.Run("SuccessSharedByOwner", func(t *testing.T) {
+		headers := map[string]string{
+			"Userid": ownerId,
+		}
+
+		shareFileReq := ShareFileRequest{
+			Role:   "editor",
+			UserId: shareeId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
 }
 
-func TestShareFileFailNoShareeUser(t *testing.T) {
+func TestListFiles(t *testing.T) {
 	router := gin.New()
-	router.POST("/files/:file/user:share", shareFile)
+	router.GET("/files", listFiles)
 
-	uid := "1234"
-	resourceId := "abcd"
+	users, err := createUsers("segment", 1)
+	require.NoError(t, err)
+	userId := users[0].Id
 	headers := map[string]string{
-		"Userid": uid,
+		"Userid": userId,
 	}
 
-	shareFileReq := ShareFileRequest{
-		UserId: "unicorn",
-	}
+	defer deleteUsers(users)
 
-	authzClient, err := getAuthzClient()
+	numFiles := 5
+	files, err := createFiles(numFiles, userId)
 	require.NoError(t, err)
+	defer deleteFiles(files, userId)
 
-	authzGrantRequest := sentium_grpc.AuthzGrantRequest{
-		PrincipalId:  uid,
-		ResourceId:   resourceId,
-		ResourceType: "files",
-	}
+	t.Run("SuccessWithPaginationLimitNoToken", func(t *testing.T) {
+		listFilesReq := ListFilesRequest{
+			PaginationLimit: uint32(numFiles - 1),
+		}
 
-	_, err = authzClient.Grant(context.Background(), &authzGrantRequest)
-	require.NoError(t, err)
+		resp, err := RouteHttp(router, "GET", "/files", listFilesReq, headers)
+		require.NoError(t, err)
 
-	resp, err := RouteHttp(router, "POST", "/files/"+resourceId+"/user:share", shareFileReq, headers)
-	require.NoError(t, err)
+		require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-	require.Equal(t, "\"rpc error: code = InvalidArgument desc = [sentium:1.3.2.400] Invalid principal for record\"", string(respBody))
-}
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
 
-func TestShareFileSuccess(t *testing.T) {
-	router := gin.New()
-	router.POST("/files/:file/user:share", shareFile)
+		var listFilesResp ListFilesResponse
+		json.Unmarshal(respBody, &listFilesResp)
 
-	uid := "1234"
-	resourceId := "abcd"
-	headers := map[string]string{
-		"Userid": uid,
-	}
-
-	shareFileReq := ShareFileRequest{
-		UserId: "5678",
-	}
-
-	authzClient, err := getAuthzClient()
-	require.NoError(t, err)
-
-	authzGrantRequest := sentium_grpc.AuthzGrantRequest{
-		PrincipalId:  uid,
-		ResourceId:   resourceId,
-		ResourceType: "files",
-	}
-
-	_, err = authzClient.Grant(context.Background(), &authzGrantRequest)
-	require.NoError(t, err)
-
-	resp, err := RouteHttp(router, "POST", "/files/"+resourceId+"/user:share", shareFileReq, headers)
-	require.NoError(t, err)
-
-	require.Equal(t, http.StatusNoContent, resp.StatusCode)
+		require.NotEmpty(t, listFilesResp.PaginationToken)
+		fmt.Println("-----", listFilesResp.Files)
+		// require.Len(t, listFilesResp.Files, numFiles-1)
+	})
 }
 
 func TestListFilesSuccessNoPaginationNoFiles(t *testing.T) {

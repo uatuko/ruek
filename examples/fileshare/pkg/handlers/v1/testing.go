@@ -43,7 +43,7 @@ func createUsers(segment string, numUsers int) ([]User, error) {
 		return nil, err
 	}
 
-	for i := 1; i <= numUsers; i++ {
+	for i := 0; i < numUsers; i++ {
 		principalId := xid.New().String()
 		attrs, err := structpb.NewStruct(map[string]interface{}{
 			"name": fmt.Sprintf("User Name %d", i),
@@ -84,6 +84,96 @@ func deleteUsers(users []User) error {
 		if _, err := principalsClient.Delete(context.Background(), &delReq); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func filesCreate(numFiles int, principalId string, role string) ([]File, error) {
+	files := []File{}
+
+	authzClient, err := getAuthzClient()
+	if err != nil {
+		return nil, err
+	}
+
+	attrs, err := structpb.NewStruct(map[string]interface{}{
+		"name": "File Name",
+		"role": role,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < numFiles; i++ {
+		authzGrantRequest := sentium.AuthzGrantRequest{
+			Attrs:        attrs,
+			PrincipalId:  principalId,
+			ResourceId:   xid.New().String(),
+			ResourceType: "files",
+		}
+
+		if _, err := authzClient.Grant(context.Background(), &authzGrantRequest); err != nil {
+			return nil, err
+		}
+
+		file := File{
+			Id:    authzGrantRequest.ResourceId,
+			Name:  "",
+			Owner: principalId,
+			Type:  "files",
+		}
+
+		files = append([]File{file}, files...)
+	}
+
+	return files, nil
+}
+
+func filesDelete(files []File, principalId string) error {
+	authzClient, err := getAuthzClient()
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		delReq := sentium.AuthzRevokeRequest{
+			PrincipalId:  principalId,
+			ResourceId:   file.Id,
+			ResourceType: "files",
+		}
+
+		if _, err := authzClient.Revoke(context.Background(), &delReq); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func filesShare(file File, principalId string, role string) error {
+	authzClient, err := getAuthzClient()
+	if err != nil {
+		return err
+	}
+
+	attrs, err := structpb.NewStruct(map[string]interface{}{
+		"name": file.Name,
+		"role": role,
+	})
+	if err != nil {
+		return err
+	}
+
+	authzGrantRequest := sentium.AuthzGrantRequest{
+		Attrs:        attrs,
+		PrincipalId:  principalId,
+		ResourceId:   file.Id,
+		ResourceType: "files",
+	}
+
+	if _, err := authzClient.Grant(context.Background(), &authzGrantRequest); err != nil {
+		return err
 	}
 
 	return nil

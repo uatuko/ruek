@@ -32,6 +32,7 @@ type ListFilesResponse struct {
 }
 
 type ShareFileRequest struct {
+	Role   string `json:"role"`
 	UserId string `json:"id"`
 }
 
@@ -211,6 +212,12 @@ func shareFile(c *gin.Context) {
 		return
 	}
 
+	role := authzCheckResponse.Attrs.Fields["role"].GetStringValue()
+	if !canShare(role) {
+		c.JSON(http.StatusForbidden, nil)
+		return
+	}
+
 	// Share resource
 	authzGrantRequest := sentium_grpc.AuthzGrantRequest{
 		PrincipalId:  request.UserId,
@@ -224,4 +231,12 @@ func shareFile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, nil)
+}
+
+func canShare(role string) bool {
+	if role != "owner" && role != "editor" {
+		return false
+	}
+
+	return true
 }
