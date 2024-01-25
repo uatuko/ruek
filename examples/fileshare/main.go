@@ -12,7 +12,12 @@ func main() {
 	engine := gin.New()
 	engine.Use(logger.SetLogger()) // logger middleware
 	engine.Use(gin.Recovery())     // recovery middleware
-	engine.Use(cors.Default())     // cors
+
+	// cors
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowHeaders = append(config.AllowHeaders, "user-id")
+	engine.Use(cors.New(config))
 
 	engine.NoRoute(func(c *gin.Context) {
 		c.JSON(404, gin.H{

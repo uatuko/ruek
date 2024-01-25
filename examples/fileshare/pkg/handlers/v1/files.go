@@ -32,7 +32,7 @@ type ListFilesRequest struct {
 
 type ListFilesResponse struct {
 	Files           []File `json:"files"`
-	PaginationToken string `json:"pagination_token"                                                                                                                                                                                                                                `
+	PaginationToken string `json:"pagination_token"`
 }
 
 type ShareFileRequest struct {
@@ -120,7 +120,7 @@ func getFile(c *gin.Context) {}
 
 func listFiles(c *gin.Context) {
 	// Read the request body
-	uid := c.Request.Header["Userid"][0]
+	uid := c.GetHeader("user-id")
 	var request ListFilesRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.Error(err).SetType(gin.ErrorTypePublic)

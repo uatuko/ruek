@@ -88,4 +88,3 @@ func deleteUsers(users []User) error {
 
 	return nil
 }
-
