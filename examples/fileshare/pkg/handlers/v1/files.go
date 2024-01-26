@@ -56,7 +56,7 @@ func createFile(c *gin.Context) {
 	}
 
 	authzGrantRequest := sentium_grpc.AuthzGrantRequest{
-		PrincipalId:  c.Request.Header["Userid"][0],
+		PrincipalId:  c.GetHeader("user-id"),
 		ResourceId:   resourceId,
 		ResourceType: "files",
 		Attrs:        attrs,
@@ -185,7 +185,6 @@ func shareFile(c *gin.Context) {
 		return
 	}
 
-	uid := c.Request.Header["Userid"][0]
 	resourceId := c.Param("file")
 
 	// Check requestor has access to shared resource
@@ -196,7 +195,7 @@ func shareFile(c *gin.Context) {
 	}
 
 	authzCheckRequest := sentium_grpc.AuthzCheckRequest{
-		PrincipalId:  uid,
+		PrincipalId:  c.GetHeader("user-id"),
 		ResourceId:   resourceId,
 		ResourceType: "files",
 	}
