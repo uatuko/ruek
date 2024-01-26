@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
@@ -23,11 +24,6 @@ type File struct {
 	Name  string `json:"name"`
 	Owner string `json:"owner"`
 	Type  string `json:"type"`
-}
-
-type ListFilesRequest struct {
-	PaginationLimit uint32 `json:"pagination_limit"`
-	PaginationToken string `json:"pagination_token"`
 }
 
 type ListFilesResponse struct {
@@ -119,20 +115,20 @@ func deleteFile(c *gin.Context) {}
 func getFile(c *gin.Context) {}
 
 func listFiles(c *gin.Context) {
-	// Read the request body
-	uid := c.GetHeader("user-id")
-	var request ListFilesRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.Error(err).SetType(gin.ErrorTypePublic)
-		return
-	}
-
 	// Map request
 	resourcesListReq := sentium_grpc.ResourcesListRequest{
-		PrincipalId:     uid,
-		ResourceType:    "files",
-		PaginationLimit: &request.PaginationLimit,
-		PaginationToken: &request.PaginationToken,
+		PrincipalId:  c.GetHeader("user-id"),
+		ResourceType: "files",
+	}
+
+	if limit, ok := c.GetQuery("pagination_limit"); ok {
+		l64, _ := strconv.ParseUint(limit, 10, 32)
+		l32 := uint32(l64)
+		resourcesListReq.PaginationLimit = &l32
+	}
+
+	if token, ok := c.GetQuery("pagination_token"); ok {
+		resourcesListReq.PaginationToken = &token
 	}
 
 	resourcesClient, err := getResourcesClient()
