@@ -2,7 +2,10 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
+
+var validate *validator.Validate
 
 func Init(router *gin.RouterGroup) {
 	router.DELETE("/files/:file", deleteFile)
@@ -17,4 +20,13 @@ func Init(router *gin.RouterGroup) {
 	router.GET("/users", listUsers)
 
 	router.POST("/users", createUser)
+}
+
+func getValidator() *validator.Validate {
+	if validate != nil {
+		return validate
+	}
+
+	validate := validator.New()
+	return validate
 }

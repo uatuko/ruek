@@ -118,10 +118,9 @@ func filesCreate(numFiles int, principalId string, role string) ([]File, error) 
 		}
 
 		file := File{
-			Id:    authzGrantRequest.ResourceId,
-			Name:  "",
-			Owner: principalId,
-			Type:  "files",
+			Id:   authzGrantRequest.ResourceId,
+			Name: "",
+			Role: role,
 		}
 
 		files = append([]File{file}, files...)

@@ -15,15 +15,22 @@ import (
 )
 
 type CreateFileRequest struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Name string `json:"name" validate:"required"`
+}
+
+func (req *CreateFileRequest) Validate() error {
+	validate := getValidator()
+	if err := validate.Struct(req); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type File struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Owner string `json:"owner"`
-	Type  string `json:"type"`
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
 }
 
 type ListFilesResponse struct {
@@ -40,7 +47,12 @@ func createFile(c *gin.Context) {
 	// Read the request body
 	var request CreateFileRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.Error(err).SetType(gin.ErrorTypePublic)
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := request.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -49,10 +61,9 @@ func createFile(c *gin.Context) {
 	attrs, err := structpb.NewStruct(map[string]interface{}{
 		"name": request.Name,
 		"role": "owner",
-		"type": request.Type,
 	})
 	if err != nil {
-		c.Error(err).SetType(gin.ErrorTypePublic)
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -79,7 +90,7 @@ func createFile(c *gin.Context) {
 	resp := File{
 		Id:   resourceId,
 		Name: request.Name,
-		Type: request.Type,
+		Role: "owner",
 	}
 
 	c.JSON(http.StatusCreated, resp)
@@ -162,7 +173,6 @@ func listFiles(c *gin.Context) {
 		file := File{
 			Id:   resource.GetId(),
 			Name: attrs.Fields["name"].String(),
-			Type: resource.GetType(),
 		}
 
 		if attrs.Fields["name"] != nil {

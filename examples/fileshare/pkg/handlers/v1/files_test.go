@@ -1,72 +1,86 @@
 package v1
 
 import (
-	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	sentium_grpc "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
 	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateFileFailOnPrincipalNotFound(t *testing.T) {
+func TestCreateFile(t *testing.T) {
 	router := gin.New()
 	router.POST("/files", createFile)
 
-	fileReq := CreateFileRequest{
-		Name: "Best Test File",
-		Type: "best-file-type",
-	}
-
+	users, err := createUsers("segment", 1)
+	require.NoError(t, err)
+	defer deleteUsers(users)
 	headers := map[string]string{
-		"Userid": "unicorn",
+		"user-id": users[0].Id,
 	}
-	resp, err := RouteHttp(router, "POST", "/files", fileReq, headers)
-	require.NoError(t, err)
-
-	require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-
-	expedtedResp := "\"rpc error: code = InvalidArgument desc = [sentium:1.3.2.400] Invalid principal for record\""
-	require.Equal(t, expedtedResp, string(respBody))
-}
-
-func TestCreateFileSuccess(t *testing.T) {
-	router := gin.New()
-	router.POST("/files", createFile)
 
 	fileReq := CreateFileRequest{
-		Name: "Best Test File",
-		Type: "best-file-type",
+		Name: "File Name",
 	}
 
-	headers := map[string]string{
-		"Userid": "1234",
-	}
-	resp, err := RouteHttp(router, "POST", "/files", fileReq, headers)
-	require.NoError(t, err)
+	t.Run("FailPrincipalNotFound", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": "unicorn",
+		}
 
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
+		resp, err := RouteHttp(router, "POST", "/files", fileReq, headers)
+		require.NoError(t, err)
 
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
+		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 
-	var file File
-	json.Unmarshal(respBody, &file)
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
 
-	expectedResp := File{
-		Id:   file.Id,
-		Name: fileReq.Name,
-		Type: fileReq.Type,
-	}
+		expedtedResp := "\"rpc error: code = InvalidArgument desc = [sentium:1.3.2.400] Invalid principal for record\""
+		require.Equal(t, expedtedResp, string(respBody))
+	})
 
-	require.Equal(t, expectedResp, file)
+	t.Run("FailMissingName", func(t *testing.T) {
+		resp, err := RouteHttp(router, "POST", "/files", CreateFileRequest{}, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		require.Equal(
+			t,
+			"\"Key: 'CreateFileRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		resp, err := RouteHttp(router, "POST", "/files", fileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var file File
+		json.Unmarshal(respBody, &file)
+		defer filesDelete([]File{file}, headers["user-id"])
+
+		expectedResp := File{
+			Id:   file.Id,
+			Name: fileReq.Name,
+			Role: "owner",
+		}
+
+		require.Equal(t, expectedResp, file)
+	})
 }
 
 func TestShareFile(t *testing.T) {
