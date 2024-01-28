@@ -15,27 +15,45 @@ func TestCreateUser(t *testing.T) {
 	router := gin.New()
 	router.POST("/users", createUser)
 
-	userReq := CreateUserRequest{
-		Name: "Best Users",
-	}
+	t.Run("FailMissingName", func(t *testing.T) {
+		resp, err := RouteHttp(router, "POST", "/users", CreateUserRequest{}, nil)
+		require.NoError(t, err)
 
-	resp, err := RouteHttp(router, "POST", "/users", userReq, nil)
-	require.NoError(t, err)
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"Key: 'CreateUserRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag\"",
+			string(respBody),
+		)
+	})
 
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
+	t.Run("Success", func(t *testing.T) {
+		userReq := CreateUserRequest{
+			Name: "Best Users",
+		}
 
-	var user User
-	json.Unmarshal(respBody, &user)
+		resp, err := RouteHttp(router, "POST", "/users", userReq, nil)
+		require.NoError(t, err)
 
-	expectedResp := User{
-		Id:   user.Id,
-		Name: userReq.Name,
-	}
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-	require.Equal(t, expectedResp, user)
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var user User
+		json.Unmarshal(respBody, &user)
+		defer deleteUsers([]User{user})
+
+		expectedResp := User{
+			Id:   user.Id,
+			Name: userReq.Name,
+		}
+
+		require.Equal(t, expectedResp, user)
+	})
 }
 
 func TestListUsers(t *testing.T) {

@@ -12,7 +12,16 @@ import (
 )
 
 type CreateUserRequest struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required"`
+}
+
+func (req *CreateUserRequest) Validate() error {
+	validate := getValidator()
+	if err := validate.Struct(req); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type ListUsersRequest struct {
@@ -34,9 +43,14 @@ type User struct {
 
 func createUser(c *gin.Context) {
 	// Read the request body
-	var request CreateFileRequest
+	var request CreateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.Error(err).SetType(gin.ErrorTypePublic)
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := request.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -46,7 +60,7 @@ func createUser(c *gin.Context) {
 		"name": request.Name,
 	})
 	if err != nil {
-		c.Error(err).SetType(gin.ErrorTypePublic)
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
