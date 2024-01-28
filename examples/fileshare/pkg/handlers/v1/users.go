@@ -6,14 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	sentium "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
 )
-
-var principalsClient sentium.PrincipalsClient
 
 type CreateUserRequest struct {
 	Name string `json:"name"`
@@ -79,24 +75,6 @@ func createUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, resp)
-}
-
-func getPrincipalsClient() (sentium.PrincipalsClient, error) {
-	if principalsClient != nil {
-		return principalsClient, nil
-	}
-
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-
-	conn, err := grpc.Dial("127.0.0.1:7000", opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	principalsClient = sentium.NewPrincipalsClient(conn)
-	return principalsClient, nil
 }
 
 func listUsers(c *gin.Context) {

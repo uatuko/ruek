@@ -7,8 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	sentium_grpc "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
@@ -94,32 +92,6 @@ func createFile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, resp)
-}
-
-func getAuthzClient() (sentium_grpc.AuthzClient, error) {
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-
-	conn, err := grpc.Dial("127.0.0.1:7000", opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return sentium_grpc.NewAuthzClient(conn), nil
-}
-
-func getResourcesClient() (sentium_grpc.ResourcesClient, error) {
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-
-	conn, err := grpc.Dial("127.0.0.1:7000", opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return sentium_grpc.NewResourcesClient(conn), nil
 }
 
 func deleteFile(c *gin.Context) {}
