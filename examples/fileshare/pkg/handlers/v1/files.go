@@ -26,9 +26,18 @@ func (req *CreateFileRequest) Validate() error {
 }
 
 type File struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Role string `json:"role"`
+	Id   string `json:"id" validate:"required"`
+	Name string `json:"name" validate:"required"`
+	Role string `json:"role" validate:"required,oneof=editor owner viewer"`
+}
+
+func (f *File) Validate() error {
+	validate := getValidator()
+	if err := validate.Struct(f); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type ListFilesResponse struct {
@@ -37,8 +46,17 @@ type ListFilesResponse struct {
 }
 
 type ShareFileRequest struct {
-	Role   string `json:"role"`
-	UserId string `json:"id"`
+	Role   string `json:"role" validate:"required,oneof=editor owner viewer"`
+	UserId string `json:"id" validate:"required"`
+}
+
+func (req *ShareFileRequest) Validate() error {
+	validate := getValidator()
+	if err := validate.Struct(req); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func createFile(c *gin.Context) {
@@ -153,13 +171,17 @@ func listFiles(c *gin.Context) {
 }
 
 func shareFile(c *gin.Context) {
+	resourceId := c.Param("file")
 	var request ShareFileRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	resourceId := c.Param("file")
+	if err := request.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
 
 	// Check requestor has access to shared resource
 	authzClient, err := getAuthzClient()
@@ -181,13 +203,13 @@ func shareFile(c *gin.Context) {
 	}
 
 	if !authzCheckResponse.GetOk() {
-		c.JSON(http.StatusForbidden, nil)
+		c.JSON(http.StatusForbidden, "no access to file")
 		return
 	}
 
 	role := authzCheckResponse.Attrs.Fields["role"].GetStringValue()
-	if !canShare(role) {
-		c.JSON(http.StatusForbidden, nil)
+	if err := canShare(role, request.Role); err != nil {
+		c.JSON(http.StatusForbidden, err.Error())
 		return
 	}
 
@@ -204,12 +226,4 @@ func shareFile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, nil)
-}
-
-func canShare(role string) bool {
-	if role != "owner" && role != "editor" {
-		return false
-	}
-
-	return true
 }

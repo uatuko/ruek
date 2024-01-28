@@ -83,94 +83,6 @@ func TestCreateFile(t *testing.T) {
 	})
 }
 
-func TestShareFile(t *testing.T) {
-	router := gin.New()
-	router.POST("/files/:file/user:share", shareFile)
-
-	// Create users
-	users, err := createUsers(xid.New().String(), 4)
-	require.NoError(t, err)
-	ownerId := users[0].Id
-	viewerId := users[1].Id
-	noAccessUser := users[2].Id
-	shareeId := users[3].Id
-	defer deleteUsers(users)
-
-	// Create and share file with viewer
-	files, err := filesCreate(1, ownerId, "owner")
-	require.NoError(t, err)
-	file := files[0]
-	defer filesDelete(files, ownerId)
-
-	err = filesShare(file, viewerId, "viewer")
-	require.NoError(t, err)
-
-	t.Run("FailNoAccess", func(t *testing.T) {
-		headers := map[string]string{
-			"Userid": noAccessUser,
-		}
-
-		shareFileReq := ShareFileRequest{
-			UserId: shareeId,
-		}
-
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
-		require.NoError(t, err)
-
-		require.Equal(t, http.StatusForbidden, resp.StatusCode)
-	})
-
-	t.Run("FailRoleCannotShare", func(t *testing.T) {
-		headers := map[string]string{
-			"Userid": viewerId,
-		}
-
-		shareFileReq := ShareFileRequest{
-			Role:   "editor",
-			UserId: shareeId,
-		}
-
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
-		require.NoError(t, err)
-
-		require.Equal(t, http.StatusForbidden, resp.StatusCode)
-	})
-
-	t.Run("FailShareeNotFound", func(t *testing.T) {
-		headers := map[string]string{
-			"Userid": ownerId,
-		}
-
-		shareFileReq := ShareFileRequest{
-			UserId: "unicorn",
-		}
-
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
-		require.NoError(t, err)
-
-		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-		respBody, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		require.Equal(t, "\"rpc error: code = InvalidArgument desc = [sentium:1.3.2.400] Invalid principal for record\"", string(respBody))
-	})
-
-	t.Run("SuccessSharedByOwner", func(t *testing.T) {
-		headers := map[string]string{
-			"Userid": ownerId,
-		}
-
-		shareFileReq := ShareFileRequest{
-			Role:   "editor",
-			UserId: shareeId,
-		}
-
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
-		require.NoError(t, err)
-
-		require.Equal(t, http.StatusNoContent, resp.StatusCode)
-	})
-}
-
 func TestListFiles(t *testing.T) {
 	router := gin.New()
 	router.GET("/files", listFiles)
@@ -184,7 +96,7 @@ func TestListFiles(t *testing.T) {
 	}
 
 	numFiles := 5
-	files, err := filesCreate(numFiles, userId, "owner")
+	files, err := filesCreate(numFiles, userId)
 	require.NoError(t, err)
 	defer filesDelete(files, userId)
 
@@ -270,5 +182,194 @@ func TestListFiles(t *testing.T) {
 
 		require.NotEqual(t, "", listFilesResp.PaginationToken)
 		require.Len(t, listFilesResp.Files, numFiles)
+	})
+}
+
+func TestShareFile(t *testing.T) {
+	router := gin.New()
+	router.POST("/files/:file/user:share", shareFile)
+
+	// Create users
+	users, err := createUsers(xid.New().String(), 5)
+	require.NoError(t, err)
+	ownerId := users[0].Id
+	editorId := users[1].Id
+	viewerId := users[2].Id
+	noAccessUser := users[3].Id
+	shareeId := users[4].Id
+	defer deleteUsers(users)
+
+	// Create and share file with editor and viewer
+	files, err := filesCreate(1, ownerId)
+	require.NoError(t, err)
+	file := files[0]
+	defer filesDelete(files, ownerId)
+
+	err = filesShare(file, editorId, "editor")
+	require.NoError(t, err)
+
+	err = filesShare(file, viewerId, "viewer")
+	require.NoError(t, err)
+
+	shareFileReq := ShareFileRequest{
+		Role:   "editor",
+		UserId: shareeId,
+	}
+
+	headers := map[string]string{
+		"user-id": ownerId,
+	}
+
+	t.Run("FailMissingSharee", func(t *testing.T) {
+		req := ShareFileRequest{
+			Role: "editor",
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", req, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"Key: 'ShareFileRequest.UserId' Error:Field validation for 'UserId' failed on the 'required' tag\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailMissingRole", func(t *testing.T) {
+		req := ShareFileRequest{
+			UserId: shareeId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", req, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"Key: 'ShareFileRequest.Role' Error:Field validation for 'Role' failed on the 'required' tag\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailInvalidRole", func(t *testing.T) {
+		req := ShareFileRequest{
+			Role:   "invalid",
+			UserId: shareeId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", req, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"Key: 'ShareFileRequest.Role' Error:Field validation for 'Role' failed on the 'oneof' tag\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailNoAccess", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": noAccessUser,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailRoleCannotShare", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": viewerId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"role cannot share (sharer role: viewer)\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailCannotGiveHigherPermissions", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": editorId,
+		}
+
+		shareFileReq := ShareFileRequest{
+			Role:   "owner",
+			UserId: shareeId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"cannot share to higher role (sharer role: editor, sharee role: owner)\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailShareeNotFound", func(t *testing.T) {
+		shareFileReq := ShareFileRequest{
+			UserId: "unicorn",
+			Role:   "editor",
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(t, "\"rpc error: code = InvalidArgument desc = [sentium:1.3.2.400] Invalid principal for record\"", string(respBody))
+	})
+
+	t.Run("SuccessSharedByOwner", func(t *testing.T) {
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
+
+	t.Run("SuccessSharedByEditor", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": editorId,
+		}
+
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
 }

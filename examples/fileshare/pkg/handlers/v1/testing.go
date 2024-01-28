@@ -89,7 +89,7 @@ func deleteUsers(users []User) error {
 	return nil
 }
 
-func filesCreate(numFiles int, principalId string, role string) ([]File, error) {
+func filesCreate(numFiles int, ownerId string) ([]File, error) {
 	files := []File{}
 
 	authzClient, err := getAuthzClient()
@@ -99,7 +99,7 @@ func filesCreate(numFiles int, principalId string, role string) ([]File, error) 
 
 	attrs, err := structpb.NewStruct(map[string]interface{}{
 		"name": "File Name",
-		"role": role,
+		"role": "owner",
 	})
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func filesCreate(numFiles int, principalId string, role string) ([]File, error) 
 	for i := 0; i < numFiles; i++ {
 		authzGrantRequest := sentium.AuthzGrantRequest{
 			Attrs:        attrs,
-			PrincipalId:  principalId,
+			PrincipalId:  ownerId,
 			ResourceId:   xid.New().String(),
 			ResourceType: "files",
 		}
@@ -120,7 +120,7 @@ func filesCreate(numFiles int, principalId string, role string) ([]File, error) 
 		file := File{
 			Id:   authzGrantRequest.ResourceId,
 			Name: "",
-			Role: role,
+			Role: "owner",
 		}
 
 		files = append([]File{file}, files...)
