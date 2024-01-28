@@ -166,24 +166,15 @@ func listFiles(c *gin.Context) {
 
 	for _, resource := range resourcesListResp.Resources {
 		attrs := resource.GetAttrs()
-		if attrs == nil {
+		if attrs == nil || attrs.Fields["name"] == nil || attrs.Fields["role"] == nil {
 			continue
 		}
 
-		file := File{
+		resp.Files = append(resp.Files, File{
 			Id:   resource.GetId(),
-			Name: attrs.Fields["name"].String(),
-		}
-
-		if attrs.Fields["name"] != nil {
-			file.Name = attrs.Fields["name"].GetStringValue()
-		}
-
-		if attrs.Fields["owner"] != nil {
-			file.Owner = attrs.Fields["owner"].GetStringValue()
-		}
-
-		resp.Files = append(resp.Files, file)
+			Name: attrs.Fields["name"].GetStringValue(),
+			Role: attrs.Fields["role"].GetStringValue(),
+		})
 	}
 
 	c.JSON(http.StatusOK, resp)

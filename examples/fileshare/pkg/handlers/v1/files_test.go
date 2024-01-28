@@ -177,24 +177,20 @@ func TestListFiles(t *testing.T) {
 
 	users, err := createUsers("segment", 1)
 	require.NoError(t, err)
+	defer deleteUsers(users)
 	userId := users[0].Id
 	headers := map[string]string{
-		"Userid": userId,
+		"user-id": userId,
 	}
 
-	defer deleteUsers(users)
-
 	numFiles := 5
-	files, err := createFiles(numFiles, userId)
+	files, err := filesCreate(numFiles, userId, "owner")
 	require.NoError(t, err)
-	defer deleteFiles(files, userId)
+	defer filesDelete(files, userId)
 
 	t.Run("SuccessWithPaginationLimitNoToken", func(t *testing.T) {
-		listFilesReq := ListFilesRequest{
-			PaginationLimit: uint32(numFiles - 1),
-		}
-
-		resp, err := RouteHttp(router, "GET", "/files", listFilesReq, headers)
+		path := fmt.Sprintf("/files?pagination_limit=%d", numFiles-1)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -206,60 +202,73 @@ func TestListFiles(t *testing.T) {
 		json.Unmarshal(respBody, &listFilesResp)
 
 		require.NotEmpty(t, listFilesResp.PaginationToken)
-		fmt.Println("-----", listFilesResp.Files)
-		// require.Len(t, listFilesResp.Files, numFiles-1)
+		require.Len(t, listFilesResp.Files, numFiles-1)
 	})
-}
 
-func TestListFilesSuccessNoPaginationNoFiles(t *testing.T) {
-	router := gin.New()
-	router.GET("/files", listFiles)
+	t.Run("SuccessNoPaginationNoFiles", func(t *testing.T) {
+		headers := map[string]string{
+			"Userid": "unicorn",
+		}
 
-	headers := map[string]string{
-		"Userid": "unicorn",
-	}
+		resp, err := RouteHttp(router, "GET", "/files", nil, headers)
+		require.NoError(t, err)
 
-	resp, err := RouteHttp(router, "GET", "/files", ListFilesRequest{}, headers)
-	require.NoError(t, err)
+		require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
 
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
+		var listFilesResp ListFilesResponse
+		json.Unmarshal(respBody, &listFilesResp)
 
-	var listFilesResp ListFilesResponse
-	json.Unmarshal(respBody, &listFilesResp)
+		require.Equal(t, "", listFilesResp.PaginationToken)
+		require.Empty(t, listFilesResp.Files)
+	})
 
-	require.Equal(t, "", listFilesResp.PaginationToken)
-	require.Empty(t, listFilesResp.Files)
-}
+	t.Run("successWithTokenNoLimit", func(t *testing.T) {
+		// Run first search to iobrtain a token
+		limit := 3
+		path := fmt.Sprintf("/files?pagination_limit=%d", limit)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
 
-func TestListFilesSuccessWithLimitNoToken(t *testing.T) {
-	router := gin.New()
-	router.GET("/files", listFiles)
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
 
-	headers := map[string]string{
-		"Userid": "1234",
-	}
+		var listFilesResp ListFilesResponse
+		json.Unmarshal(respBody, &listFilesResp)
 
-	listFilesReq := ListFilesRequest{
-		PaginationLimit: 5,
-	}
+		token := listFilesResp.PaginationToken
+		require.NotEmpty(t, token)
 
-	resp, err := RouteHttp(router, "GET", "/files", listFilesReq, headers)
-	require.NoError(t, err)
+		// Second request using token
+		path = fmt.Sprintf("/files?pagination_token=%s", token)
+		resp, err = RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
 
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+		respBody, err = io.ReadAll(resp.Body)
+		require.NoError(t, err)
 
-	respBody, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
+		json.Unmarshal(respBody, &listFilesResp)
 
-	var files ListFilesResponse
-	json.Unmarshal(respBody, &files)
+		require.Empty(t, listFilesResp.PaginationToken)
+		require.Len(t, listFilesResp.Files, numFiles-limit)
+	})
 
-	var listFilesResp ListFilesResponse
-	json.Unmarshal(respBody, &listFilesResp)
+	t.Run("SuccessMaxFilesReturned", func(t *testing.T) {
+		path := fmt.Sprintf("/files?pagination_limit=%d", numFiles)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
 
-	require.NotEqual(t, "", listFilesResp.PaginationToken)
-	require.Len(t, listFilesResp.Files, 5)
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var listFilesResp ListFilesResponse
+		json.Unmarshal(respBody, &listFilesResp)
+
+		require.NotEqual(t, "", listFilesResp.PaginationToken)
+		require.Len(t, listFilesResp.Files, numFiles)
+	})
 }
