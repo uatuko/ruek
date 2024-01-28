@@ -16,9 +16,9 @@ func TestCreateFile(t *testing.T) {
 	router := gin.New()
 	router.POST("/files", createFile)
 
-	users, err := createUsers("segment", 1)
+	users, err := usersCreate(nil, 1)
 	require.NoError(t, err)
-	defer deleteUsers(users)
+	defer usersDelete(users)
 	headers := map[string]string{
 		"user-id": users[0].Id,
 	}
@@ -87,9 +87,9 @@ func TestListFiles(t *testing.T) {
 	router := gin.New()
 	router.GET("/files", listFiles)
 
-	users, err := createUsers("segment", 1)
+	users, err := usersCreate(nil, 1)
 	require.NoError(t, err)
-	defer deleteUsers(users)
+	defer usersDelete(users)
 	userId := users[0].Id
 	headers := map[string]string{
 		"user-id": userId,
@@ -190,14 +190,15 @@ func TestShareFile(t *testing.T) {
 	router.POST("/files/:file/user:share", shareFile)
 
 	// Create users
-	users, err := createUsers(xid.New().String(), 5)
+	segment := xid.New().String()
+	users, err := usersCreate(&segment, 5)
 	require.NoError(t, err)
+	defer usersDelete(users)
 	ownerId := users[0].Id
 	editorId := users[1].Id
 	viewerId := users[2].Id
 	noAccessUser := users[3].Id
 	shareeId := users[4].Id
-	defer deleteUsers(users)
 
 	// Create and share file with editor and viewer
 	files, err := filesCreate(1, ownerId)

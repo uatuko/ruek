@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -45,7 +46,7 @@ func TestCreateUser(t *testing.T) {
 
 		var user User
 		json.Unmarshal(respBody, &user)
-		defer deleteUsers([]User{user})
+		defer usersDelete([]User{user})
 
 		expectedResp := User{
 			Id:   user.Id,
@@ -61,14 +62,19 @@ func TestListUsers(t *testing.T) {
 	router.GET("/users", listUsers)
 
 	segment := xid.New().String()
-	numUsers := 5
-	users, err := createUsers(segment, numUsers)
+	numUsersWithSegment := 5
+	usersWithSegment, err := usersCreate(&segment, numUsersWithSegment)
 	require.NoError(t, err)
-	defer deleteUsers(users)
+	defer usersDelete(usersWithSegment)
+
+	numUsersNoSegment := 2
+	usersNoSegment, err := usersCreate(nil, numUsersNoSegment)
+	require.NoError(t, err)
+	defer usersDelete(usersNoSegment)
 
 	t.Run("SuccessWithUsers", func(t *testing.T) {
-		listUsersReq := ListUsersRequest{Segment: segment}
-		resp, err := RouteHttp(router, "GET", "/users", listUsersReq, nil)
+		path := fmt.Sprintf("/users?segment=%s", segment)
+		resp, err := RouteHttp(router, "GET", path, nil, nil)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -80,13 +86,13 @@ func TestListUsers(t *testing.T) {
 		json.Unmarshal(respBody, &listUsersResp)
 
 		require.Empty(t, listUsersResp.PaginationToken)
-		require.Len(t, listUsersResp.Users, numUsers)
-		require.Equal(t, users, listUsersResp.Users)
+		require.Len(t, listUsersResp.Users, numUsersWithSegment)
+		require.Equal(t, usersWithSegment, listUsersResp.Users)
 	})
 
 	t.Run("SuccessNoUsers", func(t *testing.T) {
-		listUsersReq := ListUsersRequest{Segment: xid.New().String()}
-		resp, err := RouteHttp(router, "GET", "/users", listUsersReq, nil)
+		path := fmt.Sprintf("/users?segment=%s", xid.New().String())
+		resp, err := RouteHttp(router, "GET", path, nil, nil)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -102,12 +108,8 @@ func TestListUsers(t *testing.T) {
 	})
 
 	t.Run("SuccessWithPaginationLimitNoToken", func(t *testing.T) {
-		paginationLimit := uint32(numUsers - 1)
-		listUsersReq := ListUsersRequest{
-			PaginationLimit: paginationLimit,
-			Segment:         segment,
-		}
-		resp, err := RouteHttp(router, "GET", "/users", listUsersReq, nil)
+		path := fmt.Sprintf("/users?pagination_limit=%d&segment=%s", numUsersWithSegment-1, segment)
+		resp, err := RouteHttp(router, "GET", path, nil, nil)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -119,17 +121,13 @@ func TestListUsers(t *testing.T) {
 		json.Unmarshal(respBody, &listUsersResp)
 
 		require.NotEmpty(t, listUsersResp.PaginationToken)
-		require.Len(t, listUsersResp.Users, numUsers-1)
+		require.Len(t, listUsersResp.Users, numUsersWithSegment-1)
 	})
 
 	t.Run("SuccessWithPaginationLimitAndToken", func(t *testing.T) {
-		// First search
-		paginationLimit := uint32(numUsers - 1)
-		listUsersReq := ListUsersRequest{
-			PaginationLimit: paginationLimit,
-			Segment:         segment,
-		}
-		resp, err := RouteHttp(router, "GET", "/users", listUsersReq, nil)
+		// First search to obtain the token
+		path := fmt.Sprintf("/users?pagination_limit=%d&segment=%s", numUsersWithSegment-1, segment)
+		resp, err := RouteHttp(router, "GET", path, nil, nil)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -141,11 +139,16 @@ func TestListUsers(t *testing.T) {
 		json.Unmarshal(respBody, &listUsersResp)
 
 		require.NotEmpty(t, listUsersResp.PaginationToken)
-		require.Len(t, listUsersResp.Users, numUsers-1)
+		require.Len(t, listUsersResp.Users, numUsersWithSegment-1)
 
-		// Second search
-		listUsersReq.PaginationToken = listUsersResp.PaginationToken
-		resp, err = RouteHttp(router, "GET", "/users", listUsersReq, nil)
+		// Second search, using the token
+		path = fmt.Sprintf(
+			"/users?pagination_token=%s&segment=%s",
+			listUsersResp.PaginationToken,
+			segment,
+		)
+
+		resp, err = RouteHttp(router, "GET", path, nil, nil)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -157,5 +160,21 @@ func TestListUsers(t *testing.T) {
 
 		require.Empty(t, listUsersResp.PaginationToken)
 		require.Len(t, listUsersResp.Users, 1)
+	})
+
+	t.Run("SuccessNoSegment", func(t *testing.T) {
+		resp, err := RouteHttp(router, "GET", "/users", nil, nil)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var listUsersResp ListUsersResponse
+		json.Unmarshal(respBody, &listUsersResp)
+
+		require.Empty(t, listUsersResp.PaginationToken)
+		require.Len(t, listUsersResp.Users, 2)
 	})
 }

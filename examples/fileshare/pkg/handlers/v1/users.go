@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
@@ -22,12 +23,6 @@ func (req *CreateUserRequest) Validate() error {
 	}
 
 	return nil
-}
-
-type ListUsersRequest struct {
-	PaginationLimit uint32 `json:"pagination_limit"`
-	PaginationToken string `json:"pagination_token"`
-	Segment         string `json:"segment"`
 }
 
 type ListUsersResponse struct {
@@ -92,17 +87,20 @@ func createUser(c *gin.Context) {
 }
 
 func listUsers(c *gin.Context) {
-	var request ListUsersRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
+	// Map request
+	var principalsListReq sentium.PrincipalsListRequest
+	if limit, ok := c.GetQuery("pagination_limit"); ok {
+		l64, _ := strconv.ParseUint(limit, 10, 32)
+		l32 := uint32(l64)
+		principalsListReq.PaginationLimit = &l32
 	}
 
-	// Map request
-	principalsListReq := sentium.PrincipalsListRequest{
-		PaginationLimit: &request.PaginationLimit,
-		PaginationToken: &request.PaginationToken,
-		Segment:         &request.Segment,
+	if token, ok := c.GetQuery("pagination_token"); ok {
+		principalsListReq.PaginationToken = &token
+	}
+
+	if segment, ok := c.GetQuery("segment"); ok {
+		principalsListReq.Segment = &segment
 	}
 
 	// List principals
@@ -133,11 +131,16 @@ func listUsers(c *gin.Context) {
 			continue
 		}
 
-		resp.Users = append(resp.Users, User{
-			Id:      principal.Id,
-			Name:    attrs.Fields["name"].GetStringValue(),
-			Segment: *principal.Segment,
-		})
+		user := User{
+			Id:   principal.Id,
+			Name: attrs.Fields["name"].GetStringValue(),
+		}
+
+		if principal.Segment != nil {
+			user.Segment = *principal.Segment
+		}
+
+		resp.Users = append(resp.Users, user)
 	}
 
 	c.JSON(http.StatusOK, resp)
