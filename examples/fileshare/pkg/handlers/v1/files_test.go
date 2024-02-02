@@ -83,6 +83,81 @@ func TestCreateFile(t *testing.T) {
 	})
 }
 
+func TestGetFile(t *testing.T) {
+	router := gin.New()
+	router.GET("/files/:file", getFile)
+
+	users, err := usersCreate(nil, 2)
+	require.NoError(t, err)
+	defer usersDelete(users)
+	userWithAccess := users[0]
+	userNoAccess := users[1]
+
+	files, err := filesCreate(1, userWithAccess.Id)
+	require.NoError(t, err)
+	defer filesDelete(files, userWithAccess.Id)
+	fileId := files[0].Id
+
+	t.Run("FailNoAccess", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": userNoAccess.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s", fileId)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailNotExists", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": userWithAccess.Id,
+		}
+
+		resp, err := RouteHttp(router, "GET", "/files/1234", nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": userWithAccess.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s", fileId)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var actual File
+		err = json.Unmarshal(respBody, &actual)
+		require.NoError(t, err)
+		require.Equal(t, files[0], actual)
+	})
+}
+
 func TestListFiles(t *testing.T) {
 	router := gin.New()
 	router.GET("/files", listFiles)
@@ -137,7 +212,7 @@ func TestListFiles(t *testing.T) {
 		require.Empty(t, listFilesResp.Files)
 	})
 
-	t.Run("successWithTokenNoLimit", func(t *testing.T) {
+	t.Run("SuccessWithTokenNoLimit", func(t *testing.T) {
 		// Run first search to iobrtain a token
 		limit := 3
 		path := fmt.Sprintf("/files?pagination_limit=%d", limit)

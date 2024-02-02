@@ -114,7 +114,79 @@ func createFile(c *gin.Context) {
 
 func deleteFile(c *gin.Context) {}
 
-func getFile(c *gin.Context) {}
+func getFile(c *gin.Context) {
+	resourceId := c.Param("file")
+	userId := c.GetHeader("user-id")
+
+	// Check requestor has access to file
+	authzClient, err := getAuthzClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	authzCheckRequest := sentium_grpc.AuthzCheckRequest{
+		PrincipalId:  userId,
+		ResourceId:   resourceId,
+		ResourceType: "files",
+	}
+
+	authzCheckResponse, err := authzClient.Check(context.Background(), &authzCheckRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if !authzCheckResponse.GetOk() {
+		c.JSON(http.StatusForbidden, "no access to file")
+		return
+	}
+
+	// Get the file
+	resourcesListReq := sentium_grpc.ResourcesListRequest{
+		PrincipalId:  c.GetHeader("user-id"),
+		ResourceType: "files",
+	}
+
+	resourcesClient, err := getResourcesClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resourcesListResp, err := resourcesClient.List(context.Background(), &resourcesListReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Map response
+	var file *File
+	for _, resource := range resourcesListResp.Resources {
+		if resource.Id != resourceId {
+			continue
+		}
+
+		attrs := resource.GetAttrs()
+		if attrs == nil || attrs.Fields["name"] == nil || attrs.Fields["role"] == nil {
+			continue
+		}
+
+		file = &File{
+			Id:   resource.GetId(),
+			Name: attrs.Fields["name"].GetStringValue(),
+			Role: attrs.Fields["role"].GetStringValue(),
+		}
+
+		break
+	}
+
+	if file == nil {
+		c.JSON(http.StatusNotFound, "not found")
+	}
+
+	c.JSON(http.StatusOK, file)
+}
 
 func listFiles(c *gin.Context) {
 	// Map request
