@@ -1,14 +1,3 @@
-#root {
-	max-width: 1280px;
-	margin: 0 auto;
-	padding: 2rem;
-	text-align: center;
-}
-
-.card {
-	padding: 2em;
-}
-
 .toolbar {
 	display: flex;
 	justify-content: flex-end;
@@ -16,4 +5,15 @@
 }
 .toolbar > button {
 	margin-right: 1em;
+}
+.toolbar > button > span {
+	margin-left: 0.5em;
+}
+.toolbar > button > svg {
+	padding-top: 0.25em;
+	scale: 1.5;
+}
+
+.app .toolbar {
+	justify-content: flex-start;
 }

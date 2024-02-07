@@ -13,6 +13,13 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+	max-width: 1280px;
+	margin: 0 auto;
+	padding: 2rem;
+	text-align: center;
+}
+
 a {
 	font-weight: 500;
 	color: #646cff;
@@ -49,7 +56,53 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-	outline: 4px auto -webkit-focus-ring-color;
+	outline: 0.25em auto -webkit-focus-ring-color;
+}
+
+input {
+	background: #fff;
+	border: 0.08em solid rgba(175, 184, 193, 0.6);
+	border-radius: 0.5em;
+	font-size: large;
+	margin-bottom: 1em;
+	padding: 0.8em;
+}
+input:focus {
+	border-color: #90c6ff;
+	outline: none;
+	transition: border .5s ease;
+}
+input::placeholder {
+	color: #a6afb8;
+}
+input[type="submit"] {
+	border: 0.1em solid #1a1a1a;
+	border-radius: 0.5em;
+	cursor: pointer;
+	font-weight: 500;
+	min-width: 10em;
+	transition: all .2s ease-out
+}
+input[type="submit"]:hover,
+input[type="submit"]:focus-visible {
+	background: #1a1a1a;
+	box-shadow: rgba(0, 0, 0, 0.25) 0.1em 0.4em 1em;
+	color: #fff;
+	transform: translateY(-0.25em);
+	transition: all .5s ease;
+}
+input[type="text"] {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+label {
+	display: block;
+	font-size: large;
+	font-weight: 700;
+	margin-bottom: 0.5em;
+	padding-left: 0.5em;
+	text-align: left;
 }
 
 @media (prefers-color-scheme: light) {

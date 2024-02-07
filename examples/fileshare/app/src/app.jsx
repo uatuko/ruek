@@ -1,25 +1,32 @@
-import { Show } from 'solid-js';
-import { Navigate } from '@solidjs/router';
-import { IoCogSharp } from 'solid-icons/io';
-import { IoAdd } from 'solid-icons/io';
+import { createEffect } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
+import { IoAdd, IoCogSharp } from 'solid-icons/io';
 
 import Files from './files';
 
 import './app.css';
 
 function App(props) {
+	const nav = useNavigate();
+
+	createEffect(() => {
+		if (!props.user.id) {
+			nav('/sign-up', { replace: true });
+		}
+	});
+
 	return (
-		<Show
-			when={props.user.id}
-			fallback={<Navigate href="/sign-up" />}
-		>
+		<div class="app">
 			<div class="toolbar">
 				<button><IoCogSharp /></button>
-				<button><IoAdd /></button>
+				<button onClick={() => {nav('/files/:new');}}>
+					<IoAdd />
+					<span>New File</span>
+				</button>
 			</div>
 
-			<Files />
-		</Show>
+			<Files user={props.user} />
+		</div>
 	);
 }
 

@@ -1,0 +1,49 @@
+.file-details {
+	border: 0.01em solid #bbb;
+	border-radius: 0.25em;
+	margin: 5em auto;
+	max-width: 40em;
+	transition: all .5s ease;
+	text-align: left;
+}
+.file-details .icon {
+	font-size: xx-large;
+}
+.file-details .toolbar > button {
+	background-color: transparent;
+	margin: 0.7em 0.7em 0 0;
+	transition: all .2s ease-out;
+}
+.file-details .toolbar > button:hover {
+	transform: translateY(-0.25em);
+	transition: all .5s ease;
+}
+
+.detail {
+	border-left: 0.09em solid #eaeaea;
+	margin-left: 3em;
+	padding: 2em;
+}
+.detail .group {
+	margin-bottom: 1em;
+}
+
+.flex {
+	display: flex;
+	padding: 0 2em 2em 2em;
+}
+
+.icon {
+	align-items: center;
+	border: 0.05em solid #e8e8e8;
+	border-radius: 50%;
+	display: flex;
+	justify-content: center;
+	margin: auto 0;
+	padding: 1em;
+}
+
+.label {
+	display: block;
+	font-weight: 700;
+}

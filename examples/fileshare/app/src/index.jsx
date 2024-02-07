@@ -6,6 +6,7 @@ import { Router, Route } from '@solidjs/router';
 import './index.css';
 import App from './app';
 
+const File = lazy(() => import('./file'));
 const SignUp = lazy(() => import('./sign-up'));
 
 const [user, setUser] = createSignal({});
@@ -15,6 +16,7 @@ render(
 	() => (
 		<Router>
 			<Route path="/" component={() => (<App user={user()} />)} />
+			<Route path="/files/:id" component={() => (<File user={user()} />)} />
 			<Route path="/sign-up" component={() => (<SignUp setUser={setUser} />)} />
 		</Router>
 	),

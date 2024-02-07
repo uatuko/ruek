@@ -1,7 +1,7 @@
-.cell > span {
+.cell .link > span {
 	padding-left: 0.3em;
 }
-.cell > svg {
+.cell .link > svg {
 	padding: 0.2em 0.4em 0 0.3em;
 	scale: 1.5;
 }
