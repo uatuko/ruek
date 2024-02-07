@@ -1,6 +1,6 @@
 import { createEffect } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { IoAdd, IoCogSharp } from 'solid-icons/io';
+import { IoAdd, IoPeopleSharp } from 'solid-icons/io';
 
 import Files from './files';
 
@@ -18,7 +18,7 @@ function App(props) {
 	return (
 		<div class="app">
 			<div class="toolbar">
-				<button><IoCogSharp /></button>
+				<button onClick={() => {nav('/users');}}><IoPeopleSharp /></button>
 				<button onClick={() => {nav('/files/:new');}}>
 					<IoAdd />
 					<span>New File</span>
