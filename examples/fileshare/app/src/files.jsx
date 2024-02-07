@@ -1,8 +1,6 @@
 import { A } from '@solidjs/router';
 
-import { IoChevronBack } from 'solid-icons/io';
-import { IoChevronForward } from 'solid-icons/io';
-import { IoDocumentOutline } from 'solid-icons/io';
+import { IoChevronBack, IoChevronForward, IoDocumentOutline } from 'solid-icons/io';
 
 import './files.css';
 import { createResource, createSignal, For } from 'solid-js';
@@ -20,7 +18,7 @@ function Files(props) {
 	};
 
 	const next = () => {
-		setPageTokens( [ ...pageTokens(), token() ] );
+		setPageTokens([ ...pageTokens(), token() ]);
 
 		const t = nextToken();
 		setNextToken('');
