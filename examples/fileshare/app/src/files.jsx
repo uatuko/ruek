@@ -1,9 +1,11 @@
+import { createResource, createSignal, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 
 import { IoChevronBack, IoChevronForward, IoDocumentOutline } from 'solid-icons/io';
 
+import Busy from './busy';
+
 import './files.css';
-import { createResource, createSignal, For } from 'solid-js';
 
 function Files(props) {
 	const [pageTokens, setPageTokens] = createSignal([]);
@@ -44,38 +46,42 @@ function Files(props) {
 
 	return (
 		<div class="files">
-			<span>{files.loading && 'Loading...'}</span>
 			<div class="list">
 				<div class="row header">
 					<div class="cell">Name</div>
 					<div class="cell">Access</div>
 				</div>
-				<For each={files()}>
-					{
-						(file) => (
-							<div class="row">
-								<div class="cell">
-									<A class="link" href={`/files/${file.id}`}>
-										<IoDocumentOutline />
-										<span>{file.name}</span>
-									</A>
+				<Show
+					when={!files.loading}
+					fallback={Busy}
+				>
+					<For each={files()}>
+						{
+							(file) => (
+								<div class="row">
+									<div class="cell">
+										<A class="link" href={`/files/${file.id}`}>
+											<IoDocumentOutline />
+											<span>{file.name}</span>
+										</A>
+									</div>
+									<div class="cell">{file.role}</div>
 								</div>
-								<div class="cell">{file.role}</div>
-							</div>
-						)
-					}
-				</For>
+							)
+						}
+					</For>
+				</Show>
 			</div>
 			<div class="pagination">
 				<button
-					disabled={pageTokens().length === 0}
+					disabled={files.loading || pageTokens().length === 0}
 					onClick={prev}
 				>
 					<IoChevronBack />
 				</button>
 				<span>...</span>
 				<button
-					disabled={nextToken() === ''}
+					disabled={files.loading || nextToken() === ''}
 					onClick={next}
 				>
 					<IoChevronForward />

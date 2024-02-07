@@ -2,6 +2,7 @@ import { createEffect, createResource, Show } from 'solid-js';
 import { useNavigate, useParams } from '@solidjs/router';
 import { IoCloseCircleOutline, IoDocumentOutline } from 'solid-icons/io';
 
+import Busy from './busy';
 import NewFile from './new-file';
 
 import './file.css';
@@ -77,12 +78,12 @@ function File(props) {
 
 	return (
 		<Show
-			when={file()?.id}
+			when={file.loading || file()?.id}
 			fallback={() => (<NewFile user={props.user} onCancel={onClose} onSuccess={onNewFile} />)}
 		>
 			<Show
 				when={!file.loading}
-				fallback={() => (<span>Loading...</span>)}
+				fallback={Busy}
 			>
 				<FileDetails data={file()} onClose={onClose} />
 			</Show>
