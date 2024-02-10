@@ -65,7 +65,7 @@ func filesCreate(numFiles int, ownerId string) ([]File, error) {
 
 		file := File{
 			Id:   authzGrantRequest.ResourceId,
-			Name: "",
+			Name: "File Name",
 			Role: "owner",
 		}
 

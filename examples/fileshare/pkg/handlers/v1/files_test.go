@@ -262,7 +262,7 @@ func TestListFiles(t *testing.T) {
 
 func TestShareFile(t *testing.T) {
 	router := gin.New()
-	router.POST("/files/:file/user:share", shareFile)
+	router.POST("/files/:file/users", shareFile)
 
 	// Create users
 	segment := xid.New().String()
@@ -301,7 +301,7 @@ func TestShareFile(t *testing.T) {
 			Role: "editor",
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", req, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", req, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -320,7 +320,7 @@ func TestShareFile(t *testing.T) {
 			UserId: shareeId,
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", req, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", req, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -340,7 +340,7 @@ func TestShareFile(t *testing.T) {
 			UserId: shareeId,
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", req, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", req, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -359,7 +359,7 @@ func TestShareFile(t *testing.T) {
 			"user-id": noAccessUser,
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", shareFileReq, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -378,7 +378,7 @@ func TestShareFile(t *testing.T) {
 			"user-id": viewerId,
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", shareFileReq, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -402,7 +402,7 @@ func TestShareFile(t *testing.T) {
 			UserId: shareeId,
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", shareFileReq, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -422,7 +422,7 @@ func TestShareFile(t *testing.T) {
 			Role:   "editor",
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", shareFileReq, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
@@ -432,7 +432,7 @@ func TestShareFile(t *testing.T) {
 	})
 
 	t.Run("SuccessSharedByOwner", func(t *testing.T) {
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", shareFileReq, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusNoContent, resp.StatusCode)
@@ -443,7 +443,7 @@ func TestShareFile(t *testing.T) {
 			"user-id": editorId,
 		}
 
-		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/user:share", shareFileReq, headers)
+		resp, err := RouteHttp(router, "POST", "/files/"+file.Id+"/users", shareFileReq, headers)
 		require.NoError(t, err)
 
 		require.Equal(t, http.StatusNoContent, resp.StatusCode)
