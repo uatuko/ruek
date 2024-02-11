@@ -12,6 +12,7 @@ func Init(router *gin.RouterGroup) {
 
 	router.GET("/files", listFiles)
 	router.GET("/files/:file", getFile)
+	router.GET("/files/:file/users", listFileUsers)
 
 	router.POST("/files", createFile)
 	router.POST("/files/:file/users", shareFile)

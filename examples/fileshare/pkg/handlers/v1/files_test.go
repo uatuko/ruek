@@ -260,6 +260,173 @@ func TestListFiles(t *testing.T) {
 	})
 }
 
+func TestListFileUsers(t *testing.T) {
+	router := gin.New()
+	router.GET("/files/:file/users", listFileUsers)
+
+	// Create users
+	users, err := usersCreate(nil, 4)
+	require.NoError(t, err)
+	// defer usersDelete(users)
+	owner := users[0]
+	editor := users[1]
+	viewer := users[2]
+	noAccessUser := users[3]
+
+	// Create files
+	files, err := filesCreate(1, owner.Id)
+	require.NoError(t, err)
+	// defer filesDelete(files, ownerId)
+	file := files[0]
+
+	// Share files
+	err = filesShare(file, editor.Id, "editor")
+	require.NoError(t, err)
+
+	err = filesShare(file, viewer.Id, "viewer")
+	require.NoError(t, err)
+
+	usersWithAccess := []FileUser{
+		{
+			Id:   owner.Id,
+			Name: owner.Name,
+			Role: "owner",
+		},
+		{
+			Id:   editor.Id,
+			Name: editor.Name,
+			Role: "editor",
+		},
+		{
+			Id:   viewer.Id,
+			Name: viewer.Name,
+			Role: "viewer",
+		},
+	}
+
+	t.Run("FailFileDoesNotExist", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": owner.Id,
+		}
+
+		resp, err := RouteHttp(router, "GET", "/files/1234/users", nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailUserDoesNotExist", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": "1234",
+		}
+
+		path := fmt.Sprintf("/files/%s/users", file.Id)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailNoFileAccess", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": noAccessUser.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s/users", file.Id)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("SuccessOwner", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": owner.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s/users", file.Id)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var listFileUsersResp ListFileUsersResponse
+		json.Unmarshal(respBody, &listFileUsersResp)
+
+		require.Len(t, listFileUsersResp.Users, 3)
+		require.ElementsMatch(t, usersWithAccess, listFileUsersResp.Users)
+	})
+
+	t.Run("SuccessEditor", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": editor.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s/users", file.Id)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var listFileUsersResp ListFileUsersResponse
+		json.Unmarshal(respBody, &listFileUsersResp)
+
+		require.Len(t, listFileUsersResp.Users, 3)
+		require.ElementsMatch(t, usersWithAccess, listFileUsersResp.Users)
+	})
+
+	t.Run("SuccessViewer", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": viewer.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s/users", file.Id)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var listFileUsersResp ListFileUsersResponse
+		json.Unmarshal(respBody, &listFileUsersResp)
+
+		require.Len(t, listFileUsersResp.Users, 3)
+		require.ElementsMatch(t, usersWithAccess, listFileUsersResp.Users)
+	})
+}
+
 func TestShareFile(t *testing.T) {
 	router := gin.New()
 	router.POST("/files/:file/users", shareFile)

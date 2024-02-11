@@ -59,6 +59,17 @@ func (req *ShareFileRequest) Validate() error {
 	return nil
 }
 
+type FileUser struct {
+	Id      string `json:"id"`
+	Name    string `json:"name"`
+	Role    string `json:"role"`
+	Segment string `json:"segment"`
+}
+
+type ListFileUsersResponse struct {
+	Users []FileUser `json:"users"`
+}
+
 func createFile(c *gin.Context) {
 	// Read the request body
 	var request CreateFileRequest
@@ -242,8 +253,72 @@ func listFiles(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func listFileUsers(c *gin.Context) {
+	fileId := c.Param("file")
+	userId := c.GetHeader("user-id")
+
+	// Check requestor has access to file
+	role, err := getRole(userId, fileId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if role == "" {
+		c.JSON(http.StatusForbidden, "no access to file")
+		return
+	}
+
+	// Map request
+	// TODO: add pagination support
+	listPrinipalsReq := sentium_grpc.ResourcesListPrincipalsRequest{
+		ResourceId:   fileId,
+		ResourceType: "files",
+	}
+
+	// List Principals
+	resourcesClient, err := getResourcesClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	listPrincipalsResp, err := resourcesClient.ListPrincipals(context.Background(), &listPrinipalsReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Map response
+	resp := ListFileUsersResponse{
+		Users: []FileUser{},
+	}
+	for _, principal := range listPrincipalsResp.Principals {
+		attrs := principal.GetAttrs()
+		if attrs == nil || attrs.Fields["name"] == nil || attrs.Fields["role"] == nil {
+			continue
+		}
+
+		user, err := getUser(principal.Id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		resp.Users = append(resp.Users, FileUser{
+			Id:      principal.Id,
+			Name:    user.Name,
+			Role:    attrs.Fields["role"].GetStringValue(),
+			Segment: user.Segment,
+		})
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 func shareFile(c *gin.Context) {
 	resourceId := c.Param("file")
+	userId := c.GetHeader("user-id")
 	var request ShareFileRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -256,30 +331,18 @@ func shareFile(c *gin.Context) {
 	}
 
 	// Check requestor has access to shared resource
-	authzClient, err := getAuthzClient()
+	role, err := getRole(userId, resourceId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	authzCheckRequest := sentium_grpc.AuthzCheckRequest{
-		PrincipalId:  c.GetHeader("user-id"),
-		ResourceId:   resourceId,
-		ResourceType: "files",
-	}
-
-	authzCheckResponse, err := authzClient.Check(context.Background(), &authzCheckRequest)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if !authzCheckResponse.GetOk() {
+	if role == "" {
 		c.JSON(http.StatusForbidden, "no access to file")
 		return
 	}
 
-	role := authzCheckResponse.Attrs.Fields["role"].GetStringValue()
+	// Check requestor can share file
 	if err := canShare(role, request.Role); err != nil {
 		c.JSON(http.StatusForbidden, err.Error())
 		return

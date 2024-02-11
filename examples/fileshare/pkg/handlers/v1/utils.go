@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 
 	sentium "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
@@ -86,4 +87,59 @@ func getResourcesClient() (sentium.ResourcesClient, error) {
 
 	resourcesClient := sentium.NewResourcesClient(conn)
 	return resourcesClient, nil
+}
+
+// Check the principal has access to resource
+func getRole(principalId string, resourceId string) (string, error) {
+	authzClient, err := getAuthzClient()
+	if err != nil {
+		return "", err
+	}
+
+	authzCheckRequest := sentium.AuthzCheckRequest{
+		PrincipalId:  principalId,
+		ResourceId:   resourceId,
+		ResourceType: "files",
+	}
+
+	authzCheckResponse, err := authzClient.Check(context.Background(), &authzCheckRequest)
+	if err != nil {
+		return "", err
+	}
+
+	if !authzCheckResponse.GetOk() {
+		return "", nil
+	}
+
+	return authzCheckResponse.Attrs.Fields["role"].GetStringValue(), nil
+}
+
+func getUser(principalId string) (*User, error) {
+	principalsClient, err := getPrincipalsClient()
+	if err != nil {
+		return nil, err
+	}
+
+	req := &sentium.PrincipalsRetrieveRequest{
+		Id: principalId,
+	}
+	principal, err := principalsClient.Retrieve(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{
+		Id: principal.Id,
+	}
+
+	attrs := principal.GetAttrs()
+	if attrs != nil && attrs.Fields["name"] != nil {
+		user.Name = attrs.Fields["name"].GetStringValue()
+	}
+
+	if principal.Segment != nil {
+		user.Segment = *principal.Segment
+	}
+
+	return user, nil
 }
