@@ -43,15 +43,15 @@ func filesCreate(numFiles int, ownerId string) ([]File, error) {
 		return nil, err
 	}
 
-	attrs, err := structpb.NewStruct(map[string]interface{}{
-		"name": "File Name",
-		"role": "owner",
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	for i := 0; i < numFiles; i++ {
+		attrs, err := structpb.NewStruct(map[string]interface{}{
+			"name": fmt.Sprintf("File Name %d", i),
+			"role": "owner",
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		authzGrantRequest := sentium.AuthzGrantRequest{
 			Attrs:        attrs,
 			PrincipalId:  ownerId,
@@ -65,7 +65,7 @@ func filesCreate(numFiles int, ownerId string) ([]File, error) {
 
 		file := File{
 			Id:   authzGrantRequest.ResourceId,
-			Name: fmt.Sprintf("File Name %d", i),
+			Name: attrs.Fields["name"].GetStringValue(),
 			Role: "owner",
 		}
 
