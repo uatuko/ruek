@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,12 +14,13 @@ import (
 )
 
 func TestCreateFile(t *testing.T) {
+	ctx := context.Background()
 	router := gin.New()
 	router.POST("/files", createFile)
 
-	users, err := usersCreate(nil, 1)
+	users, err := usersCreate(ctx, nil, 1)
 	require.NoError(t, err)
-	defer usersDelete(users)
+	defer usersDelete(ctx, users)
 	headers := map[string]string{
 		"user-id": users[0].Id,
 	}
@@ -71,7 +73,7 @@ func TestCreateFile(t *testing.T) {
 
 		var file File
 		json.Unmarshal(respBody, &file)
-		defer filesDelete([]File{file}, headers["user-id"])
+		defer filesDelete(ctx, []File{file}, headers["user-id"])
 
 		expectedResp := File{
 			Id:   file.Id,
@@ -84,18 +86,19 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestGetFile(t *testing.T) {
+	ctx := context.Background()
 	router := gin.New()
 	router.GET("/files/:file", getFile)
 
-	users, err := usersCreate(nil, 2)
+	users, err := usersCreate(ctx, nil, 2)
 	require.NoError(t, err)
-	defer usersDelete(users)
+	defer usersDelete(ctx, users)
 	userWithAccess := users[0]
 	userNoAccess := users[1]
 
-	files, err := filesCreate(1, userWithAccess.Id)
+	files, err := filesCreate(ctx, 1, userWithAccess.Id)
 	require.NoError(t, err)
-	defer filesDelete(files, userWithAccess.Id)
+	defer filesDelete(ctx, files, userWithAccess.Id)
 	fileId := files[0].Id
 
 	t.Run("FailNoAccess", func(t *testing.T) {
@@ -159,21 +162,22 @@ func TestGetFile(t *testing.T) {
 }
 
 func TestListFiles(t *testing.T) {
+	ctx := context.Background()
 	router := gin.New()
 	router.GET("/files", listFiles)
 
-	users, err := usersCreate(nil, 1)
+	users, err := usersCreate(ctx, nil, 1)
 	require.NoError(t, err)
-	defer usersDelete(users)
+	defer usersDelete(ctx, users)
 	userId := users[0].Id
 	headers := map[string]string{
 		"user-id": userId,
 	}
 
 	numFiles := 5
-	files, err := filesCreate(numFiles, userId)
+	files, err := filesCreate(ctx, numFiles, userId)
 	require.NoError(t, err)
-	defer filesDelete(files, userId)
+	defer filesDelete(ctx, files, userId)
 
 	t.Run("SuccessWithPaginationLimitNoToken", func(t *testing.T) {
 		path := fmt.Sprintf("/files?pagination_limit=%d", numFiles-1)
@@ -261,29 +265,30 @@ func TestListFiles(t *testing.T) {
 }
 
 func TestListFileUsers(t *testing.T) {
+	ctx := context.Background()
 	router := gin.New()
 	router.GET("/files/:file/users", listFileUsers)
 
 	// Create users
-	users, err := usersCreate(nil, 4)
+	users, err := usersCreate(ctx, nil, 4)
 	require.NoError(t, err)
-	defer usersDelete(users)
+	defer usersDelete(ctx, users)
 	owner := users[0]
 	editor := users[1]
 	viewer := users[2]
 	noAccessUser := users[3]
 
 	// Create files
-	files, err := filesCreate(1, owner.Id)
+	files, err := filesCreate(ctx, 1, owner.Id)
 	require.NoError(t, err)
-	defer filesDelete(files, owner.Id)
+	defer filesDelete(ctx, files, owner.Id)
 	file := files[0]
 
 	// Share files
-	err = filesShare(file, editor.Id, "editor")
+	err = filesShare(ctx, file, editor.Id, "editor")
 	require.NoError(t, err)
 
-	err = filesShare(file, viewer.Id, "viewer")
+	err = filesShare(ctx, file, viewer.Id, "viewer")
 	require.NoError(t, err)
 
 	usersWithAccess := []FileUser{
@@ -450,14 +455,15 @@ func TestListFileUsers(t *testing.T) {
 }
 
 func TestShareFile(t *testing.T) {
+	ctx := context.Background()
 	router := gin.New()
 	router.POST("/files/:file/users", shareFile)
 
 	// Create users
 	segment := xid.New().String()
-	users, err := usersCreate(&segment, 5)
+	users, err := usersCreate(ctx, &segment, 5)
 	require.NoError(t, err)
-	defer usersDelete(users)
+	defer usersDelete(ctx, users)
 	ownerId := users[0].Id
 	editorId := users[1].Id
 	viewerId := users[2].Id
@@ -465,15 +471,15 @@ func TestShareFile(t *testing.T) {
 	shareeId := users[4].Id
 
 	// Create and share file with editor and viewer
-	files, err := filesCreate(1, ownerId)
+	files, err := filesCreate(ctx, 1, ownerId)
 	require.NoError(t, err)
 	file := files[0]
-	defer filesDelete(files, ownerId)
+	defer filesDelete(ctx, files, ownerId)
 
-	err = filesShare(file, editorId, "editor")
+	err = filesShare(ctx, file, editorId, "editor")
 	require.NoError(t, err)
 
-	err = filesShare(file, viewerId, "viewer")
+	err = filesShare(ctx, file, viewerId, "viewer")
 	require.NoError(t, err)
 
 	shareFileReq := ShareFileRequest{

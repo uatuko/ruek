@@ -92,7 +92,7 @@ func getResourcesClient() (sentium.ResourcesClient, error) {
 }
 
 // Check the principal has access to resource
-func getRole(principalId string, resourceId string) (string, error) {
+func getRole(ctx context.Context, principalId string, resourceId string) (string, error) {
 	authzClient, err := getAuthzClient()
 	if err != nil {
 		return "", err
@@ -104,7 +104,7 @@ func getRole(principalId string, resourceId string) (string, error) {
 		ResourceType: "files",
 	}
 
-	authzCheckResponse, err := authzClient.Check(context.Background(), &authzCheckRequest)
+	authzCheckResponse, err := authzClient.Check(ctx, &authzCheckRequest)
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +116,7 @@ func getRole(principalId string, resourceId string) (string, error) {
 	return authzCheckResponse.Attrs.Fields["role"].GetStringValue(), nil
 }
 
-func getUser(principalId string) (*User, error) {
+func getUser(ctx context.Context, principalId string) (*User, error) {
 	principalsClient, err := getPrincipalsClient()
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func getUser(principalId string) (*User, error) {
 	req := &sentium.PrincipalsRetrieveRequest{
 		Id: principalId,
 	}
-	principal, err := principalsClient.Retrieve(context.Background(), req)
+	principal, err := principalsClient.Retrieve(ctx, req)
 	if err != nil {
 		return nil, err
 	}

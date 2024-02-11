@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,6 +35,7 @@ type User struct {
 }
 
 func createUser(c *gin.Context) {
+	ctx := c.Request.Context()
 	// Read the request body
 	var request CreateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -70,7 +70,7 @@ func createUser(c *gin.Context) {
 		return
 	}
 
-	principal, err := principalClient.Create(context.Background(), &principalsCreateRequest)
+	principal, err := principalClient.Create(ctx, &principalsCreateRequest)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
@@ -86,6 +86,7 @@ func createUser(c *gin.Context) {
 }
 
 func listUsers(c *gin.Context) {
+	ctx := c.Request.Context()
 	// Map request
 	paginationLimit, paginationToken := getPaginationParams(c)
 	principalsListReq := sentium.PrincipalsListRequest{
@@ -104,7 +105,7 @@ func listUsers(c *gin.Context) {
 		return
 	}
 
-	principalsList, err := principalClient.List(context.Background(), &principalsListReq)
+	principalsList, err := principalClient.List(ctx, &principalsListReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return

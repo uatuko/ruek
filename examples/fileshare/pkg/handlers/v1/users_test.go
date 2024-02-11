@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 )
 
 func TestCreateUser(t *testing.T) {
+	ctx := context.Background()
 	router := gin.New()
 	router.POST("/users", createUser)
 
@@ -46,7 +48,7 @@ func TestCreateUser(t *testing.T) {
 
 		var user User
 		json.Unmarshal(respBody, &user)
-		defer usersDelete([]User{user})
+		defer usersDelete(ctx, []User{user})
 
 		expectedResp := User{
 			Id:   user.Id,
@@ -58,19 +60,20 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
+	ctx := context.Background()
 	router := gin.New()
 	router.GET("/users", listUsers)
 
 	segment := xid.New().String()
 	numUsersWithSegment := 5
-	usersWithSegment, err := usersCreate(&segment, numUsersWithSegment)
+	usersWithSegment, err := usersCreate(ctx, &segment, numUsersWithSegment)
 	require.NoError(t, err)
-	defer usersDelete(usersWithSegment)
+	defer usersDelete(ctx, usersWithSegment)
 
 	numUsersNoSegment := 2
-	usersNoSegment, err := usersCreate(nil, numUsersNoSegment)
+	usersNoSegment, err := usersCreate(ctx, nil, numUsersNoSegment)
 	require.NoError(t, err)
-	defer usersDelete(usersNoSegment)
+	defer usersDelete(ctx, usersNoSegment)
 
 	t.Run("SuccessWithUsers", func(t *testing.T) {
 		path := fmt.Sprintf("/users?segment=%s", segment)

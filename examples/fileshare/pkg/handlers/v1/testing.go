@@ -35,7 +35,7 @@ func RouteHttp(
 	return w.Result(), nil
 }
 
-func filesCreate(numFiles int, ownerId string) ([]File, error) {
+func filesCreate(ctx context.Context, numFiles int, ownerId string) ([]File, error) {
 	files := []File{}
 
 	authzClient, err := getAuthzClient()
@@ -59,7 +59,7 @@ func filesCreate(numFiles int, ownerId string) ([]File, error) {
 			ResourceType: "files",
 		}
 
-		if _, err := authzClient.Grant(context.Background(), &authzGrantRequest); err != nil {
+		if _, err := authzClient.Grant(ctx, &authzGrantRequest); err != nil {
 			return nil, err
 		}
 
@@ -75,7 +75,7 @@ func filesCreate(numFiles int, ownerId string) ([]File, error) {
 	return files, nil
 }
 
-func filesDelete(files []File, principalId string) error {
+func filesDelete(ctx context.Context, files []File, principalId string) error {
 	authzClient, err := getAuthzClient()
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func filesDelete(files []File, principalId string) error {
 			ResourceType: "files",
 		}
 
-		if _, err := authzClient.Revoke(context.Background(), &delReq); err != nil {
+		if _, err := authzClient.Revoke(ctx, &delReq); err != nil {
 			return err
 		}
 	}
@@ -96,7 +96,7 @@ func filesDelete(files []File, principalId string) error {
 	return nil
 }
 
-func filesShare(file File, principalId string, role string) error {
+func filesShare(ctx context.Context, file File, principalId string, role string) error {
 	authzClient, err := getAuthzClient()
 	if err != nil {
 		return err
@@ -117,14 +117,14 @@ func filesShare(file File, principalId string, role string) error {
 		ResourceType: "files",
 	}
 
-	if _, err := authzClient.Grant(context.Background(), &authzGrantRequest); err != nil {
+	if _, err := authzClient.Grant(ctx, &authzGrantRequest); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func usersCreate(segment *string, numUsers int) ([]User, error) {
+func usersCreate(ctx context.Context, segment *string, numUsers int) ([]User, error) {
 	users := []User{}
 
 	principalClient, err := getPrincipalsClient()
@@ -147,7 +147,7 @@ func usersCreate(segment *string, numUsers int) ([]User, error) {
 			Segment: segment,
 		}
 
-		principal, err := principalClient.Create(context.Background(), &principalsCreateRequest)
+		principal, err := principalClient.Create(ctx, &principalsCreateRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -167,13 +167,13 @@ func usersCreate(segment *string, numUsers int) ([]User, error) {
 	return users, nil
 }
 
-func usersDelete(users []User) error {
+func usersDelete(ctx context.Context, users []User) error {
 	for _, user := range users {
 		delReq := sentium.PrincipalsDeleteRequest{
 			Id: user.Id,
 		}
 
-		if _, err := principalsClient.Delete(context.Background(), &delReq); err != nil {
+		if _, err := principalsClient.Delete(ctx, &delReq); err != nil {
 			return err
 		}
 	}
