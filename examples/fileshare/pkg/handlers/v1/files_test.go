@@ -267,7 +267,7 @@ func TestListFileUsers(t *testing.T) {
 	// Create users
 	users, err := usersCreate(nil, 4)
 	require.NoError(t, err)
-	// defer usersDelete(users)
+	defer usersDelete(users)
 	owner := users[0]
 	editor := users[1]
 	viewer := users[2]
@@ -276,7 +276,7 @@ func TestListFileUsers(t *testing.T) {
 	// Create files
 	files, err := filesCreate(1, owner.Id)
 	require.NoError(t, err)
-	// defer filesDelete(files, ownerId)
+	defer filesDelete(files, owner.Id)
 	file := files[0]
 
 	// Share files
@@ -424,6 +424,28 @@ func TestListFileUsers(t *testing.T) {
 
 		require.Len(t, listFileUsersResp.Users, 3)
 		require.ElementsMatch(t, usersWithAccess, listFileUsersResp.Users)
+	})
+
+	t.Run("seccessOwnerWithPaginationLimit", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": owner.Id,
+		}
+
+		numUsers := 2
+		path := fmt.Sprintf("/files/%s/users?pagination_limit=%d", file.Id, numUsers)
+		resp, err := RouteHttp(router, "GET", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var listFileUsersResp ListFileUsersResponse
+		json.Unmarshal(respBody, &listFileUsersResp)
+
+		require.Len(t, listFileUsersResp.Users, numUsers)
+		require.NotEmpty(t, listFileUsersResp.PaginationToken)
 	})
 }
 

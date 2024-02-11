@@ -3,7 +3,9 @@ package v1
 import (
 	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/gin-gonic/gin"
 	sentium "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -142,4 +144,20 @@ func getUser(principalId string) (*User, error) {
 	}
 
 	return user, nil
+}
+
+func getPaginationParams(c *gin.Context) (*uint32, *string) {
+	var paginationLimit *uint32
+	if limit, ok := c.GetQuery("pagination_limit"); ok {
+		l64, _ := strconv.ParseUint(limit, 10, 32)
+		l32 := uint32(l64)
+		paginationLimit = &l32
+	}
+
+	var paginationToken *string
+	if token, ok := c.GetQuery("pagination_token"); ok {
+		paginationToken = &token
+	}
+
+	return paginationLimit, paginationToken
 }

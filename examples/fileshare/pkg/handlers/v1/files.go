@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
@@ -67,7 +66,8 @@ type FileUser struct {
 }
 
 type ListFileUsersResponse struct {
-	Users []FileUser `json:"users"`
+	PaginationToken string     `json:"pagination_token"`
+	Users           []FileUser `json:"users"`
 }
 
 func createFile(c *gin.Context) {
@@ -201,19 +201,12 @@ func getFile(c *gin.Context) {
 
 func listFiles(c *gin.Context) {
 	// Map request
+	paginationLimit, paginationToken := getPaginationParams(c)
 	resourcesListReq := sentium_grpc.ResourcesListRequest{
-		PrincipalId:  c.GetHeader("user-id"),
-		ResourceType: "files",
-	}
-
-	if limit, ok := c.GetQuery("pagination_limit"); ok {
-		l64, _ := strconv.ParseUint(limit, 10, 32)
-		l32 := uint32(l64)
-		resourcesListReq.PaginationLimit = &l32
-	}
-
-	if token, ok := c.GetQuery("pagination_token"); ok {
-		resourcesListReq.PaginationToken = &token
+		PaginationLimit: paginationLimit,
+		PaginationToken: paginationToken,
+		PrincipalId:     c.GetHeader("user-id"),
+		ResourceType:    "files",
 	}
 
 	resourcesClient, err := getResourcesClient()
@@ -256,6 +249,7 @@ func listFiles(c *gin.Context) {
 func listFileUsers(c *gin.Context) {
 	fileId := c.Param("file")
 	userId := c.GetHeader("user-id")
+	paginationLimit, paginationToken := getPaginationParams(c)
 
 	// Check requestor has access to file
 	role, err := getRole(userId, fileId)
@@ -270,10 +264,11 @@ func listFileUsers(c *gin.Context) {
 	}
 
 	// Map request
-	// TODO: add pagination support
 	listPrinipalsReq := sentium_grpc.ResourcesListPrincipalsRequest{
-		ResourceId:   fileId,
-		ResourceType: "files",
+		ResourceId:      fileId,
+		ResourceType:    "files",
+		PaginationLimit: paginationLimit,
+		PaginationToken: paginationToken,
 	}
 
 	// List Principals
@@ -293,6 +288,11 @@ func listFileUsers(c *gin.Context) {
 	resp := ListFileUsersResponse{
 		Users: []FileUser{},
 	}
+
+	if listPrincipalsResp.PaginationToken != nil {
+		resp.PaginationToken = *listPrincipalsResp.PaginationToken
+	}
+
 	for _, principal := range listPrincipalsResp.Principals {
 		attrs := principal.GetAttrs()
 		if attrs == nil || attrs.Fields["name"] == nil || attrs.Fields["role"] == nil {

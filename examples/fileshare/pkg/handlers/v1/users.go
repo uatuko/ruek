@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
@@ -88,15 +87,10 @@ func createUser(c *gin.Context) {
 
 func listUsers(c *gin.Context) {
 	// Map request
-	var principalsListReq sentium.PrincipalsListRequest
-	if limit, ok := c.GetQuery("pagination_limit"); ok {
-		l64, _ := strconv.ParseUint(limit, 10, 32)
-		l32 := uint32(l64)
-		principalsListReq.PaginationLimit = &l32
-	}
-
-	if token, ok := c.GetQuery("pagination_token"); ok {
-		principalsListReq.PaginationToken = &token
+	paginationLimit, paginationToken := getPaginationParams(c)
+	principalsListReq := sentium.PrincipalsListRequest{
+		PaginationLimit: paginationLimit,
+		PaginationToken: paginationToken,
 	}
 
 	if segment, ok := c.GetQuery("segment"); ok {
