@@ -37,6 +37,18 @@ func canShare(sharerRole string, sharedRole string) error {
 	return nil
 }
 
+func canUnshare(requestorRole string, unsharedRole string) error {
+	if shareOrder[requestorRole] > shareOrder[unsharedRole] {
+		return fmt.Errorf(
+			"cannot unshare from a higher role (requestor role: %s, unshared role: %s)",
+			requestorRole,
+			unsharedRole,
+		)
+	}
+
+	return nil
+}
+
 func getAuthzClient() (sentium.AuthzClient, error) {
 	if authzClient != nil {
 		return authzClient, nil

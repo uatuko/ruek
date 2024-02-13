@@ -368,3 +368,60 @@ func shareFile(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+
+func unshareFile(c *gin.Context) {
+	ctx := c.Request.Context()
+	fileId := c.Param("file")
+	userId := c.Param("user")
+	reqUserId := c.GetHeader("user-id")
+
+	// Chech request user has access to file
+	requestorRole, err := getRole(ctx, reqUserId, fileId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if requestorRole == "" {
+		c.JSON(http.StatusForbidden, "no access to file")
+		return
+	}
+
+	// Get role of the user the file share is removed from
+	role, err := getRole(ctx, userId, fileId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if role == "" {
+		c.Status(http.StatusNoContent)
+		return
+	}
+
+	// Check if user can unsharefile
+	if err := canUnshare(requestorRole, role); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+
+	// Unshare file
+	authzRevokeRequest := sentium.AuthzRevokeRequest{
+		PrincipalId:  userId,
+		ResourceId:   fileId,
+		ResourceType: "files",
+	}
+
+	authzClient, err := getAuthzClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if _, err := authzClient.Revoke(ctx, &authzRevokeRequest); err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

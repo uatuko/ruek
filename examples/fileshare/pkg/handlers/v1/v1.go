@@ -16,6 +16,7 @@ func Init(router *gin.RouterGroup) {
 
 	router.POST("/files", createFile)
 	router.POST("/files/:file/users", shareFile)
+	router.DELETE("/files/:file/users/:user", unshareFile)
 
 	// User management
 	router.GET("/users", listUsers)

@@ -644,3 +644,146 @@ func TestShareFile(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
 }
+
+func TestUnshareFile(t *testing.T) {
+	ctx := context.Background()
+	router := gin.New()
+	router.DELETE("/files/:file/users/:user", unshareFile)
+
+	// Create users
+	users, err := usersCreate(ctx, nil, 7)
+	require.NoError(t, err)
+	defer usersDelete(ctx, users)
+	owner := users[0]
+	editor1 := users[1]
+	editor2 := users[2]
+	viewer1 := users[3]
+	viewer2 := users[4]
+	viewer3 := users[5]
+	noAccessUser := users[6]
+
+	// Create file
+	files, err := filesCreate(ctx, 1, owner.Id)
+	require.NoError(t, err)
+	defer filesDelete(ctx, files, owner.Id)
+	file := files[0]
+
+	// Share file
+	err = filesShare(ctx, file, editor1.Id, "editor")
+	require.NoError(t, err)
+	err = filesShare(ctx, file, editor2.Id, "editor")
+	require.NoError(t, err)
+
+	err = filesShare(ctx, file, viewer1.Id, "viewer")
+	require.NoError(t, err)
+	err = filesShare(ctx, file, viewer2.Id, "viewer")
+	require.NoError(t, err)
+	err = filesShare(ctx, file, viewer3.Id, "viewer")
+	require.NoError(t, err)
+
+	t.Run("FailNoAccessToFile", func(t *testing.T) {
+		path := fmt.Sprintf("/files/%s/users/%s", file.Id, viewer1.Id)
+		headers := map[string]string{
+			"user-id": noAccessUser.Id,
+		}
+
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailUnsharingHigherRole", func(t *testing.T) {
+		path := fmt.Sprintf("/files/%s/users/%s", file.Id, editor1.Id)
+		headers := map[string]string{
+			"user-id": viewer1.Id,
+		}
+
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"cannot unshare from a higher role (requestor role: viewer, unshared role: editor)\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("SuccessOwnerUnshareEditor", func(t *testing.T) {
+		// Check user the file will be unshared woth has access to file
+		role, err := getRole(ctx, editor1.Id, file.Id)
+		require.NoError(t, err)
+		require.Equal(t, "editor", role)
+
+		// Unshare file
+		path := fmt.Sprintf("/files/%s/users/%s", file.Id, editor1.Id)
+		headers := map[string]string{
+			"user-id": owner.Id,
+		}
+
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+		role, err = getRole(ctx, editor1.Id, file.Id)
+		require.NoError(t, err)
+		require.Empty(t, role)
+	})
+
+	t.Run("SuccessEditorUnshareViewer", func(t *testing.T) {
+		// Check user the file will be unshared woth has access to file
+		role, err := getRole(ctx, viewer1.Id, file.Id)
+		require.NoError(t, err)
+		require.Equal(t, "viewer", role)
+
+		// Unshare file
+		path := fmt.Sprintf("/files/%s/users/%s", file.Id, viewer1.Id)
+		headers := map[string]string{
+			"user-id": editor2.Id,
+		}
+
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+		role, err = getRole(ctx, viewer1.Id, file.Id)
+		require.NoError(t, err)
+		require.Empty(t, role)
+	})
+
+	t.Run("SuccessViewerUnshareViewer", func(t *testing.T) {
+		// Check user the file will be unshared woth has access to file
+		role, err := getRole(ctx, viewer2.Id, file.Id)
+		require.NoError(t, err)
+		require.Equal(t, "viewer", role)
+
+		// Unshare file
+		path := fmt.Sprintf("/files/%s/users/%s", file.Id, viewer2.Id)
+		headers := map[string]string{
+			"user-id": viewer3.Id,
+		}
+
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+		role, err = getRole(ctx, viewer2.Id, file.Id)
+		require.NoError(t, err)
+		require.Empty(t, role)
+	})
+}
