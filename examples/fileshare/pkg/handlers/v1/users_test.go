@@ -59,6 +59,41 @@ func TestCreateUser(t *testing.T) {
 	})
 }
 
+func TestGetUser(t *testing.T) {
+	ctx := context.Background()
+	router := gin.New()
+	router.GET("/users/:user", getUser)
+
+	segment := "user-segment"
+	users, err := usersCreate(ctx, &segment, 1)
+	require.NoError(t, err)
+	defer usersDelete(ctx, users)
+
+	t.Run("NotFound", func(t *testing.T) {
+		path := fmt.Sprintf("/users/%s", "not-found")
+		resp, err := RouteHttp(router, "GET", path, nil, nil)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		path := fmt.Sprintf("/users/%s", users[0].Id)
+		resp, err := RouteHttp(router, "GET", path, nil, nil)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		var actual User
+		err = json.Unmarshal(respBody, &actual)
+		require.NoError(t, err)
+		require.Equal(t, users[0], actual)
+	})
+}
+
 func TestListUsers(t *testing.T) {
 	ctx := context.Background()
 	router := gin.New()

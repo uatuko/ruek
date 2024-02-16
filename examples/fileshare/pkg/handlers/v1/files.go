@@ -304,7 +304,7 @@ func listFileUsers(c *gin.Context) {
 			continue
 		}
 
-		user, err := getUser(ctx, principal.Id)
+		user, err := getUserFromPrincipalId(ctx, principal.Id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, err.Error())
 			return

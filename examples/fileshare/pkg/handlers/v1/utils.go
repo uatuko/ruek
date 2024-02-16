@@ -128,7 +128,7 @@ func getRole(ctx context.Context, principalId string, resourceId string) (string
 	return authzCheckResponse.Attrs.Fields["role"].GetStringValue(), nil
 }
 
-func getUser(ctx context.Context, principalId string) (*User, error) {
+func getUserFromPrincipalId(ctx context.Context, principalId string) (*User, error) {
 	principalsClient, err := getPrincipalsClient()
 	if err != nil {
 		return nil, err

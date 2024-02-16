@@ -5,6 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	sentium "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
@@ -83,6 +85,49 @@ func createUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, resp)
+}
+
+func getUser(c *gin.Context) {
+	ctx := c.Request.Context()
+	userId := c.Param("user")
+
+	// Map request
+	principalRetriveReq := &sentium.PrincipalsRetrieveRequest{
+		Id: userId,
+	}
+
+	// Get principal
+	principalsClient, err := getPrincipalsClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	principalRetriveResp, err := principalsClient.Retrieve(ctx, principalRetriveReq)
+	if err != nil {
+		if stts, ok := status.FromError(err); ok {
+			if stts.Code() == codes.NotFound {
+				c.Status((http.StatusNotFound))
+				return
+			}
+		}
+
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Map response
+	user := &User{
+		Id:      principalRetriveResp.Id,
+		Segment: *principalRetriveResp.Segment,
+	}
+
+	attrs := principalRetriveResp.GetAttrs()
+	if attrs != nil && attrs.Fields["name"] != nil {
+		user.Name = attrs.Fields["name"].GetStringValue()
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func listUsers(c *gin.Context) {

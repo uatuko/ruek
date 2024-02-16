@@ -20,6 +20,7 @@ func Init(router *gin.RouterGroup) {
 
 	// User management
 	router.GET("/users", listUsers)
+	router.GET("/users/:user", getUser)
 
 	router.POST("/users", createUser)
 }
