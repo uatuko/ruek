@@ -35,7 +35,7 @@ func RouteHttp(
 	return w.Result(), nil
 }
 
-func CheckFileExistsForUser(ctx context.Context, fileId string, userId string) (bool, error) {
+func checkFileExistsForUser(ctx context.Context, fileId string, userId string) (bool, error) {
 	resourcesClient, err := getResourcesClient()
 	if err != nil {
 		return false, err

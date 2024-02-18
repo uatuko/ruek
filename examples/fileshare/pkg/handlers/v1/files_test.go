@@ -160,11 +160,11 @@ func TestDeleteFile(t *testing.T) {
 
 	t.Run("SuccessOwner", func(t *testing.T) {
 		// Check owner and editor have acces to file
-		exists, err := CheckFileExistsForUser(ctx, deleteByOwner.Id, owner.Id)
+		exists, err := checkFileExistsForUser(ctx, deleteByOwner.Id, owner.Id)
 		require.NoError(t, err)
 		require.True(t, exists)
 
-		exists, err = CheckFileExistsForUser(ctx, deleteByOwner.Id, editor.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByOwner.Id, editor.Id)
 		require.NoError(t, err)
 		require.True(t, exists)
 
@@ -180,27 +180,27 @@ func TestDeleteFile(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, resp.StatusCode)
 
 		// Check the file was deleted for owner
-		exists, err = CheckFileExistsForUser(ctx, deleteByOwner.Id, owner.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByOwner.Id, owner.Id)
 		require.NoError(t, err)
 		require.False(t, exists)
 
 		// Check the file was deleted for editor
-		exists, err = CheckFileExistsForUser(ctx, deleteByOwner.Id, editor.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByOwner.Id, editor.Id)
 		require.NoError(t, err)
 		require.False(t, exists)
 	})
 
 	t.Run("SuccessEditor", func(t *testing.T) {
 		// Check owner, editor and viewer have access to file
-		exists, err := CheckFileExistsForUser(ctx, deleteByEditor.Id, owner.Id)
+		exists, err := checkFileExistsForUser(ctx, deleteByEditor.Id, owner.Id)
 		require.NoError(t, err)
 		require.True(t, exists)
 
-		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, editor.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByEditor.Id, editor.Id)
 		require.NoError(t, err)
 		require.True(t, exists)
 
-		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, viewer.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByEditor.Id, viewer.Id)
 		require.NoError(t, err)
 		require.True(t, exists)
 
@@ -216,17 +216,17 @@ func TestDeleteFile(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, resp.StatusCode)
 
 		// Check the file was deleted for owner
-		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, owner.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByEditor.Id, owner.Id)
 		require.NoError(t, err)
 		require.False(t, exists)
 
 		// Check the file was deleted for editor
-		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, editor.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByEditor.Id, editor.Id)
 		require.NoError(t, err)
 		require.False(t, exists)
 
 		// Check the file was deleted for viewer
-		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, viewer.Id)
+		exists, err = checkFileExistsForUser(ctx, deleteByEditor.Id, viewer.Id)
 		require.NoError(t, err)
 		require.False(t, exists)
 	})

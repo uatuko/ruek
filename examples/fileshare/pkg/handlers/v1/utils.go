@@ -112,7 +112,7 @@ func getResourcesClient() (sentium.ResourcesClient, error) {
 }
 
 // Check the principal has access to resource
-func getRole(ctx context.Context, principalId string, resourceId string) (string, error) {
+func getRole(ctx context.Context, principalId string, fileId string) (string, error) {
 	authzClient, err := getAuthzClient()
 	if err != nil {
 		return "", err
@@ -120,7 +120,7 @@ func getRole(ctx context.Context, principalId string, resourceId string) (string
 
 	authzCheckRequest := sentium.AuthzCheckRequest{
 		PrincipalId:  principalId,
-		ResourceId:   resourceId,
+		ResourceId:   fileId,
 		ResourceType: "files",
 	}
 

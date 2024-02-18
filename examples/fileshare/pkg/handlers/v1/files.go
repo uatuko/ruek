@@ -71,6 +71,7 @@ type ListFileUsersResponse struct {
 
 func createFile(c *gin.Context) {
 	ctx := c.Request.Context()
+	userId := c.GetHeader("user-id")
 
 	// Read the request body
 	var request CreateFileRequest
@@ -85,7 +86,7 @@ func createFile(c *gin.Context) {
 	}
 
 	// Map request
-	resourceId := xid.New().String()
+	fileId := xid.New().String()
 	attrs, err := structpb.NewStruct(map[string]interface{}{
 		"name": request.Name,
 		"role": "owner",
@@ -96,8 +97,8 @@ func createFile(c *gin.Context) {
 	}
 
 	authzGrantRequest := sentium.AuthzGrantRequest{
-		PrincipalId:  c.GetHeader("user-id"),
-		ResourceId:   resourceId,
+		PrincipalId:  userId,
+		ResourceId:   fileId,
 		ResourceType: "files",
 		Attrs:        attrs,
 	}
@@ -116,7 +117,7 @@ func createFile(c *gin.Context) {
 
 	// Map response
 	resp := File{
-		Id:   resourceId,
+		Id:   fileId,
 		Name: request.Name,
 		Role: "owner",
 	}
@@ -191,7 +192,7 @@ func deleteFile(c *gin.Context) {
 
 func getFile(c *gin.Context) {
 	ctx := c.Request.Context()
-	resourceId := c.Param("file")
+	fileId := c.Param("file")
 	userId := c.GetHeader("user-id")
 
 	// Check requestor has access to file
@@ -203,7 +204,7 @@ func getFile(c *gin.Context) {
 
 	authzCheckRequest := sentium.AuthzCheckRequest{
 		PrincipalId:  userId,
-		ResourceId:   resourceId,
+		ResourceId:   fileId,
 		ResourceType: "files",
 	}
 
@@ -239,7 +240,7 @@ func getFile(c *gin.Context) {
 	// Map response
 	var file *File
 	for _, resource := range resourcesListResp.Resources {
-		if resource.Id != resourceId {
+		if resource.Id != fileId {
 			continue
 		}
 
@@ -266,13 +267,14 @@ func getFile(c *gin.Context) {
 
 func listFiles(c *gin.Context) {
 	ctx := c.Request.Context()
+	userId := c.GetHeader("user-id")
 
 	// Map request
 	paginationLimit, paginationToken := getPaginationParams(c)
 	resourcesListReq := sentium.ResourcesListRequest{
 		PaginationLimit: paginationLimit,
 		PaginationToken: paginationToken,
-		PrincipalId:     c.GetHeader("user-id"),
+		PrincipalId:     userId,
 		ResourceType:    "files",
 	}
 
@@ -386,7 +388,7 @@ func listFileUsers(c *gin.Context) {
 
 func shareFile(c *gin.Context) {
 	ctx := c.Request.Context()
-	resourceId := c.Param("file")
+	fileId := c.Param("file")
 	userId := c.GetHeader("user-id")
 	var request ShareFileRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -400,7 +402,7 @@ func shareFile(c *gin.Context) {
 	}
 
 	// Check requestor has access to shared resource
-	role, err := getRole(ctx, userId, resourceId)
+	role, err := getRole(ctx, userId, fileId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
@@ -420,7 +422,7 @@ func shareFile(c *gin.Context) {
 	// Share resource
 	authzGrantRequest := sentium.AuthzGrantRequest{
 		PrincipalId:  request.UserId,
-		ResourceId:   resourceId,
+		ResourceId:   fileId,
 		ResourceType: "files",
 	}
 
