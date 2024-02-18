@@ -9,6 +9,7 @@ var validate *validator.Validate
 
 func Init(router *gin.RouterGroup) {
 	router.DELETE("/files/:file", deleteFile)
+	router.DELETE("/files/:file/users/:user", unshareFile)
 
 	router.GET("/files", listFiles)
 	router.GET("/files/:file", getFile)
@@ -16,9 +17,10 @@ func Init(router *gin.RouterGroup) {
 
 	router.POST("/files", createFile)
 	router.POST("/files/:file/users", shareFile)
-	router.DELETE("/files/:file/users/:user", unshareFile)
 
 	// User management
+	router.DELETE("/users/:user", deleteUser)
+
 	router.GET("/users", listUsers)
 	router.GET("/users/:user", getUser)
 

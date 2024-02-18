@@ -10,6 +10,8 @@ import (
 
 	"github.com/rs/xid"
 	sentium "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -114,7 +116,7 @@ func filesDelete(ctx context.Context, files []File, principalId string) error {
 		}
 
 		if _, err := authzClient.Revoke(ctx, &delReq); err != nil {
-			return err
+			panic(err)
 		}
 	}
 
@@ -199,7 +201,13 @@ func usersDelete(ctx context.Context, users []User) error {
 		}
 
 		if _, err := principalsClient.Delete(ctx, &delReq); err != nil {
-			return err
+			if stts, ok := status.FromError(err); ok {
+				if stts.Code() == codes.NotFound {
+					continue
+				}
+			}
+
+			panic(err)
 		}
 	}
 

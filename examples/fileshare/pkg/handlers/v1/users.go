@@ -87,6 +87,36 @@ func createUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+func deleteUser(c *gin.Context) {
+	ctx := c.Request.Context()
+	userId := c.Param("user")
+
+	// Delete principal
+	principalsClient, err := getPrincipalsClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	principalDeleteRequest := sentium.PrincipalsDeleteRequest{
+		Id: userId,
+	}
+
+	if _, err = principalsClient.Delete(ctx, &principalDeleteRequest); err != nil {
+		if stts, ok := status.FromError(err); ok {
+			if stts.Code() == codes.NotFound {
+				c.Status((http.StatusNotFound))
+				return
+			}
+		}
+
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func getUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	userId := c.Param("user")

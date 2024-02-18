@@ -10,7 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
+	sentium "github.com/sentium/examples/fileshare/pkg/pb/sentium/api/v1"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestCreateUser(t *testing.T) {
@@ -56,6 +59,65 @@ func TestCreateUser(t *testing.T) {
 		}
 
 		require.Equal(t, expectedResp, user)
+	})
+}
+
+func TestDeleteUser(t *testing.T) {
+	ctx := context.Background()
+	router := gin.New()
+	router.DELETE("/users/:user", deleteUser)
+
+	users, err := usersCreate(ctx, nil, 2)
+	require.NoError(t, err)
+	defer usersDelete(ctx, users)
+	owner := users[0]
+	editor := users[1]
+
+	files, err := filesCreate(ctx, 1, users[0].Id)
+	require.NoError(t, err)
+	defer filesDelete(ctx, files, users[0].Id)
+
+	err = filesShare(ctx, files[0], editor.Id, "editor")
+	require.NoError(t, err)
+
+	t.Run("FailNotFound", func(t *testing.T) {
+		resp, err := RouteHttp(router, "DELETE", "/users/not-found", nil, nil)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNotFound, resp.StatusCode)
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		path := fmt.Sprintf("/users/%s", owner.Id)
+		resp, err := RouteHttp(router, "DELETE", path, nil, nil)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+		// Check the user does not exist
+		principalsClient, err := getPrincipalsClient()
+		require.NoError(t, err)
+
+		principalRetriveReq := &sentium.PrincipalsRetrieveRequest{
+			Id: owner.Id,
+		}
+
+		_, err = principalsClient.Retrieve(ctx, principalRetriveReq)
+		require.NotNil(t, err)
+
+		stts, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equal(t, codes.NotFound, stts.Code())
+
+		// Check the file access was revoked for deleted user
+		ok, err = checkFileExistsForUser(ctx, files[0].Id, owner.Id)
+		require.NoError(t, err)
+		require.False(t, ok)
+
+		// Check editor still has access to file
+		ok, err = checkFileExistsForUser(ctx, files[0].Id, editor.Id)
+		require.NoError(t, err)
+		require.True(t, ok)
 	})
 }
 
