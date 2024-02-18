@@ -35,6 +35,31 @@ func RouteHttp(
 	return w.Result(), nil
 }
 
+func CheckFileExistsForUser(ctx context.Context, fileId string, userId string) (bool, error) {
+	resourcesClient, err := getResourcesClient()
+	if err != nil {
+		return false, err
+	}
+
+	resourcesListReq := sentium.ResourcesListRequest{
+		PrincipalId:  userId,
+		ResourceType: "files",
+	}
+
+	resourcesListResp, err := resourcesClient.List(ctx, &resourcesListReq)
+	if err != nil {
+		return false, err
+	}
+
+	for _, file := range resourcesListResp.Resources {
+		if file.Id == fileId {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func filesCreate(ctx context.Context, numFiles int, ownerId string) ([]File, error) {
 	files := []File{}
 

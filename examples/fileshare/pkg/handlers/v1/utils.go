@@ -21,6 +21,14 @@ var shareOrder = map[string]int{
 	"viewer": 2,
 }
 
+func canDelete(role string) error {
+	if role == "viewer" {
+		return fmt.Errorf("cannot delee file (role: %s)", role)
+	}
+
+	return nil
+}
+
 func canShare(sharerRole string, sharedRole string) error {
 	if sharerRole != "owner" && sharerRole != "editor" {
 		return fmt.Errorf("role cannot share (sharer role: %s)", sharerRole)

@@ -85,6 +85,153 @@ func TestCreateFile(t *testing.T) {
 	})
 }
 
+func TestDeleteFile(t *testing.T) {
+	ctx := context.Background()
+	router := gin.New()
+	router.DELETE("/files/:file", deleteFile)
+
+	users, err := usersCreate(ctx, nil, 4)
+	require.NoError(t, err)
+	defer usersDelete(ctx, users)
+	owner := users[0]
+	editor := users[1]
+	viewer := users[2]
+	noAccess := users[3]
+
+	files, err := filesCreate(ctx, 3, owner.Id)
+	require.NoError(t, err)
+	defer filesDelete(ctx, files, owner.Id)
+	deleteByOwner := files[0]
+	deleteByEditor := files[1]
+	deleteByViewer := files[2]
+
+	// Share files
+	err = filesShare(ctx, deleteByOwner, editor.Id, "editor")
+	require.NoError(t, err)
+
+	err = filesShare(ctx, deleteByEditor, editor.Id, "editor")
+	require.NoError(t, err)
+
+	err = filesShare(ctx, deleteByEditor, viewer.Id, "viewer")
+	require.NoError(t, err)
+
+	err = filesShare(ctx, deleteByViewer, viewer.Id, "viewer")
+	require.NoError(t, err)
+
+	t.Run("FailNoAccess", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": noAccess.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s", deleteByViewer.Id)
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"no access to file\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("FailViewer", func(t *testing.T) {
+		headers := map[string]string{
+			"user-id": viewer.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s", deleteByViewer.Id)
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		respBody, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			"\"cannot delee file (role: viewer)\"",
+			string(respBody),
+		)
+	})
+
+	t.Run("SuccessOwner", func(t *testing.T) {
+		// Check owner and editor have acces to file
+		exists, err := CheckFileExistsForUser(ctx, deleteByOwner.Id, owner.Id)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		exists, err = CheckFileExistsForUser(ctx, deleteByOwner.Id, editor.Id)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		// Send request to delete file
+		headers := map[string]string{
+			"user-id": owner.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s", deleteByOwner.Id)
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+		// Check the file was deleted for owner
+		exists, err = CheckFileExistsForUser(ctx, deleteByOwner.Id, owner.Id)
+		require.NoError(t, err)
+		require.False(t, exists)
+
+		// Check the file was deleted for editor
+		exists, err = CheckFileExistsForUser(ctx, deleteByOwner.Id, editor.Id)
+		require.NoError(t, err)
+		require.False(t, exists)
+	})
+
+	t.Run("SuccessEditor", func(t *testing.T) {
+		// Check owner, editor and viewer have access to file
+		exists, err := CheckFileExistsForUser(ctx, deleteByEditor.Id, owner.Id)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, editor.Id)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, viewer.Id)
+		require.NoError(t, err)
+		require.True(t, exists)
+
+		// Send request to delete file
+		headers := map[string]string{
+			"user-id": editor.Id,
+		}
+
+		path := fmt.Sprintf("/files/%s", deleteByEditor.Id)
+		resp, err := RouteHttp(router, "DELETE", path, nil, headers)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+		// Check the file was deleted for owner
+		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, owner.Id)
+		require.NoError(t, err)
+		require.False(t, exists)
+
+		// Check the file was deleted for editor
+		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, editor.Id)
+		require.NoError(t, err)
+		require.False(t, exists)
+
+		// Check the file was deleted for viewer
+		exists, err = CheckFileExistsForUser(ctx, deleteByEditor.Id, viewer.Id)
+		require.NoError(t, err)
+		require.False(t, exists)
+	})
+}
+
 func TestGetFile(t *testing.T) {
 	ctx := context.Background()
 	router := gin.New()

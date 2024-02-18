@@ -124,7 +124,70 @@ func createFile(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
-func deleteFile(c *gin.Context) {}
+func deleteFile(c *gin.Context) {
+	ctx := c.Request.Context()
+	fileId := c.Param("file")
+	userId := c.GetHeader("user-id")
+
+	// Check requestor has access to shared resource
+	role, err := getRole(ctx, userId, fileId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if role == "" {
+		c.JSON(http.StatusForbidden, "no access to file")
+		return
+	}
+
+	// Check requestor can delete file
+	if err := canDelete(role); err != nil {
+		c.JSON(http.StatusForbidden, err.Error())
+		return
+	}
+
+	// To delete a file, we revoke all access to it
+	// List all principals that have access to the file
+	listPrinipalsReq := sentium.ResourcesListPrincipalsRequest{
+		ResourceId:   fileId,
+		ResourceType: "files",
+	}
+
+	resourcesClient, err := getResourcesClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	listPrincipalsResp, err := resourcesClient.ListPrincipals(ctx, &listPrinipalsReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Revoke access from each principal
+	authzClient, err := getAuthzClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, principal := range listPrincipalsResp.Principals {
+		authzRevokeRequest := sentium.AuthzRevokeRequest{
+			PrincipalId:  principal.Id,
+			ResourceId:   fileId,
+			ResourceType: "files",
+		}
+
+		if _, err := authzClient.Revoke(ctx, &authzRevokeRequest); err != nil {
+			c.JSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	c.Status(http.StatusNoContent)
+}
 
 func getFile(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -157,7 +220,7 @@ func getFile(c *gin.Context) {
 
 	// Get the file
 	resourcesListReq := sentium.ResourcesListRequest{
-		PrincipalId:  c.GetHeader("user-id"),
+		PrincipalId:  userId,
 		ResourceType: "files",
 	}
 
