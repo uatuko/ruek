@@ -6,13 +6,13 @@ import {
 	Show
 } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { IoHome } from 'solid-icons/io';
+import { IoHome, IoLogInOutline } from 'solid-icons/io';
 
 import Busy from './busy';
 
 import './users.css';
 
-function Users() {
+function Users(props) {
 	const nav = useNavigate();
 
 	const [busy, setBusy] = createSignal(false);
@@ -45,6 +45,11 @@ function Users() {
 		}
 	}
 
+	function switchUser(user) {
+		props.setUser(user);
+		nav('/');
+	}
+
 	createEffect(() => {
 		window.addEventListener('scroll', onScroll);
 	});
@@ -67,7 +72,12 @@ function Users() {
 					{
 						(user) => (
 							<div class="row">
-								<div class="cell">{user.id}</div>
+								<div class="cell">
+									<button onClick={() => {switchUser(user);}}>
+										<IoLogInOutline />
+									</button>
+									<span>{user.id}</span>
+								</div>
 								<div class="cell">{user.name}</div>
 							</div>
 						)

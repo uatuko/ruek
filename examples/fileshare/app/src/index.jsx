@@ -19,7 +19,7 @@ render(
 			<Route path="/" component={() => (<App user={user()} />)} />
 			<Route path="/files/:id" component={() => (<File user={user()} />)} />
 			<Route path="/sign-up" component={() => (<SignUp setUser={setUser} />)} />
-			<Route path="/users" component={Users} />
+			<Route path="/users" component={() => (<Users setUser={setUser} />)} />
 		</Router>
 	),
 	root

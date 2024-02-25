@@ -11,7 +11,7 @@ function App(props) {
 
 	createEffect(() => {
 		if (!props.user.id) {
-			nav('/sign-up', { replace: true });
+			nav('/users', { replace: true });
 		}
 	});
 
