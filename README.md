@@ -3,7 +3,20 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](https://raw.githubusercontent.com/uatuko/sentium/main/LICENSE)
 [![codecov](https://codecov.io/gh/uatuko/sentium/graph/badge.svg?token=KR9MkDkk8s)](https://codecov.io/gh/uatuko/sentium)
 
-Global scale authorisation for mere mortals.
+Lightning fast, global scale authorisation service without the overhead of (yet another) modeling language.
+
+## Features
+
+* Schema-less fine-grained access control (FGA)
+* Zero-trust, least privilege architecture (ZTA)
+* Predictable constant time authorisation checks (O(1))
+* Strongly consistent with no cache
+* Cloud native at global scale[^1]
+* ABAC, RBAC & ReBAC (with constraints)
+* Not just authorisation checks, list users, resources a user can access and users with access to a resource
+* First class treatment for listing endpoints with pagination and limits to handle large datasets
+* Built using the fastest gRPC server implementation[^2]
+
 
 ## Getting started
 
@@ -190,3 +203,6 @@ Listening on [127.0.0.1:8080] ...
 ## Acknowledgments
 
 * Thanks to [@kw510](https://github.com/kw510), [@neculalaura](https://github.com/neculalaura) and [@td0m](https://github.com/td0m) for their contributions on the `gatekeeper` branch.
+
+[^1]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
+[^2]: [gRPCxx](https://github.com/uatuko/grpcxx) is benchmarked to be the fastest in February 2024.
