@@ -3,7 +3,41 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](https://raw.githubusercontent.com/uatuko/sentium/main/LICENSE)
 [![codecov](https://codecov.io/gh/uatuko/sentium/graph/badge.svg?token=KR9MkDkk8s)](https://codecov.io/gh/uatuko/sentium)
 
-Global scale authorisation for mere mortals.
+Lightning fast, global scale authorisation service without the overhead of (yet another) modeling language.
+
+## What is Sentium?
+
+Sentium is an authorisation service for securing your applications and services using zero trust[^1]
+fine-grained access control (FGA).
+
+We designed Sentium to be as powerful and scalable as [Zanzibar — Google’s Consistent, Global Authorization System](https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/)
+yet simple enough to start using without the overhead of having to learn a new modeling language or a policy syntax.
+
+### Why Sentium?
+
+There are other open-source (and commercial) authorisation services, some are inspired by Google Zanzibar
+while others tend to offer policy-as-code solutions. But these solutions require learning a new modeling
+language or a policy syntax creating unnecessary complexities.
+
+Using an authorisation service shouldn't come with a requirement to be an expert in building and maintaining
+authorisation models or policies. It should be as easy as using an API.
+
+Sentium lean on well known API design principals to provide an authorisation service that's easy to
+integrate, quick to master and flexible enough to handle complex requirements.
+
+
+## Features
+
+* Schema-less fine-grained access control (FGA)
+* Zero-trust, least privilege architecture (ZTA)
+* Predictable constant time authorisation checks (O(1))
+* Strongly consistent with no cache
+* Cloud native at global scale[^2]
+* ABAC, RBAC & ReBAC (with constraints)
+* Not just authorisation checks, list users, resources a user can access and users with access to a resource
+* First class treatment for listing endpoints with pagination and limits to handle large datasets
+* Built using the fastest gRPC server implementation[^3]
+
 
 ## Getting started
 
@@ -189,4 +223,9 @@ Listening on [127.0.0.1:8080] ...
 
 ## Acknowledgments
 
-* Thanks to [@kw510](https://github.com/kw510), [@neculalaura](https://github.com/neculalaura) and [@td0m](https://github.com/td0m) for their contributions on the `gatekeeper` branch.
+* Thanks to [@kw510](https://github.com/kw510), [@neculalaura](https://github.com/neculalaura) and [@td0m](https://github.com/td0m)
+for their contributions on the `gatekeeper` branch.
+
+[^1]: [Zero trust architecture (ZTA)](https://en.wikipedia.org/wiki/Zero_trust_security_model)
+[^2]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
+[^3]: [gRPCxx](https://github.com/uatuko/grpcxx) is benchmarked to be the fastest in February 2024.
