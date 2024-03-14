@@ -23,8 +23,8 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 		limit = req.pagination_limit();
 	}
 
-	auto results =
-		db::ListRecordsByPrincipal(req.principal_id(), req.resource_type(), lastId, limit);
+	auto results = db::ListRecordsByPrincipal(
+		ctx.meta("space-id"), req.principal_id(), req.resource_type(), lastId, limit);
 
 	auto response = map<rpcList::response_type>(results);
 	if (results.size() == limit) {
@@ -54,7 +54,8 @@ rpcListPrincipals::result_type Impl::call<rpcListPrincipals>(
 		limit = req.pagination_limit();
 	}
 
-	auto results = db::ListRecordsByResource(req.resource_type(), req.resource_id(), lastId, limit);
+	auto results = db::ListRecordsByResource(
+		ctx.meta("space-id"), req.resource_type(), req.resource_id(), lastId, limit);
 	auto response = map<rpcListPrincipals::response_type>(results);
 
 	if (results.size() == limit) {

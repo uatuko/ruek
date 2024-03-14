@@ -14,7 +14,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
 	if (req.has_id()) {
 		try {
-			db::Principal::retrieve(req.id());
+			db::Principal::retrieve(ctx.meta("space-id"), req.id());
 
 			throw err::RpcPrincipalsAlreadyExists();
 		} catch (const err::DbPrincipalNotFound &) {
@@ -22,7 +22,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 		}
 	}
 
-	auto p = map(req);
+	auto p = map(ctx, req);
 	p.store();
 
 	return {grpcxx::status::code_t::ok, map(p)};
@@ -31,7 +31,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 template <>
 rpcDelete::result_type Impl::call<rpcDelete>(
 	grpcxx::context &ctx, const rpcDelete::request_type &req) {
-	if (auto r = db::Principal::discard(req.id()); r == false) {
+	if (auto r = db::Principal::discard(ctx.meta("space-id"), req.id()); r == false) {
 		throw err::RpcPrincipalsNotFound();
 	}
 
@@ -58,7 +58,7 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 		limit = req.pagination_limit();
 	}
 
-	auto results  = db::ListPrincipals(segment, lastId, limit);
+	auto results  = db::ListPrincipals(ctx.meta("space-id"), segment, lastId, limit);
 	auto response = map(results);
 
 	if (results.size() == limit) {
@@ -75,14 +75,14 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 template <>
 rpcRetrieve::result_type Impl::call<rpcRetrieve>(
 	grpcxx::context &ctx, const rpcRetrieve::request_type &req) {
-	auto p = db::Principal::retrieve(req.id());
+	auto p = db::Principal::retrieve(ctx.meta("space-id"), req.id());
 	return {grpcxx::status::code_t::ok, map(p)};
 }
 
 template <>
 rpcUpdate::result_type Impl::call<rpcUpdate>(
 	grpcxx::context &ctx, const rpcUpdate::request_type &req) {
-	auto p = db::Principal::retrieve(req.id());
+	auto p = db::Principal::retrieve(ctx.meta("space-id"), req.id());
 	if (!req.has_attrs() && !req.has_segment()) {
 		// Nothing to update
 		return {grpcxx::status::code_t::ok, map(p)};
@@ -132,9 +132,11 @@ google::rpc::Status Impl::exception() noexcept {
 	return status;
 }
 
-db::Principal Impl::map(const rpcCreate::request_type &from) const noexcept {
+db::Principal Impl::map(
+	const grpcxx::context &ctx, const rpcCreate::request_type &from) const noexcept {
 	db::Principal to({
-		.id = from.id(),
+		.spaceId = std::string(ctx.meta("space-id")),
+		.id      = from.id(),
 	});
 
 	if (from.has_attrs()) {

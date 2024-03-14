@@ -142,8 +142,8 @@ TEST_F(svc_AuthzTest, Grant) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 
-		auto actual =
-			db::Record::lookup(record.principalId(), record.resourceType(), record.resourceId());
+		auto actual = db::Record::lookup(
+			record.spaceId(), record.principalId(), record.resourceType(), record.resourceId());
 		EXPECT_EQ(record.rev() + 1, actual->rev());
 		EXPECT_EQ(R"({"foo": "bar"})", actual->attrs());
 	}
@@ -204,7 +204,7 @@ TEST_F(svc_AuthzTest, Revoke) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 
-		EXPECT_FALSE(
-			db::Record::lookup(record.principalId(), record.resourceType(), record.resourceId()));
+		EXPECT_FALSE(db::Record::lookup(
+			record.spaceId(), record.principalId(), record.resourceType(), record.resourceId()));
 	}
 }

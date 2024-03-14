@@ -40,7 +40,8 @@ public:
 	google::rpc::Status exception() noexcept;
 
 private:
-	db::Principal map(const rpcCreate::request_type &from) const noexcept;
+	db::Principal map(
+		const grpcxx::context &ctx, const rpcCreate::request_type &from) const noexcept;
 
 	rpcCreate::response_type map(const db::Principal &from) const noexcept;
 	rpcList::response_type   map(const db::Principals &from) const noexcept;

@@ -361,7 +361,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 		EXPECT_FALSE(actual.has_segment());
 		EXPECT_FALSE(actual.has_attrs());
 
-		auto p = db::Principal::retrieve(principal.id());
+		auto p = db::Principal::retrieve(principal.spaceId(), principal.id());
 		EXPECT_EQ(principal.rev(), p.rev());
 	}
 }

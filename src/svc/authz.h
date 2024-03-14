@@ -32,7 +32,7 @@ public:
 private:
 	rpcCheck::response_type map(const std::optional<db::Record> &from) const noexcept;
 
-	db::Record              map(const rpcGrant::request_type &from) const noexcept;
+	db::Record map(const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept;
 	rpcGrant::response_type map(const db::Record &from) const noexcept;
 };
 } // namespace authz
