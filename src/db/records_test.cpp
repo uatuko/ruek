@@ -34,6 +34,7 @@ TEST_F(db_RecordsTest, discard) {
 		.principalId  = principal.id(),
 		.resourceId   = "discard",
 		.resourceType = "db_RecordsTest",
+		.spaceId      = principal.spaceId(),
 	});
 	ASSERT_NO_THROW(record.store());
 
@@ -73,6 +74,7 @@ TEST_F(db_RecordsTest, list) {
 		.principalId  = principal.id(),
 		.resourceId   = "list",
 		.resourceType = "db_RecordsTest",
+		.spaceId      = principal.spaceId(),
 	});
 	ASSERT_NO_THROW(record.store());
 
@@ -114,21 +116,25 @@ TEST_F(db_RecordsTest, list) {
 				.principalId  = principals[0].id(),
 				.resourceId   = "list-with_last_id[0]",
 				.resourceType = "db_RecordsTest",
+				.spaceId      = principals[0].spaceId(),
 			}},
 			{{
 				.principalId  = principals[1].id(),
 				.resourceId   = "list-with_last_id[0]",
 				.resourceType = "db_RecordsTest",
+				.spaceId      = principals[1].spaceId(),
 			}},
 			{{
 				.principalId  = principals[0].id(),
 				.resourceId   = "list-with_last_id[1]",
 				.resourceType = "db_RecordsTest",
+				.spaceId      = principals[0].spaceId(),
 			}},
 			{{
 				.principalId  = principals[1].id(),
 				.resourceId   = "list-with_last_id[1]",
 				.resourceType = "db_RecordsTest",
+				.spaceId      = principals[1].spaceId(),
 			}},
 		});
 
@@ -178,6 +184,7 @@ TEST_F(db_RecordsTest, lookup) {
 		.principalId  = principal.id(),
 		.resourceId   = "lookup",
 		.resourceType = "db_RecordsTest",
+		.spaceId      = principal.spaceId(),
 	});
 	ASSERT_NO_THROW(record.store());
 
@@ -210,6 +217,7 @@ TEST_F(db_RecordsTest, rev) {
 			.principalId  = principal.id(),
 			.resourceId   = "rev",
 			.resourceType = "db_RecordsTest",
+			.spaceId      = principal.spaceId(),
 		});
 
 		ASSERT_NO_THROW(record.store());
@@ -225,6 +233,7 @@ TEST_F(db_RecordsTest, rev) {
 			.principalId  = principal.id(),
 			.resourceId   = "rev-mismatch",
 			.resourceType = "db_RecordsTest",
+			.spaceId      = principal.spaceId(),
 		});
 
 		std::string_view qry = R"(
@@ -267,6 +276,7 @@ TEST_F(db_RecordsTest, store) {
 			.principalId  = principal.id(),
 			.resourceId   = "store",
 			.resourceType = "db_RecordsTest",
+			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(record.store());
 
@@ -311,6 +321,7 @@ TEST_F(db_RecordsTest, store) {
 			.principalId  = principal.id(),
 			.resourceId   = "store",
 			.resourceType = "db_RecordsTest",
+			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(record.store());
 
@@ -337,12 +348,25 @@ TEST_F(db_RecordsTest, store) {
 		EXPECT_EQ(R"(["test"])", tags);
 	}
 
+	// Error: invalid `spaceId`
+	{
+		db::Record record({
+			.principalId  = principal.id(),
+			.resourceId   = "store-invalid_space_id",
+			.resourceType = "db_RecordsTest",
+			.spaceId      = "space_id:db_RecordsTest.store-invalid_space_id",
+		});
+
+		EXPECT_THROW(record.store(), err::DbRecordInvalidPrincipalId);
+	}
+
 	// Error: invalid `principalId`
 	{
 		db::Record record({
-			.principalId  = "id:db_RecordsTest.store-invalid-principalId",
-			.resourceId   = "store-invalid-principalId",
+			.principalId  = "id:db_RecordsTest.store-invalid_principal_id",
+			.resourceId   = "store-invalid_principal_id",
 			.resourceType = "db_RecordsTest",
+			.spaceId      = principal.spaceId(),
 		});
 
 		EXPECT_THROW(record.store(), err::DbRecordInvalidPrincipalId);
@@ -353,8 +377,9 @@ TEST_F(db_RecordsTest, store) {
 		db::Record record({
 			.attrs        = R"("string")",
 			.principalId  = principal.id(),
-			.resourceId   = "store-invalid-attrs",
+			.resourceId   = "store-invalid_attrs",
 			.resourceType = "db_RecordsTest",
+			.spaceId      = principal.spaceId(),
 		});
 
 		EXPECT_THROW(record.store(), err::DbRecordInvalidData);

@@ -76,6 +76,21 @@ TEST_F(db_PrincipalsTest, list) {
 		EXPECT_EQ(principal, results[0]);
 	}
 
+	// Success: list with space id
+	{
+		db::Principal principal({
+			.id      = "id:db_PrincipalsTest.list-with_space_id",
+			.spaceId = "space_id:db_PrincipalsTest.list-with_space_id",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principal.spaceId()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principal, results[0]);
+	}
+
 	// Success: list with last id
 	// WARNING: this test can break depending on other tests
 	{
@@ -120,7 +135,7 @@ TEST_F(db_PrincipalsTest, list) {
 		EXPECT_EQ(principals[0], results[0]);
 	}
 
-	// Success: list with count (and segment id)
+	// Success: list with count (and segment)
 	{
 		db::Principals principals({
 			{{
@@ -191,6 +206,31 @@ TEST_F(db_PrincipalsTest, retrieve) {
 		auto principal = db::Principal::retrieve("", "id:db_PrincipalsTest.retrieve-optional");
 		EXPECT_EQ(1237, principal.rev());
 		EXPECT_EQ(R"({"foo": "bar"})", principal.attrs());
+	}
+
+	// Error: not found (space id mismatch)
+	{
+		std::string_view qry = R"(
+			insert into principals (
+				space_id,
+				id,
+				_rev
+			) values (
+				$1::text,
+				$2::text,
+				$3::integer
+			);
+		)";
+
+		ASSERT_NO_THROW(db::pg::exec(
+			qry,
+			"space_id:db_PrincipalsTest.retrieve-space_id_mismatch",
+			"id:db_PrincipalsTest.retrieve-space_id_mismatch",
+			933));
+
+		EXPECT_THROW(
+			db::Principal::retrieve("", "id:db_PrincipalsTest.retrieve-space_id_mismatch"),
+			err::DbPrincipalNotFound);
 	}
 }
 
@@ -318,7 +358,7 @@ TEST_F(db_PrincipalsTest, store) {
 	{
 		db::Principal principal({
 			.attrs = R"("string")",
-			.id    = "id:db_PrincipalsTest.store-invalid-attrs",
+			.id    = "id:db_PrincipalsTest.store-invalid_attrs",
 		});
 
 		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidData);
