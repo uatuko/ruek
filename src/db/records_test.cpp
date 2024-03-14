@@ -39,8 +39,8 @@ TEST_F(db_RecordsTest, discard) {
 
 	bool result = false;
 	ASSERT_NO_THROW(
-		result =
-			db::Record::discard(record.principalId(), record.resourceType(), record.resourceId()));
+		result = db::Record::discard(
+			record.spaceId(), record.principalId(), record.resourceType(), record.resourceId()));
 	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(
@@ -48,13 +48,15 @@ TEST_F(db_RecordsTest, discard) {
 			count(*)
 		from records
 		where
-			principal_id = $1::text
-			and resource_type = $2::text
-			and resource_id = $3::text
+			space_id = $1::text
+			and principal_id = $2::text
+			and resource_type = $3::text
+			and resource_id = $4::text
 		;
 	)";
 
-	auto res = db::pg::exec(qry, record.principalId(), record.resourceType(), record.resourceId());
+	auto res = db::pg::exec(
+		qry, record.spaceId(), record.principalId(), record.resourceType(), record.resourceId());
 	ASSERT_EQ(1, res.size());
 
 	auto count = res.at(0, 0).as<int>();
@@ -78,7 +80,8 @@ TEST_F(db_RecordsTest, list) {
 	{
 		db::Records results;
 		ASSERT_NO_THROW(
-			results = db::ListRecordsByPrincipal(principal.id(), record.resourceType()));
+			results = db::ListRecordsByPrincipal(
+				principal.spaceId(), principal.id(), record.resourceType()));
 		ASSERT_EQ(1, results.size());
 
 		EXPECT_EQ(record, results[0]);
@@ -88,7 +91,8 @@ TEST_F(db_RecordsTest, list) {
 	{
 		db::Records results;
 		ASSERT_NO_THROW(
-			results = db::ListRecordsByResource(record.resourceType(), record.resourceId()));
+			results = db::ListRecordsByResource(
+				record.spaceId(), record.resourceType(), record.resourceId()));
 		ASSERT_EQ(1, results.size());
 
 		EXPECT_EQ(record, results[0]);
@@ -137,7 +141,10 @@ TEST_F(db_RecordsTest, list) {
 			db::Records results;
 			ASSERT_NO_THROW({
 				results = db::ListRecordsByPrincipal(
-					principals[0].id(), records[0].resourceType(), records[2].resourceId());
+					principals[0].spaceId(),
+					principals[0].id(),
+					records[0].resourceType(),
+					records[2].resourceId());
 			});
 
 			ASSERT_EQ(1, results.size());
@@ -149,7 +156,10 @@ TEST_F(db_RecordsTest, list) {
 			db::Records results;
 			ASSERT_NO_THROW({
 				results = db::ListRecordsByResource(
-					records[2].resourceType(), records[3].resourceId(), principals[1].id());
+					records[2].spaceId(),
+					records[2].resourceType(),
+					records[3].resourceId(),
+					principals[1].id());
 			});
 
 			ASSERT_EQ(1, results.size());
@@ -173,8 +183,8 @@ TEST_F(db_RecordsTest, lookup) {
 
 	// Success: lookup record
 	{
-		auto result =
-			db::Record::lookup(record.principalId(), record.resourceType(), record.resourceId());
+		auto result = db::Record::lookup(
+			record.spaceId(), record.principalId(), record.resourceType(), record.resourceId());
 		ASSERT_TRUE(result);
 
 		EXPECT_EQ(record, result.value());
@@ -182,8 +192,8 @@ TEST_F(db_RecordsTest, lookup) {
 
 	// Success: lookup non-existent record
 	{
-		auto result =
-			db::Record::lookup(record.principalId(), record.resourceType(), "non-existent");
+		auto result = db::Record::lookup(
+			record.spaceId(), record.principalId(), record.resourceType(), "non-existent");
 		EXPECT_EQ(std::nullopt, result);
 	}
 }
@@ -219,24 +229,27 @@ TEST_F(db_RecordsTest, rev) {
 
 		std::string_view qry = R"(
 			insert into records (
-				_rev,
+				space_id,
 				principal_id,
 				resource_type,
-				resource_id
+				resource_id,
+				_rev
 			) values (
-				$1::integer,
+				$1::text,
 				$2::text,
 				$3::text,
-				$4::text
+				$4::text,
+				$5::integer
 			)
 		)";
 
 		ASSERT_NO_THROW(db::pg::exec(
 			qry,
-			record.rev() + 1,
+			record.spaceId(),
 			record.principalId(),
 			record.resourceType(),
-			record.resourceId()));
+			record.resourceId(),
+			record.rev() + 1));
 
 		EXPECT_THROW(record.store(), err::DbRevisionMismatch);
 	}
@@ -259,21 +272,26 @@ TEST_F(db_RecordsTest, store) {
 
 		std::string_view qry = R"(
 			select
-				_rev,
-				attrs
+				attrs,
+				_rev
 			from records
 			where
-				principal_id = $1::text
-				and resource_type = $2::text
-				and resource_id = $3::text
+				space_id = $1::text
+				and principal_id = $2::text
+				and resource_type = $3::text
+				and resource_id = $4::text
 			;
 		)";
 
-		auto res =
-			db::pg::exec(qry, record.principalId(), record.resourceType(), record.resourceId());
+		auto res = db::pg::exec(
+			qry,
+			record.spaceId(),
+			record.principalId(),
+			record.resourceType(),
+			record.resourceId());
 		ASSERT_EQ(1, res.size());
 
-		auto [_rev, attrs] = res[0].as<int, db::Record::Data::attrs_t>();
+		auto [attrs, _rev] = res[0].as<db::Record::Data::attrs_t, int>();
 		EXPECT_EQ(record.rev(), _rev);
 		EXPECT_FALSE(attrs);
 	}

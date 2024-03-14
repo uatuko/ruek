@@ -23,33 +23,37 @@ Principal::Principal(const pg::row_t &r) :
 		.attrs   = r["attrs"].as<Data::attrs_t>(),
 		.id      = r["id"].as<std::string>(),
 		.segment = r["segment"].as<Data::segment_t>(),
+		.spaceId = r["space_id"].as<std::string>(),
 	}),
 	_rev(r["_rev"].as<int>()) {}
 
-bool Principal::discard(const std::string &id) {
+bool Principal::discard(std::string_view spaceId, const std::string &id) {
 	std::string_view qry = R"(
 		delete from principals
 		where
-			id = $1::text;
+			space_id = $1::text
+			and id = $2::text;
 	)";
 
-	auto res = pg::exec(qry, id);
+	auto res = pg::exec(qry, spaceId, id);
 	return (res.affected_rows() == 1);
 }
 
-Principal Principal::retrieve(const std::string &id) {
+Principal Principal::retrieve(std::string_view spaceId, const std::string &id) {
 	std::string_view qry = R"(
 		select
-			_rev,
+			space_id,
 			id,
 			segment,
-			attrs
+			attrs,
+			_rev
 		from principals
 		where
-			id = $1::text;
+			space_id = $1::text
+			and id = $2::text;
 	)";
 
-	auto res = pg::exec(qry, id);
+	auto res = pg::exec(qry, spaceId, id);
 	if (res.empty()) {
 		throw err::DbPrincipalNotFound();
 	}
@@ -60,34 +64,36 @@ Principal Principal::retrieve(const std::string &id) {
 void Principal::store() {
 	std::string_view qry = R"(
 		insert into principals as t (
-			_rev,
+			space_id,
 			id,
 			segment,
-			attrs
+			attrs,
+			_rev
 		) values (
-			$1::integer,
+			$1::text,
 			$2::text,
 			$3::text,
-			$4::jsonb
+			$4::jsonb,
+			$5::integer
 		)
-		on conflict (id)
+		on conflict (space_id, id)
 		do update
 			set (
-				_rev,
 				segment,
-				attrs
+				attrs,
+				_rev
 			) = (
-				excluded._rev + 1,
 				$3::text,
-				$4::jsonb
+				$4::jsonb,
+				excluded._rev + 1
 			)
-			where t._rev = $1::integer
+			where t._rev = $5::integer
 		returning _rev;
 	)";
 
 	pg::result_t res;
 	try {
-		res = pg::exec(qry, _rev, _data.id, _data.segment, _data.attrs);
+		res = pg::exec(qry, _data.spaceId, _data.id, _data.segment, _data.attrs, _rev);
 	} catch (pqxx::check_violation &) {
 		throw err::DbPrincipalInvalidData();
 	}
@@ -100,29 +106,31 @@ void Principal::store() {
 }
 
 Principals ListPrincipals(
-	Principal::Data::segment_t segment, std::string_view lastId, std::uint16_t count) {
-	std::string where;
+	std::string_view spaceId, Principal::Data::segment_t segment, std::string_view lastId,
+	std::uint16_t count) {
+	std::string where = "where space_id = $1::text";
 	if (segment) {
-		where = "where segment = $1::text";
+		where += " and segment = $2::text";
 	} else {
-		where = "where segment is null";
+		where += " and segment is null";
 	}
 
 	if (!lastId.empty()) {
 		if (segment) {
-			where += " and id < $2::text";
+			where += " and id < $3::text";
 		} else {
-			where += " and id < $1::text";
+			where += " and id < $2::text";
 		}
 	}
 
 	const std::string qry = fmt::format(
 		R"(
 			select
-				_rev,
+				space_id,
 				id,
 				segment,
-				attrs
+				attrs,
+				_rev
 			from principals
 			{}
 			order by id desc
@@ -133,13 +141,13 @@ Principals ListPrincipals(
 
 	db::pg::result_t res;
 	if (segment && !lastId.empty()) {
-		res = pg::exec(qry, segment, lastId);
+		res = pg::exec(qry, spaceId, segment, lastId);
 	} else if (segment) {
-		res = pg::exec(qry, segment);
+		res = pg::exec(qry, spaceId, segment);
 	} else if (!lastId.empty()) {
-		res = pg::exec(qry, lastId);
+		res = pg::exec(qry, spaceId, lastId);
 	} else {
-		res = pg::exec(qry);
+		res = pg::exec(qry, spaceId);
 	}
 
 	Principals principals;

@@ -16,6 +16,7 @@ public:
 		std::string principalId;
 		std::string resourceId;
 		std::string resourceType;
+		std::string spaceId;
 
 		bool operator==(const Data &) const noexcept = default;
 	};
@@ -36,17 +37,18 @@ public:
 	const std::string &principalId() const noexcept { return _data.principalId; }
 	const std::string &resourceId() const noexcept { return _data.resourceId; }
 	const std::string &resourceType() const noexcept { return _data.resourceType; }
+	const std::string &spaceId() const noexcept { return _data.spaceId; }
 
 	const int &rev() const noexcept { return _rev; }
 
 	void store();
 
 	static bool discard(
-		const std::string &principalId, const std::string &resourceType,
+		std::string_view spaceId, const std::string &principalId, const std::string &resourceType,
 		const std::string &resourceId);
 
 	static std::optional<Record> lookup(
-		const std::string &principalId, const std::string &resourceType,
+		std::string_view spaceId, const std::string &principalId, const std::string &resourceType,
 		const std::string &resourceId);
 
 private:
@@ -57,10 +59,10 @@ private:
 using Records = std::vector<Record>;
 
 Records ListRecordsByPrincipal(
-	std::string_view principalId, std::string_view resourceType, std::string_view lastId = "",
-	std::uint16_t count = 10);
+	std::string_view spaceId, std::string_view principalId, std::string_view resourceType,
+	std::string_view lastId = "", std::uint16_t count = 10);
 
 Records ListRecordsByResource(
-	std::string_view resourceType, std::string_view resourceId, std::string_view lastId = "",
-	std::uint16_t count = 10);
+	std::string_view spaceId, std::string_view resourceType, std::string_view resourceId,
+	std::string_view lastId = "", std::uint16_t count = 10);
 } // namespace db
