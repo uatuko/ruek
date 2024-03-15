@@ -16,6 +16,7 @@ public:
 		attrs_t     attrs;
 		std::string id;
 		segment_t   segment;
+		std::string spaceId;
 
 		bool operator==(const Data &) const noexcept = default;
 	};
@@ -41,11 +42,12 @@ public:
 
 	const std::string &id() const noexcept { return _data.id; }
 	const int         &rev() const noexcept { return _rev; }
+	const std::string &spaceId() const noexcept { return _data.spaceId; }
 
 	void store();
 
-	static bool      discard(const std::string &id);
-	static Principal retrieve(const std::string &id);
+	static bool      discard(std::string_view spaceId, const std::string &id);
+	static Principal retrieve(std::string_view spaceId, const std::string &id);
 
 private:
 	Data _data;
@@ -55,6 +57,6 @@ private:
 using Principals = std::vector<Principal>;
 
 Principals ListPrincipals(
-	Principal::Data::segment_t segment = std::nullopt, std::string_view lastId = "",
-	std::uint16_t count = 10);
+	std::string_view spaceId, Principal::Data::segment_t segment = std::nullopt,
+	std::string_view lastId = "", std::uint16_t count = 10);
 } // namespace db

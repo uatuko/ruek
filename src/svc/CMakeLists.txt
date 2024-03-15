@@ -12,6 +12,10 @@ target_sources(svc
 			resources.h
 			svc.h
 			wrapper.h
+	PRIVATE
+		FILE_SET private_headers TYPE HEADERS
+		FILES
+			common.h
 )
 
 target_link_libraries(svc

@@ -5,12 +5,15 @@
 
 #include "err/errors.h"
 
+#include "common.h"
+
 namespace svc {
 namespace authz {
 template <>
 rpcCheck::result_type Impl::call<rpcCheck>(
 	grpcxx::context &ctx, const rpcCheck::request_type &req) {
-	auto r = db::Record::lookup(req.principal_id(), req.resource_type(), req.resource_id());
+	auto r = db::Record::lookup(
+		ctx.meta(common::space_id_v), req.principal_id(), req.resource_type(), req.resource_id());
 	return {grpcxx::status::code_t::ok, map(r)};
 }
 
@@ -18,7 +21,11 @@ template <>
 rpcGrant::result_type Impl::call<rpcGrant>(
 	grpcxx::context &ctx, const rpcGrant::request_type &req) {
 	// Upsert if exists
-	if (auto r = db::Record::lookup(req.principal_id(), req.resource_type(), req.resource_id());
+	if (auto r = db::Record::lookup(
+			ctx.meta(common::space_id_v),
+			req.principal_id(),
+			req.resource_type(),
+			req.resource_id());
 		r) {
 		if (req.has_attrs()) {
 			std::string attrs;
@@ -31,7 +38,7 @@ rpcGrant::result_type Impl::call<rpcGrant>(
 		return {grpcxx::status::code_t::ok, map(r.value())};
 	}
 
-	auto r = map(req);
+	auto r = map(ctx, req);
 	r.store();
 
 	return {grpcxx::status::code_t::ok, map(r)};
@@ -40,7 +47,8 @@ rpcGrant::result_type Impl::call<rpcGrant>(
 template <>
 rpcRevoke::result_type Impl::call<rpcRevoke>(
 	grpcxx::context &ctx, const rpcRevoke::request_type &req) {
-	db::Record::discard(req.principal_id(), req.resource_type(), req.resource_id());
+	db::Record::discard(
+		ctx.meta(common::space_id_v), req.principal_id(), req.resource_type(), req.resource_id());
 	return {grpcxx::status::code_t::ok, rpcRevoke::response_type()};
 }
 
@@ -67,11 +75,13 @@ google::rpc::Status Impl::exception() noexcept {
 	return status;
 }
 
-db::Record Impl::map(const rpcGrant::request_type &from) const noexcept {
+db::Record Impl::map(
+	const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept {
 	db::Record to({
 		.principalId  = from.principal_id(),
 		.resourceId   = from.resource_id(),
 		.resourceType = from.resource_type(),
+		.spaceId      = std::string(ctx.meta(common::space_id_v)),
 	});
 
 	if (from.has_attrs()) {

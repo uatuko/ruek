@@ -29,7 +29,7 @@ TEST_F(db_PrincipalsTest, discard) {
 	ASSERT_NO_THROW(principal.store());
 
 	bool result = false;
-	ASSERT_NO_THROW(result = db::Principal::discard(principal.id()));
+	ASSERT_NO_THROW(result = db::Principal::discard("", principal.id()));
 	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(
@@ -55,7 +55,7 @@ TEST_F(db_PrincipalsTest, list) {
 		ASSERT_NO_THROW(principal.store());
 
 		db::Principals results;
-		ASSERT_NO_THROW(results = db::ListPrincipals());
+		ASSERT_NO_THROW(results = db::ListPrincipals(""));
 		ASSERT_EQ(1, results.size());
 
 		EXPECT_EQ(principal, results[0]);
@@ -70,7 +70,22 @@ TEST_F(db_PrincipalsTest, list) {
 		ASSERT_NO_THROW(principal.store());
 
 		db::Principals results;
-		ASSERT_NO_THROW(results = db::ListPrincipals(principal.segment()));
+		ASSERT_NO_THROW(results = db::ListPrincipals("", principal.segment()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(principal, results[0]);
+	}
+
+	// Success: list with space id
+	{
+		db::Principal principal({
+			.id      = "id:db_PrincipalsTest.list-with_space_id",
+			.spaceId = "space_id:db_PrincipalsTest.list-with_space_id",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Principals results;
+		ASSERT_NO_THROW(results = db::ListPrincipals(principal.spaceId()));
 		ASSERT_EQ(1, results.size());
 
 		EXPECT_EQ(principal, results[0]);
@@ -89,7 +104,7 @@ TEST_F(db_PrincipalsTest, list) {
 		}
 
 		db::Principals results;
-		ASSERT_NO_THROW(results = db::ListPrincipals(std::nullopt, principals[1].id()));
+		ASSERT_NO_THROW(results = db::ListPrincipals("", std::nullopt, principals[1].id()));
 		ASSERT_EQ(1, results.size());
 
 		EXPECT_EQ(principals[0], results[0]);
@@ -113,13 +128,14 @@ TEST_F(db_PrincipalsTest, list) {
 		}
 
 		db::Principals results;
-		ASSERT_NO_THROW(results = db::ListPrincipals(principals[0].segment(), principals[1].id()));
+		ASSERT_NO_THROW(
+			results = db::ListPrincipals("", principals[0].segment(), principals[1].id()));
 		ASSERT_EQ(1, results.size());
 
 		EXPECT_EQ(principals[0], results[0]);
 	}
 
-	// Success: list with count (and segment id)
+	// Success: list with count (and segment)
 	{
 		db::Principals principals({
 			{{
@@ -137,7 +153,7 @@ TEST_F(db_PrincipalsTest, list) {
 		}
 
 		db::Principals results;
-		ASSERT_NO_THROW(results = db::ListPrincipals(principals[0].segment(), "", 1));
+		ASSERT_NO_THROW(results = db::ListPrincipals("", principals[0].segment(), "", 1));
 		ASSERT_EQ(1, results.size());
 
 		EXPECT_EQ(principals[1], results[0]);
@@ -149,18 +165,21 @@ TEST_F(db_PrincipalsTest, retrieve) {
 	{
 		std::string_view qry = R"(
 			insert into principals (
-				_rev,
-				id
+				space_id,
+				id,
+				_rev
 			) values (
-				$1::integer,
-				$2::text
+				$1::text,
+				$2::text,
+				$3::integer
 			);
 		)";
 
-		ASSERT_NO_THROW(db::pg::exec(qry, 1232, "id:db_PrincipalsTest.retrieve"));
+		ASSERT_NO_THROW(db::pg::exec(qry, "", "id:db_PrincipalsTest.retrieve", 1232));
 
-		auto principal = db::Principal::retrieve("id:db_PrincipalsTest.retrieve");
+		auto principal = db::Principal::retrieve("", "id:db_PrincipalsTest.retrieve");
 		EXPECT_EQ(1232, principal.rev());
+		EXPECT_EQ("", principal.spaceId());
 		EXPECT_FALSE(principal.segment());
 		EXPECT_FALSE(principal.attrs());
 	}
@@ -169,22 +188,49 @@ TEST_F(db_PrincipalsTest, retrieve) {
 	{
 		std::string_view qry = R"(
 			insert into principals (
-				_rev,
+				space_id,
 				id,
-				attrs
+				attrs,
+				_rev
 			) values (
-				$1::integer,
+				$1::text,
 				$2::text,
-				$3::jsonb
+				$3::jsonb,
+				$4::integer
 			);
 		)";
 
-		ASSERT_NO_THROW(
-			db::pg::exec(qry, 1237, "id:db_PrincipalsTest.retrieve-optional", R"({"foo": "bar"})"));
+		ASSERT_NO_THROW(db::pg::exec(
+			qry, "", "id:db_PrincipalsTest.retrieve-optional", R"({"foo": "bar"})", 1237));
 
-		auto principal = db::Principal::retrieve("id:db_PrincipalsTest.retrieve-optional");
+		auto principal = db::Principal::retrieve("", "id:db_PrincipalsTest.retrieve-optional");
 		EXPECT_EQ(1237, principal.rev());
 		EXPECT_EQ(R"({"foo": "bar"})", principal.attrs());
+	}
+
+	// Error: not found (space id mismatch)
+	{
+		std::string_view qry = R"(
+			insert into principals (
+				space_id,
+				id,
+				_rev
+			) values (
+				$1::text,
+				$2::text,
+				$3::integer
+			);
+		)";
+
+		ASSERT_NO_THROW(db::pg::exec(
+			qry,
+			"space_id:db_PrincipalsTest.retrieve-space_id_mismatch",
+			"id:db_PrincipalsTest.retrieve-space_id_mismatch",
+			933));
+
+		EXPECT_THROW(
+			db::Principal::retrieve("", "id:db_PrincipalsTest.retrieve-space_id_mismatch"),
+			err::DbPrincipalNotFound);
 	}
 }
 
@@ -210,15 +256,18 @@ TEST_F(db_PrincipalsTest, rev) {
 
 		std::string_view qry = R"(
 			insert into principals (
-				_rev,
-				id
+				space_id,
+				id,
+				_rev
 			) values (
-				$1::integer,
-				$2::text
+				$1::text,
+				$2::text,
+				$3::integer
 			)
 		)";
 
-		ASSERT_NO_THROW(db::pg::exec(qry, principal.rev() + 1, principal.id()));
+		ASSERT_NO_THROW(
+			db::pg::exec(qry, principal.spaceId(), principal.id(), principal.rev() + 1));
 
 		EXPECT_THROW(principal.store(), err::DbRevisionMismatch);
 	}
@@ -235,10 +284,11 @@ TEST_F(db_PrincipalsTest, store) {
 
 		std::string_view qry = R"(
 			select
-				_rev,
+				space_id,
 				id,
 				segment,
-				attrs
+				attrs,
+				_rev
 			from principals
 			where id = $1::text;
 		)";
@@ -246,15 +296,17 @@ TEST_F(db_PrincipalsTest, store) {
 		auto res = db::pg::exec(qry, principal.id());
 		ASSERT_EQ(1, res.size());
 
-		auto [_rev, id, segment, attrs] =
+		auto [spaceId, id, segment, attrs, _rev] =
 			res[0]
-				.as<int,
+				.as<std::string,
 					std::string,
 					db::Principal::Data::segment_t,
-					db::Principal::Data::attrs_t>();
+					db::Principal::Data::attrs_t,
+					int>();
 
-		EXPECT_EQ(principal.rev(), _rev);
+		EXPECT_EQ(principal.spaceId(), spaceId);
 		EXPECT_EQ(principal.id(), id);
+		EXPECT_EQ(principal.rev(), _rev);
 		EXPECT_FALSE(segment);
 		EXPECT_FALSE(attrs);
 	}
@@ -306,7 +358,7 @@ TEST_F(db_PrincipalsTest, store) {
 	{
 		db::Principal principal({
 			.attrs = R"("string")",
-			.id    = "id:db_PrincipalsTest.store-invalid-attrs",
+			.id    = "id:db_PrincipalsTest.store-invalid_attrs",
 		});
 
 		EXPECT_THROW(principal.store(), err::DbPrincipalInvalidData);
