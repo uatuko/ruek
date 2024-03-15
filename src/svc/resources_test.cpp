@@ -1,4 +1,5 @@
 #include <google/protobuf/util/json_util.h>
+#include <grpcxx/request.h>
 #include <gtest/gtest.h>
 
 #include "db/testing.h"
@@ -24,7 +25,7 @@ TEST_F(svc_ResourcesTest, List) {
 	grpcxx::context ctx;
 	svc::Resources  svc;
 
-	db::Principal principal({.id = "id:svc_ResourcesTest-List"});
+	db::Principal principal({.id = "id:svc_ResourcesTest.List"});
 	ASSERT_NO_THROW(principal.store());
 
 	// Success: list
@@ -34,6 +35,7 @@ TEST_F(svc_ResourcesTest, List) {
 			.principalId  = principal.id(),
 			.resourceId   = "List",
 			.resourceType = "svc_ResourcesTest",
+			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(record.store());
 
@@ -57,6 +59,43 @@ TEST_F(svc_ResourcesTest, List) {
 		EXPECT_EQ(record.attrs(), responseAttrs);
 	}
 
+	// Success: list with space-id
+	{
+		db::Principal principal({
+			.id      = "id:svc_ResourcesTest.List-with_space_id",
+			.spaceId = "space_id:svc_ResourcesTest.List-with_space_id",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Record record({
+			.principalId  = principal.id(),
+			.resourceId   = "List-with_space_id",
+			.resourceType = "svc_ResourcesTest",
+			.spaceId      = principal.spaceId(),
+		});
+		ASSERT_NO_THROW(record.store());
+
+		grpcxx::detail::request r(1);
+		r.header("space-id", std::string(principal.spaceId()));
+
+		grpcxx::context ctx(r);
+
+		rpcList::request_type request;
+		request.set_principal_id(principal.id());
+		request.set_resource_type(record.resourceType());
+
+		rpcList::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->resources();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(record.resourceId(), actual[0].id());
+		EXPECT_EQ(record.resourceType(), actual[0].type());
+	}
+
 	// Success: list with pagination
 	{
 		db::Records records({
@@ -64,11 +103,13 @@ TEST_F(svc_ResourcesTest, List) {
 				.principalId  = principal.id(),
 				.resourceId   = "List-with_pagination[0]",
 				.resourceType = "svc_ResourcesTest",
+				.spaceId      = principal.spaceId(),
 			}},
 			{{
 				.principalId  = principal.id(),
 				.resourceId   = "List-with_pagination[1]",
 				.resourceType = "svc_ResourcesTest",
+				.spaceId      = principal.spaceId(),
 			}},
 		});
 
@@ -128,7 +169,7 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 
 	// Success: list
 	{
-		db::Principal principal({.id = "id:svc_ResourcesTest-ListPrincipals"});
+		db::Principal principal({.id = "id:svc_ResourcesTest.ListPrincipals"});
 		ASSERT_NO_THROW(principal.store());
 
 		db::Record record({
@@ -136,6 +177,7 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 			.principalId  = principal.id(),
 			.resourceId   = "ListPrincipals",
 			.resourceType = "svc_ResourcesTest",
+			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(record.store());
 
@@ -158,11 +200,46 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		EXPECT_EQ(record.attrs(), responseAttrs);
 	}
 
+	// Success: list (space-id mismatch)
+	{
+		db::Principal principal({
+			.id      = "id:svc_ResourcesTest.ListPrincipals-space_id_mismatch",
+			.spaceId = "space_id:svc_ResourcesTest.ListPrincipals-space_id_mismatch",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Record record({
+			.principalId  = principal.id(),
+			.resourceId   = "ListPrincipals-space_id_mismatch",
+			.resourceType = "svc_ResourcesTest",
+			.spaceId      = principal.spaceId(),
+		});
+		ASSERT_NO_THROW(record.store());
+
+		grpcxx::detail::request r(1);
+		r.header("space-id", "invalid");
+
+		grpcxx::context ctx(r);
+
+		rpcListPrincipals::request_type request;
+		request.set_resource_id(record.resourceId());
+		request.set_resource_type(record.resourceType());
+
+		rpcListPrincipals::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcListPrincipals>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->principals();
+		ASSERT_EQ(0, actual.size());
+	}
+
 	// Success: list with pagination
 	{
 		db::Principals principals({
-			{{.id = "id:svc_ResourcesTest-ListPrincipals-with_pagination[0]"}},
-			{{.id = "id:svc_ResourcesTest-ListPrincipals-with_pagination[1]"}},
+			{{.id = "id:svc_ResourcesTest.ListPrincipals-with_pagination[0]"}},
+			{{.id = "id:svc_ResourcesTest.ListPrincipals-with_pagination[1]"}},
 		});
 
 		for (auto &p : principals) {
@@ -174,11 +251,13 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 				.principalId  = principals[0].id(),
 				.resourceId   = "ListPrincipals-with_pagination",
 				.resourceType = "svc_ResourcesTest",
+				.spaceId      = principals[0].spaceId(),
 			}},
 			{{
 				.principalId  = principals[1].id(),
 				.resourceId   = "ListPrincipals-with_pagination",
 				.resourceType = "svc_ResourcesTest",
+				.spaceId      = principals[1].spaceId(),
 			}},
 		});
 
@@ -201,7 +280,7 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18r6ip1qedr66nqiclpmutbicdin6l35edq2qj39edq50sj9dphmis31dhpiqtr9ehk5us31ctkmsobkd5"
+				"18r6ip1qedr66nqiclpmutbicdin6l35edq2sj39edq50sj9dphmis31dhpiqtr9ehk5us31ctkmsobkd5"
 				"nmsmphbk",
 				result.response->pagination_token());
 
@@ -222,7 +301,7 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18r6ip1qedr66nqiclpmutbicdin6l35edq2qj39edq50sj9dphmis31dhpiqtr9ehk5us31ctkmsobkd5"
+				"18r6ip1qedr66nqiclpmutbicdin6l35edq2sj39edq50sj9dphmis31dhpiqtr9ehk5us31ctkmsobkd5"
 				"nmsmpgbk",
 				result.response->pagination_token());
 

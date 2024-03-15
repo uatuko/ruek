@@ -1,4 +1,5 @@
 #include <google/protobuf/util/json_util.h>
+#include <grpcxx/request.h>
 #include <gtest/gtest.h>
 
 #include "db/testing.h"
@@ -79,6 +80,24 @@ TEST_F(svc_PrincipalsTest, Create) {
 		EXPECT_EQ("segment:svc_PrincipalsTest.Create-with_segment", result.response->segment());
 	}
 
+	// Success: create principal with space-id
+	{
+		grpcxx::detail::request r(1);
+		r.header("space-id", "space_id:svc_PrincipalsTest.Create-with_space_id");
+
+		grpcxx::context ctx(r);
+
+		rpcCreate::request_type request;
+		rpcCreate::result_type  result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+
+		ASSERT_NO_THROW(db::Principal::retrieve(
+			"space_id:svc_PrincipalsTest.Create-with_space_id", result.response->id()));
+	}
+
 	// Error: invalid `segment`
 	{
 		rpcCreate::request_type request;
@@ -116,9 +135,31 @@ TEST_F(svc_PrincipalsTest, Delete) {
 	// Success: delete
 	{
 		db::Principal principal({
-			.id = "id:svc_PrincipalsTest-Delete",
+			.id = "id:svc_PrincipalsTest.Delete",
 		});
 		ASSERT_NO_THROW(principal.store());
+
+		rpcDelete::request_type request;
+		request.set_id(principal.id());
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+	}
+
+	// Success: delete with space-id
+	{
+		db::Principal principal({
+			.id      = "id:svc_PrincipalsTest.Delete-with_space_id",
+			.spaceId = "space_id:svc_PrincipalsTest.Delete-with_space_id",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		grpcxx::detail::request r(1);
+		r.header("space-id", std::string(principal.spaceId()));
+
+		grpcxx::context ctx(r);
 
 		rpcDelete::request_type request;
 		request.set_id(principal.id());
@@ -132,7 +173,28 @@ TEST_F(svc_PrincipalsTest, Delete) {
 	// Error: not found
 	{
 		rpcDelete::request_type request;
-		request.set_id("id:svc_PrincipalsTest-Delete-non_existent");
+		request.set_id("id:svc_PrincipalsTest.Delete-non_existent");
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::not_found, result.status.code());
+		EXPECT_FALSE(result.response);
+	}
+
+	// Error: not found (space-id mismatch)
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest.Delete-space_id_mismatch",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		grpcxx::detail::request r(1);
+		r.header("space-id", "invalid");
+
+		grpcxx::context ctx(r);
+
+		rpcDelete::request_type request;
+		request.set_id(principal.id());
 
 		rpcDelete::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
@@ -148,7 +210,7 @@ TEST_F(svc_PrincipalsTest, List) {
 	// Success: list
 	{
 		db::Principal principal({
-			.id = "id:svc_PrincipalsTest-List",
+			.id = "id:svc_PrincipalsTest.List",
 		});
 		ASSERT_NO_THROW(principal.store());
 
@@ -166,11 +228,46 @@ TEST_F(svc_PrincipalsTest, List) {
 		EXPECT_FALSE(actual[0].has_segment());
 	}
 
+	// Success: list with space-id
+	{
+		db::Principals principals({
+			{{
+				.id      = "id:svc_PrincipalsTest.List-with_space_id[0]",
+				.spaceId = "space_id:svc_PrincipalsTest.List-with_space_id",
+			}},
+			{{
+				.id = "id:svc_PrincipalsTest.List_with_space_id[1]",
+			}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		grpcxx::detail::request r(1);
+		r.header("space-id", std::string(principals[0].spaceId()));
+
+		grpcxx::context ctx(r);
+
+		rpcList::request_type request;
+		rpcList::result_type  result;
+		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->principals();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(principals[0].id(), actual[0].id());
+		EXPECT_FALSE(actual[0].has_attrs());
+		EXPECT_FALSE(actual[0].has_segment());
+	}
+
 	// Success: list with pagination
 	{
 		db::Principals principals({
-			{{.id = "id:svc_PrincipalsTest-List_with_pagination[0]", .segment = "with_pagination"}},
-			{{.id = "id:svc_PrincipalsTest-List_with_pagination[1]", .segment = "with_pagination"}},
+			{{.id = "id:svc_PrincipalsTest.List-with_pagination[0]", .segment = "with_pagination"}},
+			{{.id = "id:svc_PrincipalsTest.List-with_pagination[1]", .segment = "with_pagination"}},
 		});
 
 		for (auto &p : principals) {
@@ -191,7 +288,7 @@ TEST_F(svc_PrincipalsTest, List) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18mmip1qedr66nqge9kmsor9e1gmosqkclpn8bacd5pn8nrnd5q6gnrgc5jmirj1ehkmurir65eg",
+				"18mmip1qedr66nqge9kmsor9e1gmosqkclpn8bicd5pn8bbnd5q6gnrgc5jmirj1ehkmurir65eg",
 				result.response->pagination_token());
 
 			auto &actual = result.response->principals();
@@ -210,7 +307,7 @@ TEST_F(svc_PrincipalsTest, List) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18mmip1qedr66nqge9kmsor9e1gmosqkclpn8bacd5pn8nrnd5q6gnrgc5jmirj1ehkmurir61eg",
+				"18mmip1qedr66nqge9kmsor9e1gmosqkclpn8bicd5pn8bbnd5q6gnrgc5jmirj1ehkmurir61eg",
 				result.response->pagination_token());
 
 			auto &actual = result.response->principals();
@@ -222,7 +319,7 @@ TEST_F(svc_PrincipalsTest, List) {
 	// Success: list with invalid pagination token
 	{
 		db::Principal principal({
-			.id      = "id:svc_PrincipalsTest-List_with_invalid_pagination_token",
+			.id      = "id:svc_PrincipalsTest.List-with_invalid_pagination_token",
 			.segment = "with_invalid_pagination_token",
 		});
 		ASSERT_NO_THROW(principal.store());
@@ -252,9 +349,36 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 	// Success: retrieve
 	{
 		db::Principal principal({
-			.id = "id:svc_PrincipalsTest-Retrieve",
+			.id = "id:svc_PrincipalsTest.Retrieve",
 		});
 		ASSERT_NO_THROW(principal.store());
+
+		rpcRetrieve::request_type request;
+		request.set_id(principal.id());
+
+		rpcRetrieve::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+
+		auto &actual = result.response.value();
+		EXPECT_EQ(principal.id(), actual.id());
+		EXPECT_FALSE(actual.has_attrs());
+		EXPECT_FALSE(actual.has_segment());
+	}
+
+	// Success: retrieve with space-id
+	{
+		db::Principal principal({
+			.id      = "id:svc_PrincipalsTest.Retrieve-with_space_id",
+			.spaceId = "space_id:svc_PrincipalsTest.Retrieve-with_space_id",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		grpcxx::detail::request r(1);
+		r.header("space-id", std::string(principal.spaceId()));
+
+		grpcxx::context ctx(r);
 
 		rpcRetrieve::request_type request;
 		request.set_id(principal.id());
@@ -274,7 +398,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 	{
 		db::Principal principal({
 			.attrs = R"({"foo":"bar"})",
-			.id    = "id:svc_PrincipalsTest-Retrieve-with_attrs",
+			.id    = "id:svc_PrincipalsTest.Retrieve-with_attrs",
 		});
 		ASSERT_NO_THROW(principal.store());
 
@@ -299,7 +423,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 	// Error: not found
 	{
 		rpcRetrieve::request_type request;
-		request.set_id("id:svc_PrincipalsTest-Retrieve-non_existent");
+		request.set_id("id:svc_PrincipalsTest.Retrieve-non_existent");
 
 		rpcRetrieve::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
@@ -315,13 +439,13 @@ TEST_F(svc_PrincipalsTest, Update) {
 	// Success: update
 	{
 		db::Principal principal({
-			.id = "id:svc_PrincipalsTest-Update",
+			.id = "id:svc_PrincipalsTest.Update",
 		});
 		ASSERT_NO_THROW(principal.store());
 
 		rpcUpdate::request_type request;
 		request.set_id(principal.id());
-		request.set_segment("segment:svc_PrincipalsTest-Update");
+		request.set_segment("segment:svc_PrincipalsTest.Update");
 
 		const std::string attrs(R"({"foo":"bar"})");
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
@@ -333,7 +457,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 
 		auto &actual = result.response.value();
 		EXPECT_EQ(principal.id(), actual.id());
-		EXPECT_EQ("segment:svc_PrincipalsTest-Update", actual.segment());
+		EXPECT_EQ("segment:svc_PrincipalsTest.Update", actual.segment());
 		EXPECT_TRUE(actual.has_attrs());
 
 		std::string responseAttrs;
@@ -344,7 +468,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 	// Success: short-circuit where nothing to update
 	{
 		db::Principal principal({
-			.id = "id:svc_PrincipalsTest-Update-short_circuit",
+			.id = "id:svc_PrincipalsTest.Update-short_circuit",
 		});
 		ASSERT_NO_THROW(principal.store());
 
@@ -363,5 +487,27 @@ TEST_F(svc_PrincipalsTest, Update) {
 
 		auto p = db::Principal::retrieve(principal.spaceId(), principal.id());
 		EXPECT_EQ(principal.rev(), p.rev());
+	}
+
+	// Error: not found (space-id mismatch)
+	{
+		db::Principal principal({
+			.id      = "id:svc_PrincipalsTest.Update-space_id_mismatch",
+			.spaceId = "space_id:svc_PrincipalsTest.Update-space_id_mismatch",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		grpcxx::detail::request r(1);
+		r.header("space-id", "invalid");
+
+		grpcxx::context ctx(r);
+
+		rpcUpdate::request_type request;
+		request.set_id(principal.id());
+
+		rpcUpdate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcUpdate>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::not_found, result.status.code());
+		EXPECT_FALSE(result.response);
 	}
 }
