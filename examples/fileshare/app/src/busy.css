@@ -1,0 +1,19 @@
+.busy {
+	animation: busyframes 0.8s linear infinite;
+	display: inline-block;
+	border-top: 0.1em solid #646cff;
+	border-right: 0.1em solid transparent;
+	border-radius: 50%;
+	box-sizing: border-box;
+	height: 2em;
+	width: 2em;
+}
+
+@keyframes busyframes {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}

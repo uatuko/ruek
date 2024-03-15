@@ -1,0 +1,6 @@
+# .gitignore
+#
+
+# node / npm
+dist/
+node_modules/

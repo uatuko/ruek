@@ -1,0 +1,29 @@
+.new-file {
+	border: 0.01em solid #bbb;
+	border-radius: 0.25em;
+	margin: 5em auto;
+	max-width: 40em;
+	transition: all .5s ease;
+}
+
+.new-file form {
+	margin: 2em 4em;
+}
+
+.new-file h2 {
+	margin-bottom: 2em;
+}
+
+.new-file .action {
+	margin-top: 3em;
+}
+
+.new-file .toolbar > button {
+	background-color: transparent;
+	margin: 0.7em 0.7em 0 0;
+	transition: all .2s ease-out;
+}
+.new-file .toolbar > button:hover {
+	transform: translateY(-0.25em);
+	transition: all .5s ease;
+}
