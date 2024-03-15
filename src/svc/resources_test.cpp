@@ -4,6 +4,7 @@
 
 #include "db/testing.h"
 
+#include "common.h"
 #include "svc.h"
 
 using namespace sentium::api::v1::Resources;
@@ -76,7 +77,7 @@ TEST_F(svc_ResourcesTest, List) {
 		ASSERT_NO_THROW(record.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", std::string(principal.spaceId()));
+		r.header(std::string(svc::common::space_id_v), std::string(principal.spaceId()));
 
 		grpcxx::context ctx(r);
 
@@ -217,7 +218,7 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		ASSERT_NO_THROW(record.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", "invalid");
+		r.header(std::string(svc::common::space_id_v), "invalid");
 
 		grpcxx::context ctx(r);
 

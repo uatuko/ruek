@@ -4,6 +4,7 @@
 
 #include "db/testing.h"
 
+#include "common.h"
 #include "svc.h"
 
 using namespace sentium::api::v1::Principals;
@@ -83,7 +84,9 @@ TEST_F(svc_PrincipalsTest, Create) {
 	// Success: create principal with space-id
 	{
 		grpcxx::detail::request r(1);
-		r.header("space-id", "space_id:svc_PrincipalsTest.Create-with_space_id");
+		r.header(
+			std::string(svc::common::space_id_v),
+			"space_id:svc_PrincipalsTest.Create-with_space_id");
 
 		grpcxx::context ctx(r);
 
@@ -157,7 +160,7 @@ TEST_F(svc_PrincipalsTest, Delete) {
 		ASSERT_NO_THROW(principal.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", std::string(principal.spaceId()));
+		r.header(std::string(svc::common::space_id_v), std::string(principal.spaceId()));
 
 		grpcxx::context ctx(r);
 
@@ -189,7 +192,7 @@ TEST_F(svc_PrincipalsTest, Delete) {
 		ASSERT_NO_THROW(principal.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", "invalid");
+		r.header(std::string(svc::common::space_id_v), "invalid");
 
 		grpcxx::context ctx(r);
 
@@ -245,7 +248,7 @@ TEST_F(svc_PrincipalsTest, List) {
 		}
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", std::string(principals[0].spaceId()));
+		r.header(std::string(svc::common::space_id_v), std::string(principals[0].spaceId()));
 
 		grpcxx::context ctx(r);
 
@@ -376,7 +379,7 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		ASSERT_NO_THROW(principal.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", std::string(principal.spaceId()));
+		r.header(std::string(svc::common::space_id_v), std::string(principal.spaceId()));
 
 		grpcxx::context ctx(r);
 
@@ -498,7 +501,7 @@ TEST_F(svc_PrincipalsTest, Update) {
 		ASSERT_NO_THROW(principal.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", "invalid");
+		r.header(std::string(svc::common::space_id_v), "invalid");
 
 		grpcxx::context ctx(r);
 

@@ -4,6 +4,7 @@
 
 #include "db/testing.h"
 
+#include "common.h"
 #include "svc.h"
 
 using namespace sentium::api::v1::Authz;
@@ -99,7 +100,7 @@ TEST_F(svc_AuthzTest, Check) {
 		ASSERT_NO_THROW(record.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", std::string(principal.spaceId()));
+		r.header(std::string(svc::common::space_id_v), std::string(principal.spaceId()));
 
 		grpcxx::context ctx(r);
 
@@ -144,7 +145,7 @@ TEST_F(svc_AuthzTest, Check) {
 		ASSERT_NO_THROW(record.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", "invalid");
+		r.header(std::string(svc::common::space_id_v), "invalid");
 
 		grpcxx::context ctx(r);
 
@@ -195,7 +196,7 @@ TEST_F(svc_AuthzTest, Grant) {
 		ASSERT_NO_THROW(principal.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", std::string(principal.spaceId()));
+		r.header(std::string(svc::common::space_id_v), std::string(principal.spaceId()));
 
 		grpcxx::context ctx(r);
 
@@ -270,7 +271,7 @@ TEST_F(svc_AuthzTest, Grant) {
 	// Error: invalid space-id
 	{
 		grpcxx::detail::request r(1);
-		r.header("space-id", "invalid");
+		r.header(std::string(svc::common::space_id_v), "invalid");
 
 		grpcxx::context ctx(r);
 
@@ -332,7 +333,7 @@ TEST_F(svc_AuthzTest, Revoke) {
 		ASSERT_NO_THROW(record.store());
 
 		grpcxx::detail::request r(1);
-		r.header("space-id", "invalid");
+		r.header(std::string(svc::common::space_id_v), "invalid");
 
 		grpcxx::context ctx(r);
 
