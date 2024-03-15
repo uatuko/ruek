@@ -34,9 +34,9 @@ integrate, quick to master and flexible enough to handle complex requirements.
 * Strongly consistent with no cache
 * Cloud native at global scale[^2]
 * ABAC, RBAC & ReBAC (with constraints)
+* Multi-tenancy support, if you need it
 * Not just authorisation checks, list users, resources a user can access and users with access to a resource
 * First class treatment for listing endpoints with pagination and limits to handle large datasets
-* Multi-tenancy support, if you need it
 * Built using the fastest gRPC server implementation[^3]
 
 
