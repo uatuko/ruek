@@ -66,7 +66,7 @@ func getAuthzClient() (sentium.AuthzClient, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:7000", opts...)
+	conn, err := grpc.Dial("127.0.0.1:8080", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func getPrincipalsClient() (sentium.PrincipalsClient, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:7000", opts...)
+	conn, err := grpc.Dial("127.0.0.1:8080", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func getResourcesClient() (sentium.ResourcesClient, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	conn, err := grpc.Dial("127.0.0.1:7000", opts...)
+	conn, err := grpc.Dial("127.0.0.1:8080", opts...)
 	if err != nil {
 		return nil, err
 	}
