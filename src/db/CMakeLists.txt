@@ -4,6 +4,7 @@ target_sources(db
 		pg.cpp
 		principals.cpp
 		records.cpp
+		tuples.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
@@ -11,6 +12,7 @@ target_sources(db
 			pg.h
 			principals.h
 			records.h
+			tuples.h
 )
 
 target_link_libraries(db
@@ -47,6 +49,7 @@ if (SENTIUM_BUILD_TESTING)
 			pg_test.cpp
 			principals_test.cpp
 			records_test.cpp
+			tuples_test.cpp
 	)
 
 	target_link_libraries(db_tests
