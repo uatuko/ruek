@@ -71,31 +71,21 @@ void Tuple::store() {
 		insert into tuples as t (
 			space_id,
 			strand,
-			l_entity_type,
-			l_entity_id,
+			l_entity_type, l_entity_id,
 			relation,
-			r_entity_type,
-			r_entity_id,
+			r_entity_type, r_entity_id,
 			attrs,
-			l_principal_id,
-			r_principal_id,
-			_id,
-			_rid,
-			_rev
+			l_principal_id, r_principal_id,
+			_id, _rid, _rev
 		) values (
 			$1::text,
 			$2::text,
-			$3::text,
-			$4::text,
+			$3::text, $4::text,
 			$5::text,
-			$6::text,
-			$7::text,
+			$6::text, $7::text,
 			$8::jsonb,
-			$9::text,
-			$10::text,
-			$11::text,
-			$12::text,
-			$13::integer
+			$9::text, $10::text,
+			$11::text, $12::text, $13::integer
 		)
 		on conflict (_id)
 		do update
