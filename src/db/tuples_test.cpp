@@ -31,25 +31,19 @@ TEST_F(db_TuplesTest, retrieve) {
 			insert into tuples (
 				space_id,
 				strand,
-				l_entity_type,
-				l_entity_id,
+				l_entity_type, l_entity_id,
 				relation,
-				r_entity_type,
-				r_entity_id,
+				r_entity_type, r_entity_id,
 				attrs,
-				_id,
-				_rev
+				_id, _rev
 			) values (
 				$1::text,
 				$2::text,
-				$3::text,
-				$4::text,
+				$3::text, $4::text,
 				$5::text,
-				$6::text,
-				$7::text,
+				$6::text, $7::text,
 				$8::jsonb,
-				$9::text,
-				$10::integer
+				$9::text, $10::integer
 			);
 		)";
 
@@ -123,23 +117,17 @@ TEST_F(db_TuplesTest, rev) {
 			insert into tuples as t (
 				space_id,
 				strand,
-				l_entity_type,
-				l_entity_id,
+				l_entity_type, l_entity_id,
 				relation,
-				r_entity_type,
-				r_entity_id,
-				_id,
-				_rev
+				r_entity_type, r_entity_id,
+				_id, _rev
 			) values (
 				$1::text,
 				$2::text,
-				$3::text,
-				$4::text,
+				$3::text, $4::text,
 				$5::text,
-				$6::text,
-				$7::text,
-				$8::text,
-				$9::integer
+				$6::text, $7::text,
+				$8::text, $9::integer
 			)
 		)";
 
