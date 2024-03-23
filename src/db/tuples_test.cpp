@@ -57,11 +57,11 @@ TEST_F(db_TuplesTest, retrieve) {
 			qry,
 			"",
 			"",
-			"db_TuplesTest",
-			"retrieve:left",
+			"db_TuplesTest.retrieve",
+			"left",
 			"relation",
-			"db_TuplesTest",
-			"retrieve:right",
+			"db_TuplesTest.retrieve",
+			"right",
 			R"({"foo": "bar"})",
 			"_id:db_TuplesTest.retrieve",
 			1729));
@@ -70,13 +70,13 @@ TEST_F(db_TuplesTest, retrieve) {
 		EXPECT_FALSE(tuple.rid());
 		EXPECT_EQ(1729, tuple.rev());
 
-		EXPECT_EQ("db_TuplesTest", tuple.lEntityType());
-		EXPECT_EQ("retrieve:left", tuple.lEntityId());
+		EXPECT_EQ("db_TuplesTest.retrieve", tuple.lEntityType());
+		EXPECT_EQ("left", tuple.lEntityId());
 
 		EXPECT_EQ("relation", tuple.relation());
 
-		EXPECT_EQ("db_TuplesTest", tuple.rEntityType());
-		EXPECT_EQ("retrieve:right", tuple.rEntityId());
+		EXPECT_EQ("db_TuplesTest.retrieve", tuple.rEntityType());
+		EXPECT_EQ("right", tuple.rEntityId());
 
 		EXPECT_EQ(R"({"foo": "bar"})", tuple.attrs());
 
@@ -111,11 +111,11 @@ TEST_F(db_TuplesTest, store) {
 	// Success: persist data
 	{
 		db::Tuple tuple({
-			.lEntityId   = "store:left",
-			.lEntityType = "db_TuplesTest",
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.store",
 			.relation    = "relation",
-			.rEntityId   = "store:right",
-			.rEntityType = "db_TuplesTest",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.store",
 		});
 		ASSERT_NO_THROW(tuple.store());
 
@@ -184,11 +184,11 @@ TEST_F(db_TuplesTest, store) {
 	{
 		db::Tuple tuple({
 			.attrs       = R"("string")",
-			.lEntityId   = "store-invalid_attrs:left",
-			.lEntityType = "db_TuplesTest",
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.store-invalid_attrs",
 			.relation    = "relation",
-			.rEntityId   = "store-invalid_attrs:right",
-			.rEntityType = "db_TuplesTest",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.store-invalid_attrs",
 		});
 
 		EXPECT_THROW(tuple.store(), err::DbTupleInvalidData);
@@ -199,8 +199,8 @@ TEST_F(db_TuplesTest, store) {
 		db::Tuple tuple({
 			.lPrincipalId = "dummy",
 			.relation     = "relation",
-			.rEntityId    = "store-invalid_l_principal_id:right",
-			.rEntityType  = "db_TuplesTest",
+			.rEntityId    = "right",
+			.rEntityType  = "db_TuplesTest.store-invalid_l_principal_id",
 		});
 
 		EXPECT_THROW(tuple.store(), err::DbTupleInvalidKey);
