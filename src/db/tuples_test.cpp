@@ -86,6 +86,77 @@ TEST_F(db_TuplesTest, retrieve) {
 		EXPECT_EQ("", tuple.spaceId());
 		EXPECT_EQ("", tuple.strand());
 	}
+
+	// Error: not found
+	{ EXPECT_THROW(db::Tuple::retrieve("dummy"), err::DbTupleNotFound); }
+}
+
+TEST_F(db_TuplesTest, rev) {
+	// Success: revision increment
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.rev",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.rev",
+		});
+
+		ASSERT_NO_THROW(tuple.store());
+		EXPECT_EQ(0, tuple.rev());
+
+		ASSERT_NO_THROW(tuple.store());
+		EXPECT_EQ(1, tuple.rev());
+	}
+
+	// Error: revision mismatch
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.rev-mismatch",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.rev-mismatch",
+		});
+
+		std::string_view qry = R"(
+			insert into tuples as t (
+				space_id,
+				strand,
+				l_entity_type,
+				l_entity_id,
+				relation,
+				r_entity_type,
+				r_entity_id,
+				_id,
+				_rev
+			) values (
+				$1::text,
+				$2::text,
+				$3::text,
+				$4::text,
+				$5::text,
+				$6::text,
+				$7::text,
+				$8::text,
+				$9::integer
+			)
+		)";
+
+		ASSERT_NO_THROW(db::pg::exec(
+			qry,
+			tuple.spaceId(),
+			tuple.strand(),
+			tuple.lEntityType(),
+			tuple.lEntityId(),
+			tuple.relation(),
+			tuple.rEntityType(),
+			tuple.rEntityId(),
+			tuple.id(),
+			tuple.rev() + 1));
+
+		EXPECT_THROW(tuple.store(), err::DbRevisionMismatch);
+	}
 }
 
 TEST_F(db_TuplesTest, sanitise) {
