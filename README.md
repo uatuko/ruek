@@ -33,7 +33,7 @@ integrate, quick to master and flexible enough to handle complex requirements.
 * Predictable constant time authorisation checks (O(1))
 * Strongly consistent with no cache
 * Cloud native at global scale[^2]
-* ABAC, RBAC & ReBAC (with constraints)
+* ABAC, RBAC & ReBAC[^4]
 * Multi-tenancy support, if you need it
 * Not just authorisation checks, list users, resources a user can access and users with access to a resource
 * First class treatment for listing endpoints with pagination and limits to handle large datasets
@@ -230,3 +230,4 @@ for their contributions on the `gatekeeper` branch.
 [^1]: [Zero trust architecture (ZTA)](https://en.wikipedia.org/wiki/Zero_trust_security_model)
 [^2]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
 [^3]: [gRPCxx](https://github.com/uatuko/grpcxx) is benchmarked to be the fastest in February 2024.
+[^4]: [RFC #72](https://github.com/uatuko/sentium/discussions/72)
