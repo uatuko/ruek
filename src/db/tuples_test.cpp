@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "err/errors.h"
+
 #include "common.h"
 #include "testing.h"
 #include "tuples.h"
@@ -176,5 +178,31 @@ TEST_F(db_TuplesTest, store) {
 		EXPECT_EQ(tuple.id(), _id);
 		EXPECT_EQ(tuple.rev(), _rev);
 		EXPECT_EQ(tuple.rid(), _rid);
+	}
+
+	// Error: invalid `attrs`
+	{
+		db::Tuple tuple({
+			.attrs       = R"("string")",
+			.lEntityId   = "store-invalid_attrs:left",
+			.lEntityType = "db_TuplesTest",
+			.relation    = "relation",
+			.rEntityId   = "store-invalid_attrs:right",
+			.rEntityType = "db_TuplesTest",
+		});
+
+		EXPECT_THROW(tuple.store(), err::DbTupleInvalidData);
+	}
+
+	// Error: invalid `l_principal_id`
+	{
+		db::Tuple tuple({
+			.lPrincipalId = "dummy",
+			.relation     = "relation",
+			.rEntityId    = "store-invalid_l_principal_id:right",
+			.rEntityType  = "db_TuplesTest",
+		});
+
+		EXPECT_THROW(tuple.store(), err::DbTupleInvalidKey);
 	}
 }

@@ -127,8 +127,10 @@ void Tuple::store() {
 			_id,
 			_rid,
 			_rev);
-	} catch (...) {
-		// TODO: handle errors
+	} catch (pqxx::check_violation &) {
+		throw err::DbTupleInvalidData();
+	} catch (pg::fkey_violation_t &) {
+		throw err::DbTupleInvalidKey();
 	}
 
 	if (res.empty()) {
