@@ -63,6 +63,8 @@ public:
 	static Tuple retrieve(const std::string &id);
 
 private:
+	void sanitise() noexcept;
+
 	Data        _data;
 	std::string _id;
 	int         _rev;

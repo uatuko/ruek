@@ -8,6 +8,7 @@ target_sources(db
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
+			common.h
 			config.h
 			pg.h
 			principals.h

@@ -4,11 +4,17 @@
 
 #include "err/errors.h"
 
+#include "common.h"
+
 namespace db {
-Tuple::Tuple(const Tuple::Data &data) noexcept : _data(data), _id(xid::next()), _rev(0), _rid() {}
+Tuple::Tuple(const Tuple::Data &data) noexcept : _data(data), _id(xid::next()), _rev(0), _rid() {
+	sanitise();
+}
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
-	_data(std::move(data)), _id(xid::next()), _rev(0), _rid() {}
+	_data(std::move(data)), _id(xid::next()), _rev(0), _rid() {
+	sanitise();
+}
 
 Tuple::Tuple(const pg::row_t &r) :
 	_data({
@@ -46,6 +52,18 @@ Tuple Tuple::retrieve(const std::string &id) {
 	}
 
 	return Tuple(res[0]);
+}
+
+void Tuple::sanitise() noexcept {
+	if (_data.lPrincipalId) {
+		_data.lEntityId   = *_data.lPrincipalId;
+		_data.lEntityType = common::principal_entity_v;
+	}
+
+	if (_data.rPrincipalId) {
+		_data.rEntityId   = *_data.rPrincipalId;
+		_data.rEntityType = common::principal_entity_v;
+	}
 }
 
 void Tuple::store() {

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "common.h"
 #include "testing.h"
 #include "tuples.h"
 
@@ -82,6 +83,25 @@ TEST_F(db_TuplesTest, retrieve) {
 
 		EXPECT_EQ("", tuple.spaceId());
 		EXPECT_EQ("", tuple.strand());
+	}
+}
+
+TEST_F(db_TuplesTest, sanitise) {
+	// Success: sanitise data
+	{
+		db::Tuple tuple({
+			.lEntityId    = "lid:dummy",
+			.lEntityType  = "ltype:dummy",
+			.lPrincipalId = "left:db_TuplesTest.sanitise",
+			.rEntityId    = "rid:dummy",
+			.rEntityType  = "rtype:dummy",
+			.rPrincipalId = "right:db_TuplesTest.sanitise",
+		});
+
+		EXPECT_EQ(db::common::principal_entity_v, tuple.lEntityType());
+		EXPECT_EQ(tuple.lPrincipalId(), tuple.lEntityId());
+		EXPECT_EQ(db::common::principal_entity_v, tuple.rEntityType());
+		EXPECT_EQ(tuple.rPrincipalId(), tuple.rEntityId());
 	}
 }
 
