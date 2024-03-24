@@ -72,6 +72,7 @@ std::optional<Tuple> Tuple::lookup(
 			and l_entity_type = $3::text and l_entity_id = $4::text
 			and relation = $5::text
 			and r_entity_type = $6::text and r_entity_id = $7::text
+		;
 	)";
 
 	auto res =

@@ -201,7 +201,7 @@ TEST_F(db_TuplesTest, rev) {
 				$5::text,
 				$6::text, $7::text,
 				$8::text, $9::integer
-			)
+			);
 		)";
 
 		ASSERT_NO_THROW(db::pg::exec(
