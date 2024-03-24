@@ -64,7 +64,7 @@ std::optional<Tuple> Tuple::lookup(
 	return Tuple(res[0]);
 }
 
-Tuple Tuple::retrieve(const std::string &id) {
+Tuple Tuple::retrieve(std::string_view id) {
 	std::string_view qry = R"(
 		select
 			space_id,

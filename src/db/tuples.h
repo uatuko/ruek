@@ -60,7 +60,7 @@ public:
 
 	void store();
 
-	static Tuple retrieve(const std::string &id);
+	static Tuple retrieve(std::string_view id);
 
 	static std::optional<Tuple> lookup(
 		std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
