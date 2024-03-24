@@ -24,6 +24,46 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
+TEST_F(db_TuplesTest, lookup) {
+	db::Tuple tuple({
+		.lEntityId   = "left",
+		.lEntityType = "db_TuplesTest.lookup",
+		.relation    = "relation",
+		.rEntityId   = "right",
+		.rEntityType = "db_TuplesTest.lookup",
+	});
+	ASSERT_NO_THROW(tuple.store());
+
+	// Success: lookup tuple
+	{
+		auto result = db::Tuple::lookup(
+			tuple.spaceId(),
+			tuple.strand(),
+			tuple.lEntityType(),
+			tuple.lEntityId(),
+			tuple.relation(),
+			tuple.rEntityType(),
+			tuple.rEntityId());
+		ASSERT_TRUE(result);
+
+		EXPECT_EQ(tuple, *result);
+	}
+
+	// Success: lookup non-existent tuple
+	{
+		auto result = db::Tuple::lookup(
+			tuple.spaceId(),
+			tuple.strand(),
+			tuple.lEntityType(),
+			tuple.lEntityId(),
+			"non-existent",
+			tuple.rEntityType(),
+			tuple.rEntityId());
+
+		EXPECT_EQ(std::nullopt, result);
+	}
+}
+
 TEST_F(db_TuplesTest, retrieve) {
 	// Success: retrieve data
 	{

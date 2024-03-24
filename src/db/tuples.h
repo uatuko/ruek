@@ -62,6 +62,11 @@ public:
 
 	static Tuple retrieve(const std::string &id);
 
+	static std::optional<Tuple> lookup(
+		std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
+		std::string_view lEntityId, std::string_view relation, std::string_view rEntityType,
+		std::string_view rEntityId);
+
 private:
 	void sanitise() noexcept;
 
