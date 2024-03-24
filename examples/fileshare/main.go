@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -20,6 +21,10 @@ func main() {
 }
 
 func run() (err error) {
+	var addr string
+	flag.StringVar(&addr, "l", "127.0.0.1:3000", "The address (host:port) to listen on")
+	flag.Parse()
+
 	// Main running context during app lifecycle
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -49,7 +54,7 @@ func run() (err error) {
 	// Serve HTTP in a goroutine
 	srvErr := make(chan error, 1)
 	go func() {
-		srvErr <- engine.Run("localhost:3000")
+		srvErr <- engine.Run(addr)
 	}()
 
 	// Handle channels
