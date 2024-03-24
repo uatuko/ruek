@@ -24,6 +24,39 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
+TEST_F(db_TuplesTest, discard) {
+	db::Tuple tuple({
+		.lEntityId   = "left",
+		.lEntityType = "db_TuplesTest.discard",
+		.relation    = "relation",
+		.rEntityId   = "right",
+		.rEntityType = "db_TuplesTest.discard",
+	});
+	ASSERT_NO_THROW(tuple.store());
+
+	bool result = false;
+	ASSERT_NO_THROW(result = db::Tuple::discard(tuple.id()));
+	EXPECT_TRUE(result);
+
+	std::string_view qry = R"(
+		select
+			count(*)
+		from tuples
+		where
+			_id = $1::text;
+	)";
+
+	auto res = db::pg::exec(qry, tuple.id());
+	ASSERT_EQ(1, res.size());
+
+	auto count = res.at(0, 0).as<int>();
+	EXPECT_EQ(0, count);
+
+	// Idempotency
+	ASSERT_NO_THROW(result = db::Tuple::discard(tuple.id()));
+	EXPECT_FALSE(result);
+}
+
 TEST_F(db_TuplesTest, lookup) {
 	db::Tuple tuple({
 		.lEntityId   = "left",

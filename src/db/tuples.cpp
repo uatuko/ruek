@@ -31,6 +31,25 @@ Tuple::Tuple(const pg::row_t &r) :
 	}),
 	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _rid(r["_rid"].as<rid_t>()) {}
 
+bool Tuple::discard(std::string_view id) {
+	std::string_view qry = R"(
+		delete from tuples
+		where
+			_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+	return (res.affected_rows() == 1);
+}
+
+std::optional<Tuple> Tuple::lookup(
+	std::string_view spaceId, std::string_view lPrincipalId, std::string_view rEntityType,
+	std::string_view rEntityId) {
+
+	return lookup(
+		spaceId, "", common::principal_entity_v, lPrincipalId, "", rEntityType, rEntityId);
+}
+
 std::optional<Tuple> Tuple::lookup(
 	std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
 	std::string_view lEntityId, std::string_view relation, std::string_view rEntityType,
