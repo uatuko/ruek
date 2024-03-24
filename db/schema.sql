@@ -77,5 +77,7 @@ create table if not exists tuples (
 		references principals(space_id, id)
 		on delete cascade,
 
+	constraint "tuples.check-l_entity_id" check (l_entity_id <> ''),
+	constraint "tuples.check-r_entity_id" check (r_entity_id <> ''),
 	constraint "tuples.check-attrs" check (jsonb_typeof(attrs) = 'object')
 );
