@@ -1,7 +1,7 @@
 #pragma once
 #include <google/rpc/status.pb.h>
 
-#include "db/records.h"
+#include "db/tuples.h"
 #include "sentium/api/v1/authz.grpcxx.pb.h"
 
 namespace svc {
@@ -30,10 +30,10 @@ public:
 	google::rpc::Status exception() noexcept;
 
 private:
-	rpcCheck::response_type map(const std::optional<db::Record> &from) const noexcept;
+	rpcCheck::response_type map(const std::optional<db::Tuple> &from) const noexcept;
 
-	db::Record map(const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept;
-	rpcGrant::response_type map(const db::Record &from) const noexcept;
+	db::Tuple map(const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept;
+	rpcGrant::response_type map(const db::Tuple &from) const noexcept;
 };
 } // namespace authz
 } // namespace svc

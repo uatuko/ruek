@@ -12,7 +12,7 @@ namespace authz {
 template <>
 rpcCheck::result_type Impl::call<rpcCheck>(
 	grpcxx::context &ctx, const rpcCheck::request_type &req) {
-	auto r = db::Record::lookup(
+	auto r = db::Tuple::lookup(
 		ctx.meta(common::space_id_v), req.principal_id(), req.resource_type(), req.resource_id());
 	return {grpcxx::status::code_t::ok, map(r)};
 }
@@ -21,7 +21,7 @@ template <>
 rpcGrant::result_type Impl::call<rpcGrant>(
 	grpcxx::context &ctx, const rpcGrant::request_type &req) {
 	// Upsert if exists
-	if (auto r = db::Record::lookup(
+	if (auto r = db::Tuple::lookup(
 			ctx.meta(common::space_id_v),
 			req.principal_id(),
 			req.resource_type(),
@@ -47,8 +47,15 @@ rpcGrant::result_type Impl::call<rpcGrant>(
 template <>
 rpcRevoke::result_type Impl::call<rpcRevoke>(
 	grpcxx::context &ctx, const rpcRevoke::request_type &req) {
-	db::Record::discard(
-		ctx.meta(common::space_id_v), req.principal_id(), req.resource_type(), req.resource_id());
+	if (auto r = db::Tuple::lookup(
+			ctx.meta(common::space_id_v),
+			req.principal_id(),
+			req.resource_type(),
+			req.resource_id());
+		r) {
+		db::Tuple::discard(r->id());
+	}
+
 	return {grpcxx::status::code_t::ok, rpcRevoke::response_type()};
 }
 
@@ -58,10 +65,10 @@ google::rpc::Status Impl::exception() noexcept {
 
 	try {
 		std::rethrow_exception(std::current_exception());
-	} catch (const err::DbRecordInvalidData &e) {
+	} catch (const err::DbTupleInvalidData &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
-	} catch (const err::DbRecordInvalidPrincipalId &e) {
+	} catch (const err::DbTupleInvalidKey &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbRevisionMismatch &e) {
@@ -75,12 +82,11 @@ google::rpc::Status Impl::exception() noexcept {
 	return status;
 }
 
-db::Record Impl::map(
-	const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept {
-	db::Record to({
-		.principalId  = from.principal_id(),
-		.resourceId   = from.resource_id(),
-		.resourceType = from.resource_type(),
+db::Tuple Impl::map(const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept {
+	db::Tuple to({
+		.lPrincipalId = from.principal_id(),
+		.rEntityId    = from.resource_id(),
+		.rEntityType  = from.resource_type(),
 		.spaceId      = std::string(ctx.meta(common::space_id_v)),
 	});
 
@@ -94,7 +100,7 @@ db::Record Impl::map(
 	return to;
 }
 
-rpcCheck::response_type Impl::map(const std::optional<db::Record> &from) const noexcept {
+rpcCheck::response_type Impl::map(const std::optional<db::Tuple> &from) const noexcept {
 	rpcCheck::response_type to;
 	if (!from) {
 		to.set_ok(false);
@@ -109,7 +115,7 @@ rpcCheck::response_type Impl::map(const std::optional<db::Record> &from) const n
 	return to;
 }
 
-rpcGrant::response_type Impl::map(const db::Record &from) const noexcept {
+rpcGrant::response_type Impl::map(const db::Tuple &from) const noexcept {
 	return {};
 }
 } // namespace authz
