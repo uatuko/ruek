@@ -24,6 +24,79 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
+TEST_F(db_TuplesTest, discard) {
+	db::Tuple tuple({
+		.lEntityId   = "left",
+		.lEntityType = "db_TuplesTest.discard",
+		.relation    = "relation",
+		.rEntityId   = "right",
+		.rEntityType = "db_TuplesTest.discard",
+	});
+	ASSERT_NO_THROW(tuple.store());
+
+	bool result = false;
+	ASSERT_NO_THROW(result = db::Tuple::discard(tuple.id()));
+	EXPECT_TRUE(result);
+
+	std::string_view qry = R"(
+		select
+			count(*)
+		from tuples
+		where
+			_id = $1::text;
+	)";
+
+	auto res = db::pg::exec(qry, tuple.id());
+	ASSERT_EQ(1, res.size());
+
+	auto count = res.at(0, 0).as<int>();
+	EXPECT_EQ(0, count);
+
+	// Idempotency
+	ASSERT_NO_THROW(result = db::Tuple::discard(tuple.id()));
+	EXPECT_FALSE(result);
+}
+
+TEST_F(db_TuplesTest, lookup) {
+	db::Tuple tuple({
+		.lEntityId   = "left",
+		.lEntityType = "db_TuplesTest.lookup",
+		.relation    = "relation",
+		.rEntityId   = "right",
+		.rEntityType = "db_TuplesTest.lookup",
+	});
+	ASSERT_NO_THROW(tuple.store());
+
+	// Success: lookup tuple
+	{
+		auto result = db::Tuple::lookup(
+			tuple.spaceId(),
+			tuple.strand(),
+			tuple.lEntityType(),
+			tuple.lEntityId(),
+			tuple.relation(),
+			tuple.rEntityType(),
+			tuple.rEntityId());
+		ASSERT_TRUE(result);
+
+		EXPECT_EQ(tuple, *result);
+	}
+
+	// Success: lookup non-existent tuple
+	{
+		auto result = db::Tuple::lookup(
+			tuple.spaceId(),
+			tuple.strand(),
+			tuple.lEntityType(),
+			tuple.lEntityId(),
+			"non-existent",
+			tuple.rEntityType(),
+			tuple.rEntityId());
+
+		EXPECT_EQ(std::nullopt, result);
+	}
+}
+
 TEST_F(db_TuplesTest, retrieve) {
 	// Success: retrieve data
 	{
@@ -128,7 +201,7 @@ TEST_F(db_TuplesTest, rev) {
 				$5::text,
 				$6::text, $7::text,
 				$8::text, $9::integer
-			)
+			);
 		)";
 
 		ASSERT_NO_THROW(db::pg::exec(

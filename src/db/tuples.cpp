@@ -31,7 +31,60 @@ Tuple::Tuple(const pg::row_t &r) :
 	}),
 	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _rid(r["_rid"].as<rid_t>()) {}
 
-Tuple Tuple::retrieve(const std::string &id) {
+bool Tuple::discard(std::string_view id) {
+	std::string_view qry = R"(
+		delete from tuples
+		where
+			_id = $1::text;
+	)";
+
+	auto res = pg::exec(qry, id);
+	return (res.affected_rows() == 1);
+}
+
+std::optional<Tuple> Tuple::lookup(
+	std::string_view spaceId, std::string_view lPrincipalId, std::string_view rEntityType,
+	std::string_view rEntityId) {
+
+	return lookup(
+		spaceId, "", common::principal_entity_v, lPrincipalId, "", rEntityType, rEntityId);
+}
+
+std::optional<Tuple> Tuple::lookup(
+	std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
+	std::string_view lEntityId, std::string_view relation, std::string_view rEntityType,
+	std::string_view rEntityId) {
+
+	std::string_view qry = R"(
+		select
+			space_id,
+			strand,
+			l_entity_type, l_entity_id,
+			relation,
+			r_entity_type, r_entity_id,
+			attrs,
+			l_principal_id, r_principal_id,
+			_id, _rid, _rev
+		from tuples
+		where
+			space_id = $1::text
+			and strand = $2::text
+			and l_entity_type = $3::text and l_entity_id = $4::text
+			and relation = $5::text
+			and r_entity_type = $6::text and r_entity_id = $7::text
+		;
+	)";
+
+	auto res =
+		pg::exec(qry, spaceId, strand, lEntityType, lEntityId, relation, rEntityType, rEntityId);
+	if (res.empty()) {
+		return std::nullopt;
+	}
+
+	return Tuple(res[0]);
+}
+
+Tuple Tuple::retrieve(std::string_view id) {
 	std::string_view qry = R"(
 		select
 			space_id,

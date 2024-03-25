@@ -40,6 +40,7 @@ public:
 	bool operator==(const Tuple &) const noexcept = default;
 
 	const Data::attrs_t &attrs() const noexcept { return _data.attrs; }
+	void                 attrs(std::string &&attrs) noexcept { _data.attrs = std::move(attrs); }
 
 	const std::string &lEntityId() const noexcept { return _data.lEntityId; }
 	const std::string &lEntityType() const noexcept { return _data.lEntityType; }
@@ -60,7 +61,18 @@ public:
 
 	void store();
 
-	static Tuple retrieve(const std::string &id);
+	static bool discard(std::string_view id);
+
+	static std::optional<Tuple> lookup(
+		std::string_view spaceId, std::string_view lPrincipalId, std::string_view rEntityType,
+		std::string_view rEntityId);
+
+	static std::optional<Tuple> lookup(
+		std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
+		std::string_view lEntityId, std::string_view relation, std::string_view rEntityType,
+		std::string_view rEntityId);
+
+	static Tuple retrieve(std::string_view id);
 
 private:
 	void sanitise() noexcept;

@@ -16,7 +16,7 @@ protected:
 
 		// Clear data
 		db::pg::exec("truncate table principals cascade;");
-		db::pg::exec("truncate table records;");
+		db::pg::exec("truncate table tuples;");
 	}
 
 	static void TearDownTestSuite() { db::testing::teardown(); }
@@ -33,18 +33,18 @@ TEST_F(svc_AuthzTest, Check) {
 
 	// Success: check
 	{
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "Check",
-			.resourceType = "svc_AuthzTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "Check",
+			.rEntityType  = "svc_AuthzTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		rpcCheck::request_type request;
-		request.set_principal_id(record.principalId());
-		request.set_resource_type(record.resourceType());
-		request.set_resource_id(record.resourceId());
+		request.set_principal_id(*tuple.lPrincipalId());
+		request.set_resource_type(tuple.rEntityType());
+		request.set_resource_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -57,19 +57,19 @@ TEST_F(svc_AuthzTest, Check) {
 
 	// Success: check with `attrs`
 	{
-		db::Record record({
+		db::Tuple tuple({
 			.attrs        = R"({"foo":"bar"})",
-			.principalId  = principal.id(),
-			.resourceId   = "Check-with_attrs",
-			.resourceType = "svc_AuthzTest",
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "Check-with_attrs",
+			.rEntityType  = "svc_AuthzTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		rpcCheck::request_type request;
-		request.set_principal_id(record.principalId());
-		request.set_resource_type(record.resourceType());
-		request.set_resource_id(record.resourceId());
+		request.set_principal_id(*tuple.lPrincipalId());
+		request.set_resource_type(tuple.rEntityType());
+		request.set_resource_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -80,7 +80,7 @@ TEST_F(svc_AuthzTest, Check) {
 
 		std::string responseAttrs;
 		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
-		EXPECT_EQ(record.attrs(), responseAttrs);
+		EXPECT_EQ(tuple.attrs(), responseAttrs);
 	}
 
 	// Success: check with space-id
@@ -91,13 +91,13 @@ TEST_F(svc_AuthzTest, Check) {
 		});
 		ASSERT_NO_THROW(principal.store());
 
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "Check-with_space_id",
-			.resourceType = "svc_AuthzTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "Check-with_space_id",
+			.rEntityType  = "svc_AuthzTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		grpcxx::detail::request r(1);
 		r.header(std::string(svc::common::space_id_v), std::string(principal.spaceId()));
@@ -105,9 +105,9 @@ TEST_F(svc_AuthzTest, Check) {
 		grpcxx::context ctx(r);
 
 		rpcCheck::request_type request;
-		request.set_principal_id(record.principalId());
-		request.set_resource_type(record.resourceType());
-		request.set_resource_id(record.resourceId());
+		request.set_principal_id(*tuple.lPrincipalId());
+		request.set_resource_type(tuple.rEntityType());
+		request.set_resource_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -136,13 +136,13 @@ TEST_F(svc_AuthzTest, Check) {
 
 	// Success: check !ok with space-id
 	{
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "Check-space_id_mismatch",
-			.resourceType = "svc_AuthzTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "Check-space_id_mismatch",
+			.rEntityType  = "svc_AuthzTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		grpcxx::detail::request r(1);
 		r.header(std::string(svc::common::space_id_v), "invalid");
@@ -150,9 +150,9 @@ TEST_F(svc_AuthzTest, Check) {
 		grpcxx::context ctx(r);
 
 		rpcCheck::request_type request;
-		request.set_principal_id(record.principalId());
-		request.set_resource_type(record.resourceType());
-		request.set_resource_id(record.resourceId());
+		request.set_principal_id(*tuple.lPrincipalId());
+		request.set_resource_type(tuple.rEntityType());
+		request.set_resource_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -214,18 +214,18 @@ TEST_F(svc_AuthzTest, Grant) {
 
 	// Success: upsert
 	{
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "Grant-upsert",
-			.resourceType = "svc_AuthzTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "Grant-upsert",
+			.rEntityType  = "svc_AuthzTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		rpcGrant::request_type request;
-		request.set_principal_id(record.principalId());
-		request.set_resource_type(record.resourceType());
-		request.set_resource_id(record.resourceId());
+		request.set_principal_id(*tuple.lPrincipalId());
+		request.set_resource_type(tuple.rEntityType());
+		request.set_resource_id(tuple.rEntityId());
 
 		const std::string attrs(R"({"foo":"bar"})");
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
@@ -236,9 +236,9 @@ TEST_F(svc_AuthzTest, Grant) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 
-		auto actual = db::Record::lookup(
-			record.spaceId(), record.principalId(), record.resourceType(), record.resourceId());
-		EXPECT_EQ(record.rev() + 1, actual->rev());
+		auto actual = db::Tuple::lookup(
+			tuple.spaceId(), *tuple.lPrincipalId(), tuple.rEntityType(), tuple.rEntityId());
+		EXPECT_EQ(tuple.rev() + 1, actual->rev());
 		EXPECT_EQ(R"({"foo": "bar"})", actual->attrs());
 	}
 
@@ -299,18 +299,18 @@ TEST_F(svc_AuthzTest, Revoke) {
 
 	// Success: revoke
 	{
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "Revoke",
-			.resourceType = "svc_AuthzTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "Revoke",
+			.rEntityType  = "svc_AuthzTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		rpcRevoke::request_type request;
-		request.set_principal_id(record.principalId());
-		request.set_resource_type(record.resourceType());
-		request.set_resource_id(record.resourceId());
+		request.set_principal_id(*tuple.lPrincipalId());
+		request.set_resource_type(tuple.rEntityType());
+		request.set_resource_id(tuple.rEntityId());
 
 		rpcRevoke::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcRevoke>(ctx, request));
@@ -318,19 +318,19 @@ TEST_F(svc_AuthzTest, Revoke) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 
-		EXPECT_FALSE(db::Record::lookup(
-			record.spaceId(), record.principalId(), record.resourceType(), record.resourceId()));
+		EXPECT_FALSE(db::Tuple::lookup(
+			tuple.spaceId(), *tuple.lPrincipalId(), tuple.rEntityType(), tuple.rEntityId()));
 	}
 
 	// Success: invalid space-id
 	{
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "Revoke-invalid_space_id",
-			.resourceType = "svc_AuthzTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "Revoke-invalid_space_id",
+			.rEntityType  = "svc_AuthzTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		grpcxx::detail::request r(1);
 		r.header(std::string(svc::common::space_id_v), "invalid");
@@ -338,9 +338,9 @@ TEST_F(svc_AuthzTest, Revoke) {
 		grpcxx::context ctx(r);
 
 		rpcRevoke::request_type request;
-		request.set_principal_id(record.principalId());
-		request.set_resource_type(record.resourceType());
-		request.set_resource_id(record.resourceId());
+		request.set_principal_id(*tuple.lPrincipalId());
+		request.set_resource_type(tuple.rEntityType());
+		request.set_resource_id(tuple.rEntityId());
 
 		rpcRevoke::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcRevoke>(ctx, request));
@@ -348,7 +348,7 @@ TEST_F(svc_AuthzTest, Revoke) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 
-		EXPECT_TRUE(db::Record::lookup(
-			record.spaceId(), record.principalId(), record.resourceType(), record.resourceId()));
+		EXPECT_TRUE(db::Tuple::lookup(
+			tuple.spaceId(), *tuple.lPrincipalId(), tuple.rEntityType(), tuple.rEntityId()));
 	}
 }
