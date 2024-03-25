@@ -3,26 +3,26 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](https://raw.githubusercontent.com/uatuko/sentium/main/LICENSE)
 [![codecov](https://codecov.io/gh/uatuko/sentium/graph/badge.svg?token=KR9MkDkk8s)](https://codecov.io/gh/uatuko/sentium)
 
-Lightning fast, global scale authorisation service without the overhead of (yet another) modeling language.
+Lightning fast, global scale authorization service without the overhead of yet another DSL[^5].
 
 ## What is Sentium?
 
-Sentium is an authorisation service for securing your applications and services using zero trust[^1]
-fine-grained access control (FGA).
+Sentium is an authorization service for securing your applications and services using zero trust[^1]
+fine-grained authorization (FGA).
 
 We designed Sentium to be as powerful and scalable as [Zanzibar — Google’s Consistent, Global Authorization System](https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/)
-yet simple enough to start using without the overhead of having to learn a new modeling language or a policy syntax.
+yet simple enough to start using without the overhead of having to learn a new DSL to define authorization models or policies.
 
 ### Why Sentium?
 
-There are other open-source (and commercial) authorisation services, some are inspired by Google Zanzibar
-while others tend to offer policy-as-code solutions. But these solutions require learning a new modeling
-language or a policy syntax creating unnecessary complexities.
+There are other open-source (and commercial) authorization services, some are inspired by Google Zanzibar
+while others tend to offer policy-as-code solutions. But almost all of these solutions require learning
+a new DSL to create authorization models or define policies, which adds unnecessary complexities.
 
-Using an authorisation service shouldn't come with a requirement to be an expert in building and maintaining
-authorisation models or policies. It should be as easy as using an API.
+Using an authorization service shouldn't come with a requirement to be an expert in building and maintaining
+authorization models or policies. It should be as easy as using an API.
 
-Sentium lean on well known API design principals to provide an authorisation service that's easy to
+Sentium lean on well known API design principals to provide an authorization service that's easy to
 integrate, quick to master and flexible enough to handle complex requirements.
 
 
@@ -30,12 +30,12 @@ integrate, quick to master and flexible enough to handle complex requirements.
 
 * Schema-less fine-grained access control (FGA)
 * Zero-trust, least privilege architecture (ZTA)
-* Predictable constant time authorisation checks (O(1))
+* Predictable constant time authorization checks (O(1))
 * Strongly consistent with no cache
 * Cloud native at global scale[^2]
 * ABAC, RBAC & ReBAC[^4]
 * Multi-tenancy support, if you need it
-* Not just authorisation checks, list users, resources a user can access and users with access to a resource
+* Not just authorization checks, list users, resources a user can access and users with access to a resource
 * First class treatment for listing endpoints with pagination and limits to handle large datasets
 * Built using the fastest gRPC server implementation[^3]
 
@@ -231,3 +231,4 @@ for their contributions on the `gatekeeper` branch.
 [^2]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
 [^3]: [gRPCxx](https://github.com/uatuko/grpcxx) is benchmarked to be the fastest in February 2024.
 [^4]: [RFC #72](https://github.com/uatuko/sentium/discussions/72)
+[^5]: [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language)
