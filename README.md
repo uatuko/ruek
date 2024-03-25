@@ -28,7 +28,7 @@ integrate, quick to master and flexible enough to handle complex requirements.
 
 ## Features
 
-* Schema-less fine-grained access control (FGA)
+* Schema-less fine-grained authorization (FGA)
 * Zero-trust, least privilege architecture (ZTA)
 * Predictable constant time authorization checks (O(1))
 * Strongly consistent with no cache
