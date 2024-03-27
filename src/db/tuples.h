@@ -44,13 +44,23 @@ public:
 
 	const std::string &lEntityId() const noexcept { return _data.lEntityId; }
 	const std::string &lEntityType() const noexcept { return _data.lEntityType; }
+
 	const Data::pid_t &lPrincipalId() const noexcept { return _data.lPrincipalId; }
+	void               lPrincipalId(const std::string &pid) noexcept {
+        _data.lPrincipalId = pid;
+        sanitise();
+	}
 
 	const std::string &relation() const noexcept { return _data.relation; }
 
 	const std::string &rEntityId() const noexcept { return _data.rEntityId; }
 	const std::string &rEntityType() const noexcept { return _data.rEntityType; }
+
 	const Data::pid_t &rPrincipalId() const noexcept { return _data.rPrincipalId; }
+	void               rPrincipalId(const std::string &pid) noexcept {
+        _data.rPrincipalId = pid;
+        sanitise();
+	}
 
 	const std::string &spaceId() const noexcept { return _data.spaceId; }
 	const std::string &strand() const noexcept { return _data.strand; }

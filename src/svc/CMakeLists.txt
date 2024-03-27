@@ -3,12 +3,14 @@ target_sources(svc
 	PRIVATE
 		authz.cpp
 		principals.cpp
+		relations.cpp
 		resources.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
 			authz.h
 			principals.h
+			relations.h
 			resources.h
 			svc.h
 			wrapper.h
