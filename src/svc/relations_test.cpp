@@ -1,3 +1,4 @@
+#include <google/protobuf/util/json_util.h>
 #include <grpcxx/request.h>
 #include <gtest/gtest.h>
 
@@ -39,6 +40,11 @@ TEST_F(svc_RelationsTest, Create) {
 		right->set_id("right");
 		right->set_type("svc_RelationsTest.Create");
 
+		request.set_strand("strand");
+
+		const std::string attrs(R"({"foo":"bar"})");
+		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
+
 		rpcCreate::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
@@ -57,9 +63,12 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_FALSE(actual.has_right_principal_id());
 		EXPECT_EQ(right->id(), actual.right_entity().id());
 		EXPECT_EQ(right->type(), actual.right_entity().type());
+		EXPECT_EQ(request.strand(), actual.strand());
 
-		EXPECT_FALSE(actual.has_strand());
-		EXPECT_FALSE(actual.has_attrs());
+		std::string responseAttrs;
+		google::protobuf::util::MessageToJsonString(actual.attrs(), &responseAttrs);
+		EXPECT_EQ(attrs, responseAttrs);
+
 		EXPECT_FALSE(actual.has_ref_id());
 	}
 
