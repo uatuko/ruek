@@ -30,6 +30,9 @@ google::rpc::Status Impl::exception() noexcept {
 	} catch (const err::DbTupleInvalidData &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
+	} catch (const err::DbTupleInvalidKey &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
 	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);
 		status.set_message(e.what());

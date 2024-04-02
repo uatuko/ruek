@@ -44,6 +44,7 @@ if (SENTIUM_BUILD_TESTING)
 		PRIVATE
 			authz_test.cpp
 			principals_test.cpp
+			relations_test.cpp
 			resources_test.cpp
 	)
 
