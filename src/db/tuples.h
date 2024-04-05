@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "pg.h"
 
@@ -91,11 +92,6 @@ public:
 		std::string_view spaceId, Entity left, Entity right, std::string_view relation = "",
 		std::string_view strand = "");
 
-	static std::optional<Tuple> lookup(
-		std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
-		std::string_view lEntityId, std::string_view relation, std::string_view rEntityType,
-		std::string_view rEntityId);
-
 	static Tuple retrieve(std::string_view id);
 
 private:
@@ -106,4 +102,11 @@ private:
 	int         _rev;
 	rid_t       _rid;
 };
+
+using Tuples = std::vector<Tuple>;
+
+Tuples LookupTuples(
+	std::string_view spaceId, Tuple::Entity left, std::string_view relation, Tuple::Entity right,
+	std::optional<std::string_view> strand = std::nullopt, std::string_view lastId = "",
+	std::uint16_t count = 10);
 } // namespace db

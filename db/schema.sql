@@ -60,10 +60,10 @@ create table if not exists tuples (
 	constraint "tuples.pkey" primary key (_id),
 	constraint "tuples.unique" unique (
 		space_id,
-		strand,
 		l_entity_type, l_entity_id,
 		relation,
-		r_entity_type, r_entity_id),
+		r_entity_type, r_entity_id,
+		strand),
 
 	constraint "tuples.fkey-_rid" foreign key (_rid)
 		references tuples(_id)
