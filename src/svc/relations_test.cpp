@@ -304,7 +304,7 @@ TEST_F(svc_RelationsTest, Create) {
 
 	// Error: invalid principal
 	{
-		db::Principal principal({.spaceId = "svc_RelationsTest.Create--invalid-principal"});
+		db::Principal principal({.spaceId = "svc_RelationsTest.Create-invalid-principal"});
 		ASSERT_NO_THROW(principal.store());
 
 		rpcCreate::request_type request;

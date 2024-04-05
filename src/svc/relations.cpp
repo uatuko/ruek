@@ -26,14 +26,14 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 		right = {req.right_entity().type(), req.right_entity().id()};
 	}
 
-	auto r = db::Tuple::lookup(ctx.meta(common::space_id_v), left, right, req.relation());
-
 	rpcCheck::response_type response;
-	response.set_found(r.has_value());
 	response.set_cost(1);
 
-	if (r) {
+	if (auto r = db::Tuple::lookup(ctx.meta(common::space_id_v), left, right, req.relation()); r) {
+		response.set_found(true);
 		map(*r, response.mutable_tuple());
+	} else {
+		response.set_found(false);
 	}
 
 	return {grpcxx::status::code_t::ok, response};
