@@ -19,6 +19,13 @@ service Relations {
 			body : "*"
 		};
 	}
+
+	rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse) {
+		option (google.api.http) = {
+			post : "/v1/relations:delete"
+			body : "*"
+		};
+	}
 }
 
 message Entity {
@@ -94,3 +101,21 @@ message RelationsCreateResponse {
 	Tuple  tuple = 1;
 	uint32 cost  = 2;
 }
+
+message RelationsDeleteRequest {
+	oneof left {
+		Entity left_entity       = 1;
+		string left_principal_id = 2;
+	}
+
+	string relation = 5;
+
+	oneof right {
+		Entity right_entity       = 3;
+		string right_principal_id = 4;
+	}
+
+	optional string strand = 6;
+}
+
+message RelationsDeleteResponse {}
