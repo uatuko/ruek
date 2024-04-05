@@ -63,8 +63,10 @@ message RelationsCheckRequest {
 }
 
 message RelationsCheckResponse {
-	repeated Tuple tuples = 1;
-	uint32         cost   = 2;
+	bool   found = 1;
+	uint32 cost  = 2;
+
+	optional Tuple tuple = 3;
 }
 
 message RelationsCreateRequest {
