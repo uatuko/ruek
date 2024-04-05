@@ -13,7 +13,9 @@ template <>
 rpcCheck::result_type Impl::call<rpcCheck>(
 	grpcxx::context &ctx, const rpcCheck::request_type &req) {
 	auto r = db::Tuple::lookup(
-		ctx.meta(common::space_id_v), req.principal_id(), {req.resource_type(), req.resource_id()});
+		ctx.meta(common::space_id_v),
+		{req.principal_id()},
+		{req.resource_type(), req.resource_id()});
 	return {grpcxx::status::code_t::ok, map(r)};
 }
 
@@ -23,7 +25,7 @@ rpcGrant::result_type Impl::call<rpcGrant>(
 	// Upsert if exists
 	if (auto r = db::Tuple::lookup(
 			ctx.meta(common::space_id_v),
-			req.principal_id(),
+			{req.principal_id()},
 			{req.resource_type(), req.resource_id()});
 		r) {
 		if (req.has_attrs()) {
@@ -48,7 +50,7 @@ rpcRevoke::result_type Impl::call<rpcRevoke>(
 	grpcxx::context &ctx, const rpcRevoke::request_type &req) {
 	if (auto r = db::Tuple::lookup(
 			ctx.meta(common::space_id_v),
-			req.principal_id(),
+			{req.principal_id()},
 			{req.resource_type(), req.resource_id()});
 		r) {
 		db::Tuple::discard(r->id());

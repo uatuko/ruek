@@ -237,7 +237,7 @@ TEST_F(svc_AuthzTest, Grant) {
 		ASSERT_TRUE(result.response);
 
 		auto actual = db::Tuple::lookup(
-			tuple.spaceId(), *tuple.lPrincipalId(), {tuple.rEntityType(), tuple.rEntityId()});
+			tuple.spaceId(), {*tuple.lPrincipalId()}, {tuple.rEntityType(), tuple.rEntityId()});
 		EXPECT_EQ(tuple.rev() + 1, actual->rev());
 		EXPECT_EQ(R"({"foo": "bar"})", actual->attrs());
 	}
@@ -319,7 +319,7 @@ TEST_F(svc_AuthzTest, Revoke) {
 		ASSERT_TRUE(result.response);
 
 		EXPECT_FALSE(db::Tuple::lookup(
-			tuple.spaceId(), *tuple.lPrincipalId(), {tuple.rEntityType(), tuple.rEntityId()}));
+			tuple.spaceId(), {*tuple.lPrincipalId()}, {tuple.rEntityType(), tuple.rEntityId()}));
 	}
 
 	// Success: invalid space-id
@@ -349,6 +349,6 @@ TEST_F(svc_AuthzTest, Revoke) {
 		ASSERT_TRUE(result.response);
 
 		EXPECT_TRUE(db::Tuple::lookup(
-			tuple.spaceId(), *tuple.lPrincipalId(), {tuple.rEntityType(), tuple.rEntityId()}));
+			tuple.spaceId(), {*tuple.lPrincipalId()}, {tuple.rEntityType(), tuple.rEntityId()}));
 	}
 }

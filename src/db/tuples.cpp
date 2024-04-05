@@ -43,17 +43,9 @@ bool Tuple::discard(std::string_view id) {
 }
 
 std::optional<Tuple> Tuple::lookup(
-	std::string_view spaceId, std::string_view lPrincipalId, Entity rEntity,
-	std::string_view relation) {
+	std::string_view spaceId, Entity left, Entity right, std::string_view relation) {
 
-	return lookup(
-		spaceId,
-		"",
-		common::principal_entity_v,
-		lPrincipalId,
-		relation,
-		rEntity.type(),
-		rEntity.id());
+	return lookup(spaceId, "", left.type(), left.id(), relation, right.type(), right.id());
 }
 
 std::optional<Tuple> Tuple::lookup(
@@ -188,6 +180,9 @@ void Tuple::store() {
 
 	_rev = res.at(0, 0).as<int>();
 }
+
+Tuple::Entity::Entity(std::string_view pid) noexcept :
+	_id(pid), _type(common::principal_entity_v) {}
 
 Tuple::Entity::Entity(std::string_view type, std::string_view id) noexcept : _id(id), _type(type) {}
 } // namespace db

@@ -34,6 +34,7 @@ public:
 
 	class Entity {
 	public:
+		Entity(std::string_view pid) noexcept;
 		Entity(std::string_view type, std::string_view id) noexcept;
 
 		std::string_view id() const noexcept { return _id; }
@@ -86,8 +87,7 @@ public:
 	static bool discard(std::string_view id);
 
 	static std::optional<Tuple> lookup(
-		std::string_view spaceId, std::string_view lPrincipalId, Entity rEntity,
-		std::string_view relation = "");
+		std::string_view spaceId, Entity left, Entity right, std::string_view relation = "");
 
 	static std::optional<Tuple> lookup(
 		std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
