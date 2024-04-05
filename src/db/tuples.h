@@ -88,7 +88,8 @@ public:
 	static bool discard(std::string_view id);
 
 	static std::optional<Tuple> lookup(
-		std::string_view spaceId, Entity left, Entity right, std::string_view relation = "");
+		std::string_view spaceId, Entity left, Entity right, std::string_view relation = "",
+		std::string_view strand = "");
 
 	static std::optional<Tuple> lookup(
 		std::string_view spaceId, std::string_view strand, std::string_view lEntityType,

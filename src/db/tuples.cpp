@@ -43,9 +43,10 @@ bool Tuple::discard(std::string_view id) {
 }
 
 std::optional<Tuple> Tuple::lookup(
-	std::string_view spaceId, Entity left, Entity right, std::string_view relation) {
+	std::string_view spaceId, Entity left, Entity right, std::string_view relation,
+	std::string_view strand) {
 
-	return lookup(spaceId, "", left.type(), left.id(), relation, right.type(), right.id());
+	return lookup(spaceId, strand, left.type(), left.id(), relation, right.type(), right.id());
 }
 
 std::optional<Tuple> Tuple::lookup(

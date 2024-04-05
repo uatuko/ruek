@@ -24,6 +24,10 @@ public:
 	rpcCreate::result_type call<rpcCreate>(
 		grpcxx::context &ctx, const rpcCreate::request_type &req);
 
+	template <>
+	rpcDelete::result_type call<rpcDelete>(
+		grpcxx::context &ctx, const rpcDelete::request_type &req);
+
 	google::rpc::Status exception() noexcept;
 
 private:

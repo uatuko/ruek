@@ -51,6 +51,32 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	return {grpcxx::status::code_t::ok, response};
 }
 
+template <>
+rpcDelete::result_type Impl::call<rpcDelete>(
+	grpcxx::context &ctx, const rpcDelete::request_type &req) {
+	db::Tuple::Entity left, right;
+
+	if (req.has_left_principal_id()) {
+		left = {req.left_principal_id()};
+	} else {
+		left = {req.left_entity().type(), req.left_entity().id()};
+	}
+
+	if (req.has_right_principal_id()) {
+		right = {req.right_principal_id()};
+	} else {
+		right = {req.right_entity().type(), req.right_entity().id()};
+	}
+
+	if (auto r = db::Tuple::lookup(
+			ctx.meta(common::space_id_v), left, right, req.relation(), req.strand());
+		r) {
+		db::Tuple::discard(r->id());
+	}
+
+	return {grpcxx::status::code_t::ok, rpcDelete::response_type()};
+}
+
 google::rpc::Status Impl::exception() noexcept {
 	google::rpc::Status status;
 	status.set_code(google::rpc::UNKNOWN);

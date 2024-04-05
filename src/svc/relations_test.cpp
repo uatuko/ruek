@@ -322,3 +322,115 @@ TEST_F(svc_RelationsTest, Create) {
 		ASSERT_FALSE(result.response);
 	}
 }
+
+TEST_F(svc_RelationsTest, Delete) {
+	grpcxx::context ctx;
+	svc::Relations  svc;
+
+	// Success: delete
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.Delete",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.Delete",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcDelete::request_type request;
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuple.lEntityId());
+		left->set_type(tuple.lEntityType());
+
+		request.set_relation(tuple.relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuple.rEntityId());
+		right->set_type(tuple.rEntityType());
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		EXPECT_FALSE(db::Tuple::discard(tuple.id()));
+	}
+
+	// Success: delete with principals
+	{
+		std::string_view spaceId = "space_id:svc_RelationsTest.Delete-with_principals";
+
+		db::Principal left({
+			.id      = "id:ssvc_RelationsTest.Delete-with_principals_left",
+			.spaceId = std::string(spaceId),
+		});
+		ASSERT_NO_THROW(left.store());
+
+		db::Principal right({
+			.id      = "id:svc_RelationsTest.Delete-with_principals_right",
+			.spaceId = std::string(spaceId),
+		});
+		ASSERT_NO_THROW(right.store());
+
+		db::Tuple tuple({
+			.lPrincipalId = left.id(),
+			.relation     = "relation",
+			.rPrincipalId = right.id(),
+			.spaceId      = std::string(spaceId),
+			.strand       = "strand",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcDelete::request_type request;
+		request.set_left_principal_id(*tuple.lPrincipalId());
+		request.set_relation(tuple.relation());
+		request.set_right_principal_id(*tuple.rPrincipalId());
+		request.set_strand(tuple.strand());
+
+		grpcxx::detail::request r(1);
+		r.header(std::string(svc::common::space_id_v), std::string(spaceId));
+
+		grpcxx::context ctx(r);
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		EXPECT_FALSE(db::Tuple::discard(tuple.id()));
+	}
+
+	// Success: not found (strand mismatch)
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.Delete-not_found",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.Delete-not_found",
+			.strand      = "strand",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcDelete::request_type request;
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuple.lEntityId());
+		left->set_type(tuple.lEntityType());
+
+		request.set_relation(tuple.relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuple.rEntityId());
+		right->set_type(tuple.rEntityType());
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		EXPECT_TRUE(db::Tuple::discard(tuple.id()));
+	}
+}
