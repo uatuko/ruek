@@ -10,6 +10,36 @@
 namespace svc {
 namespace relations {
 template <>
+rpcCheck::result_type Impl::call<rpcCheck>(
+	grpcxx::context &ctx, const rpcCheck::request_type &req) {
+	db::Tuple::Entity left, right;
+
+	if (req.has_left_principal_id()) {
+		left = {req.left_principal_id()};
+	} else {
+		left = {req.left_entity().type(), req.left_entity().id()};
+	}
+
+	if (req.has_right_principal_id()) {
+		right = {req.right_principal_id()};
+	} else {
+		right = {req.right_entity().type(), req.right_entity().id()};
+	}
+
+	auto r = db::Tuple::lookup(ctx.meta(common::space_id_v), left, right, req.relation());
+
+	rpcCheck::response_type response;
+	response.set_found(r.has_value());
+	response.set_cost(1);
+
+	if (r) {
+		map(*r, response.mutable_tuple());
+	}
+
+	return {grpcxx::status::code_t::ok, response};
+}
+
+template <>
 rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
 	auto tuple = map(ctx, req);

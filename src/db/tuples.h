@@ -34,6 +34,7 @@ public:
 
 	class Entity {
 	public:
+		Entity() = default;
 		Entity(std::string_view pid) noexcept;
 		Entity(std::string_view type, std::string_view id) noexcept;
 

@@ -18,6 +18,9 @@ public:
 	}
 
 	template <>
+	rpcCheck::result_type call<rpcCheck>(grpcxx::context &ctx, const rpcCheck::request_type &req);
+
+	template <>
 	rpcCreate::result_type call<rpcCreate>(
 		grpcxx::context &ctx, const rpcCreate::request_type &req);
 

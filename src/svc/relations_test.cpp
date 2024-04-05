@@ -22,6 +22,139 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
+TEST_F(svc_RelationsTest, Check) {
+	grpcxx::context ctx;
+	svc::Relations  svc;
+
+	// Success: found
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.Check",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.Check",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCheck::request_type request;
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuple.lEntityId());
+		left->set_type(tuple.lEntityType());
+
+		request.set_relation(tuple.relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuple.rEntityId());
+		right->set_type(tuple.rEntityType());
+
+		rpcCheck::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(true, result.response->found());
+		EXPECT_EQ(1, result.response->cost());
+		ASSERT_TRUE(result.response->has_tuple());
+
+		auto &actual = result.response->tuple();
+		EXPECT_EQ(tuple.spaceId(), actual.space_id());
+		EXPECT_EQ(tuple.id(), actual.id());
+		EXPECT_FALSE(actual.has_left_principal_id());
+		EXPECT_EQ(tuple.lEntityId(), actual.left_entity().id());
+		EXPECT_EQ(tuple.lEntityType(), actual.left_entity().type());
+		EXPECT_EQ(tuple.relation(), actual.relation());
+		EXPECT_FALSE(actual.has_right_principal_id());
+		EXPECT_EQ(tuple.rEntityId(), actual.right_entity().id());
+		EXPECT_EQ(tuple.rEntityType(), actual.right_entity().type());
+		EXPECT_FALSE(actual.has_strand());
+		EXPECT_FALSE(actual.has_attrs());
+		EXPECT_FALSE(actual.has_ref_id());
+	}
+
+	// Success: found with principals
+	{
+		db::Principal left({.id = "id:svc_RelationsTest.Check-with_principals_left"});
+		ASSERT_NO_THROW(left.store());
+
+		db::Principal right({.id = "id:svc_RelationsTest.Check-with_principals_right"});
+		ASSERT_NO_THROW(right.store());
+
+		db::Tuple tuple({
+			.lPrincipalId = left.id(),
+			.relation     = "relation",
+			.rPrincipalId = right.id(),
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCheck::request_type request;
+		request.set_left_principal_id(*tuple.lPrincipalId());
+		request.set_relation(tuple.relation());
+		request.set_right_principal_id(*tuple.rPrincipalId());
+
+		rpcCheck::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(true, result.response->found());
+		EXPECT_EQ(1, result.response->cost());
+		ASSERT_TRUE(result.response->has_tuple());
+
+		auto &actual = result.response->tuple();
+		EXPECT_EQ(tuple.spaceId(), actual.space_id());
+		EXPECT_EQ(tuple.id(), actual.id());
+		EXPECT_FALSE(actual.has_left_entity());
+		EXPECT_EQ(*tuple.lPrincipalId(), actual.left_principal_id());
+		EXPECT_EQ(tuple.relation(), actual.relation());
+		EXPECT_FALSE(actual.has_right_entity());
+		EXPECT_EQ(*tuple.rPrincipalId(), actual.right_principal_id());
+		EXPECT_FALSE(actual.has_strand());
+		EXPECT_FALSE(actual.has_attrs());
+		EXPECT_FALSE(actual.has_ref_id());
+	}
+
+	// Success: not found (space-id mismatch)
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.Check-not_found",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.Check-not_found",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCheck::request_type request;
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuple.lEntityId());
+		left->set_type(tuple.lEntityType());
+
+		request.set_relation(tuple.relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuple.rEntityId());
+		right->set_type(tuple.rEntityType());
+
+		grpcxx::detail::request r(1);
+		r.header(
+			std::string(svc::common::space_id_v), "space_id:svc_RelationsTest.Check-not_found");
+
+		grpcxx::context ctx(r);
+
+		rpcCheck::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(false, result.response->found());
+		EXPECT_EQ(1, result.response->cost());
+		EXPECT_FALSE(result.response->has_tuple());
+	}
+}
+
 TEST_F(svc_RelationsTest, Create) {
 	grpcxx::context ctx;
 	svc::Relations  svc;
