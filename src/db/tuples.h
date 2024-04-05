@@ -32,6 +32,18 @@ public:
 		bool operator==(const Data &) const noexcept = default;
 	};
 
+	class Entity {
+	public:
+		Entity(std::string_view type, std::string_view id) noexcept;
+
+		std::string_view id() const noexcept { return _id; }
+		std::string_view type() const noexcept { return _type; }
+
+	private:
+		std::string_view _id;
+		std::string_view _type;
+	};
+
 	Tuple(const Data &data) noexcept;
 	Tuple(Data &&data) noexcept;
 
@@ -74,8 +86,8 @@ public:
 	static bool discard(std::string_view id);
 
 	static std::optional<Tuple> lookup(
-		std::string_view spaceId, std::string_view lPrincipalId, std::string_view rEntityType,
-		std::string_view rEntityId);
+		std::string_view spaceId, std::string_view lPrincipalId, Entity rEntity,
+		std::string_view relation = "");
 
 	static std::optional<Tuple> lookup(
 		std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
