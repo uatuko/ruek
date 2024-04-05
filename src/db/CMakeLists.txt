@@ -8,12 +8,15 @@ target_sources(db
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
-			common.h
 			config.h
 			pg.h
 			principals.h
 			records.h
 			tuples.h
+	PRIVATE
+		FILE_SET private_headers TYPE HEADERS
+		FILES
+			common.h
 )
 
 target_link_libraries(db
