@@ -28,10 +28,11 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 
 	rpcCheck::response_type response;
 	response.set_cost(1);
-
-	if (auto r = db::Tuple::lookup(ctx.meta(common::space_id_v), left, right, req.relation()); r) {
+	if (auto tuples = db::LookupTuples(
+			ctx.meta(common::space_id_v), left, req.relation(), right, std::nullopt, "", 1);
+		!tuples.empty()) {
 		response.set_found(true);
-		map(*r, response.mutable_tuple());
+		map(tuples.front(), response.mutable_tuple());
 	} else {
 		response.set_found(false);
 	}

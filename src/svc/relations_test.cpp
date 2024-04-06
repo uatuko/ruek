@@ -34,6 +34,7 @@ TEST_F(svc_RelationsTest, Check) {
 			.relation    = "relation",
 			.rEntityId   = "right",
 			.rEntityType = "svc_RelationsTest.Check",
+			.strand      = "strand",
 		});
 		ASSERT_NO_THROW(tuple.store());
 
@@ -68,7 +69,7 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_FALSE(actual.has_right_principal_id());
 		EXPECT_EQ(tuple.rEntityId(), actual.right_entity().id());
 		EXPECT_EQ(tuple.rEntityType(), actual.right_entity().type());
-		EXPECT_FALSE(actual.has_strand());
+		EXPECT_EQ(tuple.strand(), actual.strand());
 		EXPECT_FALSE(actual.has_attrs());
 		EXPECT_FALSE(actual.has_ref_id());
 	}
