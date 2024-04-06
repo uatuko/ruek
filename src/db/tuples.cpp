@@ -170,16 +170,12 @@ Tuples LookupTuples(
 			and r_entity_type = $5::text and r_entity_id = $6::text
 	)";
 
+	// Looking up with a strand can only yield at most one result (due to unique key constraint).
+	// Last id is ignored if strand has a value.
 	if (strand) {
 		where += " and strand = $7::text";
-	}
-
-	if (!lastId.empty()) {
-		if (strand) {
-			where += " and _id < $8::text";
-		} else {
-			where += " and _id < $7::text";
-		}
+	} else if (!lastId.empty()) {
+		where += " and _id < $7::text";
 	}
 
 	const std::string qry = fmt::format(
@@ -202,18 +198,7 @@ Tuples LookupTuples(
 		count);
 
 	db::pg::result_t res;
-	if (strand && !lastId.empty()) {
-		res = pg::exec(
-			qry,
-			spaceId,
-			left.type(),
-			left.id(),
-			relation,
-			right.type(),
-			right.id(),
-			strand,
-			lastId);
-	} else if (strand) {
+	if (strand) {
 		res = pg::exec(
 			qry, spaceId, left.type(), left.id(), relation, right.type(), right.id(), strand);
 	} else if (!lastId.empty()) {
