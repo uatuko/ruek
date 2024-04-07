@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package sentium.api.v1;
+
+import "google/protobuf/struct.proto";
+import "google/api/annotations.proto";
+
+service Relations {
+	rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse) {
+		option (google.api.http) = {
+			post : "/v1/relations:check"
+			body : "*"
+		};
+	}
+
+	rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse) {
+		option (google.api.http) = {
+			post : "/v1/relations"
+			body : "*"
+		};
+	}
+
+	rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse) {
+		option (google.api.http) = {
+			post : "/v1/relations:delete"
+			body : "*"
+		};
+	}
+}
+
+message Entity {
+	string id   = 1;
+	string type = 2;
+}
+
+message Tuple {
+	string space_id = 1;
+	string id       = 2;
+
+	oneof left {
+		Entity left_entity       = 3;
+		string left_principal_id = 4;
+	}
+
+	string relation = 7;
+
+	oneof right {
+		Entity right_entity       = 5;
+		string right_principal_id = 6;
+	}
+
+	optional string strand                = 8;
+	optional google.protobuf.Struct attrs = 9;
+
+	optional string ref_id = 10;
+}
+
+message RelationsCheckRequest {
+	oneof left {
+		Entity left_entity       = 1;
+		string left_principal_id = 2;
+	}
+
+	string relation = 5;
+
+	oneof right {
+		Entity right_entity       = 3;
+		string right_principal_id = 4;
+	}
+}
+
+message RelationsCheckResponse {
+	bool   found = 1;
+	uint32 cost  = 2;
+
+	optional Tuple tuple = 3;
+}
+
+message RelationsCreateRequest {
+	oneof left {
+		Entity left_entity       = 1;
+		string left_principal_id = 2;
+	}
+
+	string relation = 5;
+
+	oneof right {
+		Entity right_entity       = 3;
+		string right_principal_id = 4;
+	}
+
+	optional string strand = 6;
+
+	optional google.protobuf.Struct attrs = 7;
+
+	optional bool   optimise   = 8;
+	optional uint32 cost_limit = 9;
+}
+
+message RelationsCreateResponse {
+	Tuple  tuple = 1;
+	uint32 cost  = 2;
+}
+
+message RelationsDeleteRequest {
+	oneof left {
+		Entity left_entity       = 1;
+		string left_principal_id = 2;
+	}
+
+	string relation = 5;
+
+	oneof right {
+		Entity right_entity       = 3;
+		string right_principal_id = 4;
+	}
+
+	optional string strand = 6;
+}
+
+message RelationsDeleteResponse {}

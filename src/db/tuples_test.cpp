@@ -58,42 +58,151 @@ TEST_F(db_TuplesTest, discard) {
 }
 
 TEST_F(db_TuplesTest, lookup) {
-	db::Tuple tuple({
-		.lEntityId   = "left",
-		.lEntityType = "db_TuplesTest.lookup",
-		.relation    = "relation",
-		.rEntityId   = "right",
-		.rEntityType = "db_TuplesTest.lookup",
-	});
-	ASSERT_NO_THROW(tuple.store());
-
-	// Success: lookup tuple
+	// Success: lookup
 	{
-		auto result = db::Tuple::lookup(
-			tuple.spaceId(),
-			tuple.strand(),
-			tuple.lEntityType(),
-			tuple.lEntityId(),
-			tuple.relation(),
-			tuple.rEntityType(),
-			tuple.rEntityId());
-		ASSERT_TRUE(result);
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.lookup",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.lookup",
+			.strand      = "strand",
+		});
+		ASSERT_NO_THROW(tuple.store());
 
-		EXPECT_EQ(tuple, *result);
+		auto results = db::LookupTuples(
+			tuple.spaceId(),
+			{tuple.lEntityType(), tuple.lEntityId()},
+			tuple.relation(),
+			{tuple.rEntityType(), tuple.rEntityId()},
+			tuple.strand());
+
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(tuple, results.front());
 	}
 
-	// Success: lookup non-existent tuple
+	// Success: lookup without strand
 	{
-		auto result = db::Tuple::lookup(
-			tuple.spaceId(),
-			tuple.strand(),
-			tuple.lEntityType(),
-			tuple.lEntityId(),
-			"non-existent",
-			tuple.rEntityType(),
-			tuple.rEntityId());
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.lookup-without_strand",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.lookup-without_strand",
+			.strand      = "strand",
+		});
+		ASSERT_NO_THROW(tuple.store());
 
-		EXPECT_EQ(std::nullopt, result);
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results = db::LookupTuples(
+				tuple.spaceId(),
+				{tuple.lEntityType(), tuple.lEntityId()},
+				tuple.relation(),
+				{tuple.rEntityType(), tuple.rEntityId()}));
+
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(tuple, results.front());
+	}
+
+	// Success: lookup with last id
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.lookup-with_last_id",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.lookup-with_last_id",
+				.strand      = "strand[0]",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.lookup-with_last_id",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.lookup-with_last_id",
+				.strand      = "strand[1]",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results = db::LookupTuples(
+				tuples[1].spaceId(),
+				{tuples[1].lEntityType(), tuples[1].lEntityId()},
+				tuples[1].relation(),
+				{tuples[1].rEntityType(), tuples[1].rEntityId()},
+				std::nullopt,
+				tuples[1].id()));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(tuples[0], results.front());
+	}
+
+	// Success: lookup with count
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.lookup-with_count",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.lookup-with_count",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.lookup-with_count",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.lookup-with_count",
+				.strand      = "strand",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results = db::LookupTuples(
+				tuples[0].spaceId(),
+				{tuples[0].lEntityType(), tuples[0].lEntityId()},
+				tuples[0].relation(),
+				{tuples[0].rEntityType(), tuples[0].rEntityId()},
+				std::nullopt,
+				"",
+				1));
+		ASSERT_EQ(1, results.size());
+
+		EXPECT_EQ(tuples[1], results.front());
+	}
+
+	// Success: lookup non-existent
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.lookup-non_existent",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.lookup-non_existent",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results = db::LookupTuples(
+				tuple.spaceId(),
+				{tuple.lEntityType(), tuple.lEntityId()},
+				"non-existent",
+				{tuple.rEntityType(), tuple.rEntityId()}));
+
+		EXPECT_TRUE(results.empty());
 	}
 }
 

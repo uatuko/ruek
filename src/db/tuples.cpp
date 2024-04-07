@@ -1,5 +1,6 @@
 #include "tuples.h"
 
+#include <fmt/core.h>
 #include <xid/xid.h>
 
 #include "err/errors.h"
@@ -43,45 +44,15 @@ bool Tuple::discard(std::string_view id) {
 }
 
 std::optional<Tuple> Tuple::lookup(
-	std::string_view spaceId, std::string_view lPrincipalId, std::string_view rEntityType,
-	std::string_view rEntityId) {
+	std::string_view spaceId, Entity left, Entity right, std::string_view relation,
+	std::string_view strand) {
 
-	return lookup(
-		spaceId, "", common::principal_entity_v, lPrincipalId, "", rEntityType, rEntityId);
-}
-
-std::optional<Tuple> Tuple::lookup(
-	std::string_view spaceId, std::string_view strand, std::string_view lEntityType,
-	std::string_view lEntityId, std::string_view relation, std::string_view rEntityType,
-	std::string_view rEntityId) {
-
-	std::string_view qry = R"(
-		select
-			space_id,
-			strand,
-			l_entity_type, l_entity_id,
-			relation,
-			r_entity_type, r_entity_id,
-			attrs,
-			l_principal_id, r_principal_id,
-			_id, _rid, _rev
-		from tuples
-		where
-			space_id = $1::text
-			and strand = $2::text
-			and l_entity_type = $3::text and l_entity_id = $4::text
-			and relation = $5::text
-			and r_entity_type = $6::text and r_entity_id = $7::text
-		;
-	)";
-
-	auto res =
-		pg::exec(qry, spaceId, strand, lEntityType, lEntityId, relation, rEntityType, rEntityId);
-	if (res.empty()) {
+	auto results = LookupTuples(spaceId, left, relation, right, strand, "", 1);
+	if (results.empty()) {
 		return std::nullopt;
 	}
 
-	return Tuple(res[0]);
+	return results.front();
 }
 
 Tuple Tuple::retrieve(std::string_view id) {
@@ -181,5 +152,68 @@ void Tuple::store() {
 	}
 
 	_rev = res.at(0, 0).as<int>();
+}
+
+Tuple::Entity::Entity(std::string_view pid) noexcept :
+	_id(pid), _type(common::principal_entity_v) {}
+
+Tuple::Entity::Entity(std::string_view type, std::string_view id) noexcept : _id(id), _type(type) {}
+
+Tuples LookupTuples(
+	std::string_view spaceId, Tuple::Entity left, std::string_view relation, Tuple::Entity right,
+	std::optional<std::string_view> strand, std::string_view lastId, std::uint16_t count) {
+	std::string where = R"(
+		where
+			space_id = $1::text
+			and l_entity_type = $2::text and l_entity_id = $3::text
+			and relation = $4::text
+			and r_entity_type = $5::text and r_entity_id = $6::text
+	)";
+
+	// Looking up with a strand can only yield at most one result (due to unique key constraint).
+	// Last id is ignored if strand has a value.
+	if (strand) {
+		where += " and strand = $7::text";
+	} else if (!lastId.empty()) {
+		where += " and _id < $7::text";
+	}
+
+	const std::string qry = fmt::format(
+		R"(
+			select
+				space_id,
+				strand,
+				l_entity_type, l_entity_id,
+				relation,
+				r_entity_type, r_entity_id,
+				attrs,
+				l_principal_id, r_principal_id,
+				_id, _rid, _rev
+			from tuples
+			{}
+			order by _id desc
+			limit {:d};
+		)",
+		where,
+		count);
+
+	db::pg::result_t res;
+	if (strand) {
+		res = pg::exec(
+			qry, spaceId, left.type(), left.id(), relation, right.type(), right.id(), strand);
+	} else if (!lastId.empty()) {
+		res = pg::exec(
+			qry, spaceId, left.type(), left.id(), relation, right.type(), right.id(), lastId);
+	} else {
+		res = pg::exec(qry, spaceId, left.type(), left.id(), relation, right.type(), right.id());
+	}
+
+	Tuples tuples;
+	tuples.reserve(res.affected_rows());
+	for (const auto &r : res) {
+		tuples.emplace_back(r);
+	}
+
+	return tuples;
 }
 } // namespace db
