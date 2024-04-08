@@ -76,13 +76,15 @@ TEST_F(db_TuplesTest, list) {
 			.lEntityType = "db_TuplesTest.list-right",
 			.relation    = "relation",
 			.rEntityId   = "right",
-			.rEntityType = "db_TuplesTest.list-right",
+			.rEntityType = "db_TuplesTest.list",
 			.strand      = "strand",
 		});
 		ASSERT_NO_THROW(tuple.store());
 
-		auto results =
-			db::ListTuples(tuple.spaceId(), {{tuple.lEntityType(), tuple.lEntityId()}}, {});
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results =
+				db::ListTuples(tuple.spaceId(), {{tuple.lEntityType(), tuple.lEntityId()}}, {}));
 		ASSERT_EQ(1, results.size());
 		EXPECT_EQ(tuple, results.front());
 	}
@@ -91,7 +93,7 @@ TEST_F(db_TuplesTest, list) {
 	{
 		db::Tuple tuple({
 			.lEntityId   = "left",
-			.lEntityType = "db_TuplesTest.list-left",
+			.lEntityType = "db_TuplesTest.list",
 			.relation    = "relation",
 			.rEntityId   = "right",
 			.rEntityType = "db_TuplesTest.list-left",
@@ -99,10 +101,125 @@ TEST_F(db_TuplesTest, list) {
 		});
 		ASSERT_NO_THROW(tuple.store());
 
-		auto results =
-			db::ListTuples(tuple.spaceId(), {}, {{tuple.rEntityType(), tuple.rEntityId()}});
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results =
+				db::ListTuples(tuple.spaceId(), {}, {{tuple.rEntityType(), tuple.rEntityId()}}));
 		ASSERT_EQ(1, results.size());
 		EXPECT_EQ(tuple, results.front());
+	}
+
+	// Success: list with relation
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.list-with_relation",
+				.relation    = "relation[0]",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.list-with_relation",
+				.strand      = "strand",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.list-with_relation",
+				.relation    = "relation[1]",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.list-with_relation",
+				.strand      = "strand",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results = db::ListTuples(
+				tuples[0].spaceId(),
+				{{tuples[0].lEntityType(), tuples[0].lEntityId()}},
+				{},
+				tuples[0].relation()));
+
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(tuples[0], results.front());
+	}
+
+	// Success: list with last id
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.list-with_last_id",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.list-with_last_id",
+				.strand      = "strand[0]",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.list-with_last_id",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.list-with_last_id",
+				.strand      = "strand[1]",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results = db::ListTuples(
+				tuples[0].spaceId(),
+				{{tuples[0].lEntityType(), tuples[0].lEntityId()}},
+				{},
+				{},
+				tuples[1].id()));
+
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(tuples[0], results.front());
+	}
+
+	// Success: list with last id and relation
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.list-with_last_id_and_relation",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.list-with_last_id_and_relation",
+				.strand      = "strand[0]",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "db_TuplesTest.list-with_last_id_and_relation",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "db_TuplesTest.list-with_last_id_and_relation",
+				.strand      = "strand[1]",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		db::Tuples results;
+		ASSERT_NO_THROW(
+			results = db::ListTuples(
+				tuples[0].spaceId(),
+				{},
+				{{tuples[0].rEntityType(), tuples[0].rEntityId()}},
+				tuples[0].relation(),
+				tuples[1].id()));
+
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(tuples[0], results.front());
 	}
 
 	// Error: invalid args
