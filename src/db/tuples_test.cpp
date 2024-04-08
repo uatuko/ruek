@@ -57,6 +57,64 @@ TEST_F(db_TuplesTest, discard) {
 	EXPECT_FALSE(result);
 }
 
+TEST_F(db_TuplesTest, list) {
+	// Seed tuple to check other tests are only returning expected results
+	db::Tuple tuple({
+		.lEntityId   = "left",
+		.lEntityType = "db_TuplesTest.list",
+		.relation    = "relation",
+		.rEntityId   = "right",
+		.rEntityType = "db_TuplesTest.list",
+		.strand      = "strand",
+	});
+	ASSERT_NO_THROW(tuple.store());
+
+	// Success: list right
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.list-right",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.list-right",
+			.strand      = "strand",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		auto results =
+			db::ListTuples(tuple.spaceId(), {{tuple.lEntityType(), tuple.lEntityId()}}, {});
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(tuple, results.front());
+	}
+
+	// Success: list left
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.list-left",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.list-left",
+			.strand      = "strand",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		auto results =
+			db::ListTuples(tuple.spaceId(), {}, {{tuple.rEntityType(), tuple.rEntityId()}});
+		ASSERT_EQ(1, results.size());
+		EXPECT_EQ(tuple, results.front());
+	}
+
+	// Error: invalid args
+	{
+		EXPECT_THROW(
+			db::ListTuples("", db::Tuple::Entity(), db::Tuple::Entity()),
+			err::DbTuplesInvalidListArgs);
+
+		EXPECT_THROW(db::ListTuples("", std::nullopt, std::nullopt), err::DbTuplesInvalidListArgs);
+	}
+}
+
 TEST_F(db_TuplesTest, lookup) {
 	// Success: lookup
 	{

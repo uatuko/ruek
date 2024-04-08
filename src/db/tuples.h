@@ -105,6 +105,11 @@ private:
 
 using Tuples = std::vector<Tuple>;
 
+Tuples ListTuples(
+	std::string_view spaceId, std::optional<Tuple::Entity> left, std::optional<Tuple::Entity> right,
+	std::optional<std::string_view> relation = std::nullopt, std::string_view lastId = "",
+	std::uint16_t count = 10);
+
 Tuples LookupTuples(
 	std::string_view spaceId, Tuple::Entity left, std::string_view relation, Tuple::Entity right,
 	std::optional<std::string_view> strand = std::nullopt, std::string_view lastId = "",
