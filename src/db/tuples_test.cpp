@@ -153,17 +153,17 @@ TEST_F(db_TuplesTest, list) {
 				.lEntityId   = "left",
 				.lEntityType = "db_TuplesTest.list-with_last_id",
 				.relation    = "relation",
-				.rEntityId   = "right",
+				.rEntityId   = "right-a",
 				.rEntityType = "db_TuplesTest.list-with_last_id",
-				.strand      = "strand[0]",
+				.strand      = "strand",
 			}},
 			{{
 				.lEntityId   = "left",
 				.lEntityType = "db_TuplesTest.list-with_last_id",
 				.relation    = "relation",
-				.rEntityId   = "right",
+				.rEntityId   = "right-b",
 				.rEntityType = "db_TuplesTest.list-with_last_id",
-				.strand      = "strand[1]",
+				.strand      = "strand",
 			}},
 		});
 
@@ -178,7 +178,7 @@ TEST_F(db_TuplesTest, list) {
 				{{tuples[0].lEntityType(), tuples[0].lEntityId()}},
 				{},
 				{},
-				tuples[1].id()));
+				tuples[1].rEntityId()));
 
 		ASSERT_EQ(1, results.size());
 		EXPECT_EQ(tuples[0], results.front());
@@ -188,20 +188,20 @@ TEST_F(db_TuplesTest, list) {
 	{
 		db::Tuples tuples({
 			{{
-				.lEntityId   = "left",
+				.lEntityId   = "left-a",
 				.lEntityType = "db_TuplesTest.list-with_last_id_and_relation",
 				.relation    = "relation",
 				.rEntityId   = "right",
 				.rEntityType = "db_TuplesTest.list-with_last_id_and_relation",
-				.strand      = "strand[0]",
+				.strand      = "strand",
 			}},
 			{{
-				.lEntityId   = "left",
+				.lEntityId   = "left-b",
 				.lEntityType = "db_TuplesTest.list-with_last_id_and_relation",
 				.relation    = "relation",
 				.rEntityId   = "right",
 				.rEntityType = "db_TuplesTest.list-with_last_id_and_relation",
-				.strand      = "strand[1]",
+				.strand      = "strand",
 			}},
 		});
 
@@ -216,7 +216,7 @@ TEST_F(db_TuplesTest, list) {
 				{},
 				{{tuples[0].rEntityType(), tuples[0].rEntityId()}},
 				tuples[0].relation(),
-				tuples[1].id()));
+				tuples[1].lEntityId()));
 
 		ASSERT_EQ(1, results.size());
 		EXPECT_EQ(tuples[0], results.front());

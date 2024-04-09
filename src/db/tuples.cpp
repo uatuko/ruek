@@ -169,12 +169,15 @@ Tuples ListTuples(
 
 	Tuple::Entity entity;
 	std::string   where = "where space_id = $1::text";
+	std::string   sort;
 	if (left) {
 		entity  = *left;
 		where  += " and l_entity_type = $2::text and l_entity_id = $3::text";
+		sort    = "r_entity_id";
 	} else if (right) {
 		entity  = *right;
 		where  += " and r_entity_type = $2::text and r_entity_id = $3::text";
+		sort    = "l_entity_id";
 	} else {
 		throw err::DbTuplesInvalidListArgs();
 	}
@@ -185,9 +188,9 @@ Tuples ListTuples(
 
 	if (!lastId.empty()) {
 		if (relation) {
-			where += " and _id < $5::text";
+			where += fmt::format(" and {} < $5::text", sort);
 		} else {
-			where += " and _id < $4::text";
+			where += fmt::format(" and {} < $4::text", sort);
 		}
 	}
 
@@ -204,10 +207,11 @@ Tuples ListTuples(
 				_id, _rid, _rev
 			from tuples
 			{}
-			order by _id desc
+			order by {} desc
 			limit {:d};
 		)",
 		where,
+		sort,
 		count);
 
 	db::pg::result_t res;
