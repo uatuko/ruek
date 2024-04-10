@@ -26,6 +26,18 @@ service Relations {
 			body : "*"
 		};
 	}
+
+	rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse) {
+		option (google.api.http) = {
+			get : "/v1/relations:left?_limit={pagination_limit}&_start={pagination_token}"
+		};
+	}
+
+	rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
+		option (google.api.http) = {
+			get : "/v1/relations:right?_limit={pagination_limit}&_start={pagination_token}"
+		};
+	}
 }
 
 message Entity {
@@ -119,3 +131,39 @@ message RelationsDeleteRequest {
 }
 
 message RelationsDeleteResponse {}
+
+message RelationsListLeftRequest {
+	oneof right {
+		Entity right_entity       = 1;
+		string right_principal_id = 2;
+	}
+
+	optional string relation = 3;
+
+	optional uint32 pagination_limit = 4;
+	optional string pagination_token = 5;
+}
+
+message RelationsListLeftResponse {
+	repeated Tuple tuples = 1;
+
+	optional string pagination_token = 2;
+}
+
+message RelationsListRightRequest {
+	oneof left {
+		Entity left_entity       = 1;
+		string left_principal_id = 2;
+	}
+
+	optional string relation = 3;
+
+	optional uint32 pagination_limit = 4;
+	optional string pagination_token = 5;
+}
+
+message RelationsListRightResponse {
+	repeated Tuple tuples = 1;
+
+	optional string pagination_token = 2;
+}
