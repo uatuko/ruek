@@ -3,7 +3,9 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
+#include "encoding/b32.h"
 #include "err/errors.h"
+#include "sentium/detail/pagination.pb.h"
 
 #include "common.h"
 
@@ -76,6 +78,51 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 	}
 
 	return {grpcxx::status::code_t::ok, rpcDelete::response_type()};
+}
+
+template <>
+rpcListLeft::result_type Impl::call<rpcListLeft>(
+	grpcxx::context &ctx, const rpcListLeft::request_type &req) {
+
+	db::Tuple::Entity right;
+	if (req.has_right_principal_id()) {
+		right = {req.right_principal_id()};
+	} else {
+		right = {req.right_entity().type(), req.right_entity().id()};
+	}
+
+	std::optional<std::string_view> relation;
+	if (req.has_relation()) {
+		relation = req.relation();
+	}
+
+	std::string lastId;
+	if (req.has_pagination_token()) {
+		sentium::detail::PaginationToken pbToken;
+		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
+			lastId = pbToken.last_id();
+		}
+	}
+
+	std::uint16_t limit = common::pagination_limit_v;
+	if (req.pagination_limit() > 0 && req.pagination_limit() < limit) {
+		limit = req.pagination_limit();
+	}
+
+	auto results = db::ListTuplesLeft(ctx.meta(common::space_id_v), right, relation, lastId, limit);
+
+	rpcListLeft::response_type response;
+	map(results, response.mutable_tuples());
+
+	if (results.size() == limit) {
+		sentium::detail::PaginationToken pbToken;
+		pbToken.set_last_id(results.back().lEntityId());
+
+		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());
+		response.set_pagination_token(strToken);
+	}
+
+	return {grpcxx::status::code_t::ok, response};
 }
 
 google::rpc::Status Impl::exception() noexcept {
@@ -169,6 +216,16 @@ void Impl::map(const db::Tuple &from, sentium::api::v1::Tuple *to) const noexcep
 
 	if (from.rid()) {
 		to->set_ref_id(*from.rid());
+	}
+}
+
+void Impl::map(
+	const db::Tuples                                            &from,
+	google::protobuf::RepeatedPtrField<sentium::api::v1::Tuple> *to) const noexcept {
+
+	to->Reserve(from.size());
+	for (const auto &t : from) {
+		map(t, to->Add());
 	}
 }
 } // namespace relations
