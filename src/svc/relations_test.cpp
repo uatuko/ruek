@@ -513,7 +513,6 @@ TEST_F(svc_RelationsTest, ListLeft) {
 		EXPECT_NO_THROW(result = svc.call<rpcListLeft>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
-
 		EXPECT_FALSE(result.response->has_pagination_token());
 
 		auto &actual = result.response->tuples();
@@ -561,7 +560,6 @@ TEST_F(svc_RelationsTest, ListLeft) {
 		EXPECT_NO_THROW(result = svc.call<rpcListLeft>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
-
 		EXPECT_FALSE(result.response->has_pagination_token());
 
 		auto &actual = result.response->tuples();
