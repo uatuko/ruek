@@ -104,7 +104,7 @@ rpcListLeft::result_type Impl::call<rpcListLeft>(
 		}
 	}
 
-	std::uint16_t limit = common::pagination_limit_v;
+	auto limit = common::pagination_limit_v;
 	if (req.pagination_limit() > 0 && req.pagination_limit() < limit) {
 		limit = req.pagination_limit();
 	}

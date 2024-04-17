@@ -442,20 +442,19 @@ TEST_F(svc_RelationsTest, ListLeft) {
 
 	// Success: list left
 	{
+		db::Principal principal({.id = "id:svc_RelationsTest.list-left"});
+		ASSERT_NO_THROW(principal.store());
+
 		db::Tuple tuple({
-			.lEntityId   = "left",
-			.lEntityType = "svc_RelationsTest.list",
-			.relation    = "relation",
-			.rEntityId   = "right",
-			.rEntityType = "svc_RelationsTest.list-left",
+			.lEntityId    = "left",
+			.lEntityType  = "svc_RelationsTest.list",
+			.relation     = "relation",
+			.rPrincipalId = principal.id(),
 		});
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcListLeft::request_type request;
-
-		auto *right = request.mutable_right_entity();
-		right->set_id(tuple.rEntityId());
-		right->set_type(tuple.rEntityType());
+		request.set_right_principal_id(principal.id());
 
 		rpcListLeft::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcListLeft>(ctx, request));
@@ -472,9 +471,8 @@ TEST_F(svc_RelationsTest, ListLeft) {
 		EXPECT_EQ(tuple.lEntityId(), actual[0].left_entity().id());
 		EXPECT_EQ(tuple.lEntityType(), actual[0].left_entity().type());
 		EXPECT_EQ(tuple.relation(), actual[0].relation());
-		EXPECT_FALSE(actual[0].has_right_principal_id());
-		EXPECT_EQ(tuple.rEntityId(), actual[0].right_entity().id());
-		EXPECT_EQ(tuple.rEntityType(), actual[0].right_entity().type());
+		EXPECT_TRUE(actual[0].has_right_principal_id());
+		EXPECT_EQ(principal.id(), actual[0].right_principal_id());
 		EXPECT_FALSE(actual[0].has_strand());
 		EXPECT_FALSE(actual[0].has_attrs());
 		EXPECT_FALSE(actual[0].has_ref_id());
