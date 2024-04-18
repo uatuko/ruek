@@ -125,6 +125,51 @@ rpcListLeft::result_type Impl::call<rpcListLeft>(
 	return {grpcxx::status::code_t::ok, response};
 }
 
+template <>
+rpcListRight::result_type Impl::call<rpcListRight>(
+	grpcxx::context &ctx, const rpcListRight::request_type &req) {
+
+	db::Tuple::Entity left;
+	if (req.has_left_principal_id()) {
+		left = {req.left_principal_id()};
+	} else {
+		left = {req.left_entity().type(), req.left_entity().id()};
+	}
+
+	std::optional<std::string_view> relation;
+	if (req.has_relation()) {
+		relation = req.relation();
+	}
+
+	std::string lastId;
+	if (req.has_pagination_token()) {
+		sentium::detail::PaginationToken pbToken;
+		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
+			lastId = pbToken.last_id();
+		}
+	}
+
+	auto limit = common::pagination_limit_v;
+	if (req.pagination_limit() > 0 && req.pagination_limit() < limit) {
+		limit = req.pagination_limit();
+	}
+
+	auto results = db::ListTuplesRight(ctx.meta(common::space_id_v), left, relation, lastId, limit);
+
+	rpcListRight::response_type response;
+	map(results, response.mutable_tuples());
+
+	if (results.size() == limit) {
+		sentium::detail::PaginationToken pbToken;
+		pbToken.set_last_id(results.back().rEntityId());
+
+		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());
+		response.set_pagination_token(strToken);
+	}
+
+	return {grpcxx::status::code_t::ok, response};
+}
+
 google::rpc::Status Impl::exception() noexcept {
 	google::rpc::Status status;
 	status.set_code(google::rpc::UNKNOWN);

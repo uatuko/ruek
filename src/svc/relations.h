@@ -32,6 +32,10 @@ public:
 	rpcListLeft::result_type call<rpcListLeft>(
 		grpcxx::context &ctx, const rpcListLeft::request_type &req);
 
+	template <>
+	rpcListRight::result_type call<rpcListRight>(
+		grpcxx::context &ctx, const rpcListRight::request_type &req);
+
 	google::rpc::Status exception() noexcept;
 
 private:
