@@ -28,6 +28,10 @@ public:
 	rpcDelete::result_type call<rpcDelete>(
 		grpcxx::context &ctx, const rpcDelete::request_type &req);
 
+	template <>
+	rpcListLeft::result_type call<rpcListLeft>(
+		grpcxx::context &ctx, const rpcListLeft::request_type &req);
+
 	google::rpc::Status exception() noexcept;
 
 private:
@@ -36,6 +40,9 @@ private:
 	rpcCreate::response_type map(const db::Tuple &from) const noexcept;
 
 	void map(const db::Tuple &from, sentium::api::v1::Tuple *to) const noexcept;
+	void map(
+		const db::Tuples                                            &from,
+		google::protobuf::RepeatedPtrField<sentium::api::v1::Tuple> *to) const noexcept;
 };
 } // namespace relations
 } // namespace svc

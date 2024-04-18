@@ -137,8 +137,8 @@ google::rpc::Status Impl::exception() noexcept {
 db::Principal Impl::map(
 	const grpcxx::context &ctx, const rpcCreate::request_type &from) const noexcept {
 	db::Principal to({
-		.spaceId = std::string(ctx.meta(common::space_id_v)),
 		.id      = from.id(),
+		.spaceId = std::string(ctx.meta(common::space_id_v)),
 	});
 
 	if (from.has_attrs()) {

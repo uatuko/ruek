@@ -159,6 +159,88 @@ Tuple::Entity::Entity(std::string_view pid) noexcept :
 
 Tuple::Entity::Entity(std::string_view type, std::string_view id) noexcept : _id(id), _type(type) {}
 
+Tuples ListTuples(
+	std::string_view spaceId, std::optional<Tuple::Entity> left, std::optional<Tuple::Entity> right,
+	std::optional<std::string_view> relation, std::string_view lastId, std::uint16_t count) {
+
+	if (left && right) {
+		throw err::DbTuplesInvalidListArgs();
+	}
+
+	Tuple::Entity entity;
+	std::string   where = "where space_id = $1::text";
+	std::string   sort;
+	if (left) {
+		entity  = *left;
+		where  += " and l_entity_type = $2::text and l_entity_id = $3::text";
+		sort    = "r_entity_id";
+	} else if (right) {
+		entity  = *right;
+		where  += " and r_entity_type = $2::text and r_entity_id = $3::text";
+		sort    = "l_entity_id";
+	} else {
+		throw err::DbTuplesInvalidListArgs();
+	}
+
+	if (relation) {
+		where += " and relation = $4::text";
+	}
+
+	if (!lastId.empty()) {
+		if (relation) {
+			where += fmt::format(" and {} < $5::text", sort);
+		} else {
+			where += fmt::format(" and {} < $4::text", sort);
+		}
+	}
+
+	const std::string qry = fmt::format(
+		R"(
+			select
+				space_id,
+				strand,
+				l_entity_type, l_entity_id,
+				relation,
+				r_entity_type, r_entity_id,
+				attrs,
+				l_principal_id, r_principal_id,
+				_id, _rid, _rev
+			from tuples
+			{}
+			order by {} desc
+			limit {:d};
+		)",
+		where,
+		sort,
+		count);
+
+	db::pg::result_t res;
+	if (relation && !lastId.empty()) {
+		res = pg::exec(qry, spaceId, entity.type(), entity.id(), relation, lastId);
+	} else if (relation) {
+		res = pg::exec(qry, spaceId, entity.type(), entity.id(), relation);
+	} else if (!lastId.empty()) {
+		res = pg::exec(qry, spaceId, entity.type(), entity.id(), lastId);
+	} else {
+		res = pg::exec(qry, spaceId, entity.type(), entity.id());
+	}
+
+	Tuples tuples;
+	tuples.reserve(res.affected_rows());
+	for (const auto &r : res) {
+		tuples.emplace_back(r);
+	}
+
+	return tuples;
+}
+
+Tuples ListTuplesLeft(
+	std::string_view spaceId, Tuple::Entity right, std::optional<std::string_view> relation,
+	std::string_view lastId, std::uint16_t count) {
+
+	return ListTuples(spaceId, {}, right, relation, lastId, count);
+}
+
 Tuples LookupTuples(
 	std::string_view spaceId, Tuple::Entity left, std::string_view relation, Tuple::Entity right,
 	std::optional<std::string_view> strand, std::string_view lastId, std::uint16_t count) {

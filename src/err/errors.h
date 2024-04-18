@@ -18,6 +18,9 @@ using DbTupleInvalidData = basic_error<"sentium:1.4.1.400", "Invalid tuple data"
 using DbTupleInvalidKey  = basic_error<"sentium:1.4.2.400", "Invalid reference key for tuple">;
 using DbTupleNotFound    = basic_error<"sentium:1.4.3.404", "Tuple not found">;
 
+using DbTuplesInvalidListArgs =
+	basic_error<"sentium:1.4.4.400", "Invalid arguments for listing tuples">;
+
 using RpcPrincipalsAlreadyExists = basic_error<"sentium:2.1.1.409", "Principal already exists">;
 using RpcPrincipalsNotFound      = basic_error<"sentium:2.1.2.404", "Principal not found">;
 } // namespace err
