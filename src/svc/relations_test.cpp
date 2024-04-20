@@ -631,7 +631,7 @@ TEST_F(svc_RelationsTest, ListLeft) {
 		}
 	}
 
-	// Success: list with invalid pagination token
+	// Success: list left with invalid pagination token
 	{
 		db::Tuple tuple({
 			.lEntityId   = "left",
@@ -651,6 +651,231 @@ TEST_F(svc_RelationsTest, ListLeft) {
 
 		rpcListLeft::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcListLeft>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->tuples();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(tuple.id(), actual[0].id());
+	}
+}
+
+TEST_F(svc_RelationsTest, ListRight) {
+	grpcxx::context ctx;
+	svc::Relations  svc;
+
+	// Success: list right
+	{
+		db::Principal principal({.id = "id:svc_RelationsTest.list-right"});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.relation     = "relation",
+			.rEntityId    = "right",
+			.rEntityType  = "svc_RelationsTest.list",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcListRight::request_type request;
+		request.set_left_principal_id(principal.id());
+
+		rpcListRight::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcListRight>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->tuples();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(tuple.spaceId(), actual[0].space_id());
+		EXPECT_EQ(tuple.id(), actual[0].id());
+		EXPECT_TRUE(actual[0].has_left_principal_id());
+		EXPECT_EQ(principal.id(), actual[0].left_principal_id());
+		EXPECT_EQ(tuple.relation(), actual[0].relation());
+		EXPECT_FALSE(actual[0].has_right_principal_id());
+		EXPECT_EQ(tuple.rEntityId(), actual[0].right_entity().id());
+		EXPECT_EQ(tuple.rEntityType(), actual[0].right_entity().type());
+		EXPECT_FALSE(actual[0].has_strand());
+		EXPECT_FALSE(actual[0].has_attrs());
+		EXPECT_FALSE(actual[0].has_ref_id());
+	}
+
+	// Success: list right with relation
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "svc_RelationsTest.list-right_with_relation",
+				.relation    = "relation[0]",
+				.rEntityId   = "right",
+				.rEntityType = "svc_RelationsTest.list",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "svc_RelationsTest.list-right_with_relation",
+				.relation    = "relation[1]",
+				.rEntityId   = "right",
+				.rEntityType = "svc_RelationsTest.list",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		rpcListRight::request_type request;
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuples[0].lEntityId());
+		left->set_type(tuples[0].lEntityType());
+
+		request.set_relation(tuples[0].relation());
+
+		rpcListRight::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcListRight>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->tuples();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(tuples[0].id(), actual[0].id());
+	}
+
+	// Success: list right with space-id
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "svc_RelationsTest.list-right_with_space_id",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "svc_RelationsTest.list",
+				.spaceId     = "space_id[0]",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "svc_RelationsTest.list-right_with_space_id",
+				.relation    = "relation",
+				.rEntityId   = "right",
+				.rEntityType = "svc_RelationsTest.list",
+				.spaceId     = "space_id[1]",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		grpcxx::detail::request r(1);
+		r.header(std::string(svc::common::space_id_v), std::string(tuples[1].spaceId()));
+
+		grpcxx::context ctx(r);
+
+		rpcListRight::request_type request;
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuples[1].lEntityId());
+		left->set_type(tuples[1].lEntityType());
+
+		rpcListRight::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcListRight>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_FALSE(result.response->has_pagination_token());
+
+		auto &actual = result.response->tuples();
+		ASSERT_EQ(1, actual.size());
+		EXPECT_EQ(tuples[1].id(), actual[0].id());
+	}
+
+	// Success: list right with pagination
+	{
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "svc_RelationsTest.list-right_with_pagination",
+				.relation    = "relation",
+				.rEntityId   = "right[0]",
+				.rEntityType = "svc_RelationsTest.list",
+			}},
+			{{
+				.lEntityId   = "left",
+				.lEntityType = "svc_RelationsTest.list-right_with_pagination",
+				.relation    = "relation",
+				.rEntityId   = "right[1]",
+				.rEntityType = "svc_RelationsTest.list",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		rpcListRight::request_type request;
+		request.set_pagination_limit(1);
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuples[1].lEntityId());
+		left->set_type(tuples[1].lEntityType());
+
+		rpcListRight::result_type result;
+
+		// Page 1
+		{
+			EXPECT_NO_THROW(result = svc.call<rpcListRight>(ctx, request));
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+
+			ASSERT_TRUE(result.response->has_pagination_token());
+			EXPECT_EQ("18474qb7d1q5mcat", result.response->pagination_token());
+
+			auto &actual = result.response->tuples();
+			ASSERT_EQ(1, actual.size());
+			EXPECT_EQ(tuples[1].id(), actual[0].id());
+		}
+
+		// Use pagination token to get the next page of results
+		request.set_pagination_token(result.response->pagination_token());
+
+		// Page 2
+		{
+			EXPECT_NO_THROW(result = svc.call<rpcListRight>(ctx, request));
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+
+			ASSERT_TRUE(result.response->has_pagination_token());
+			EXPECT_EQ("18474qb7d1q5mc2t", result.response->pagination_token());
+
+			auto &actual = result.response->tuples();
+			ASSERT_EQ(1, actual.size());
+			EXPECT_EQ(tuples[0].id(), actual[0].id());
+		}
+	}
+
+	// Success: list right with invalid pagination token
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.list-right_with_invalid_pagination_token",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.list",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcListRight::request_type request;
+		request.set_pagination_token("invalid");
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuple.lEntityId());
+		left->set_type(tuple.lEntityType());
+
+		rpcListRight::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcListRight>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_FALSE(result.response->has_pagination_token());

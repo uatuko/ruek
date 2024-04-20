@@ -241,6 +241,13 @@ Tuples ListTuplesLeft(
 	return ListTuples(spaceId, {}, right, relation, lastId, count);
 }
 
+Tuples ListTuplesRight(
+	std::string_view spaceId, Tuple::Entity left, std::optional<std::string_view> relation,
+	std::string_view lastId, std::uint16_t count) {
+
+	return ListTuples(spaceId, left, {}, relation, lastId, count);
+}
+
 Tuples LookupTuples(
 	std::string_view spaceId, Tuple::Entity left, std::string_view relation, Tuple::Entity right,
 	std::optional<std::string_view> strand, std::string_view lastId, std::uint16_t count) {

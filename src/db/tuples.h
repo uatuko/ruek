@@ -114,6 +114,10 @@ Tuples ListTuplesLeft(
 	std::string_view spaceId, Tuple::Entity right, std::optional<std::string_view> relation,
 	std::string_view lastId = "", std::uint16_t count = 10);
 
+Tuples ListTuplesRight(
+	std::string_view spaceId, Tuple::Entity left, std::optional<std::string_view> relation,
+	std::string_view lastId = "", std::uint16_t count = 10);
+
 Tuples LookupTuples(
 	std::string_view spaceId, Tuple::Entity left, std::string_view relation, Tuple::Entity right,
 	std::optional<std::string_view> strand = std::nullopt, std::string_view lastId = "",
