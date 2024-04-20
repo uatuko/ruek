@@ -1,6 +1,6 @@
 # 🔐 Sentium
 
-[![license](https://img.shields.io/badge/license-MIT-green)](https://raw.githubusercontent.com/uatuko/sentium/main/LICENSE)
+[![license](https://img.shields.io/github/license/uatuko/sentium)](https://raw.githubusercontent.com/uatuko/sentium/main/LICENSE)
 [![codecov](https://codecov.io/gh/uatuko/sentium/graph/badge.svg?token=KR9MkDkk8s)](https://codecov.io/gh/uatuko/sentium)
 [![discussions](https://img.shields.io/github/discussions/uatuko/sentium)](https://github.com/uatuko/sentium/discussions)
 [![release](https://img.shields.io/github/v/release/uatuko/sentium)](https://github.com/uatuko/sentium/releases)
