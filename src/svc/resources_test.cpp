@@ -16,7 +16,7 @@ protected:
 
 		// Clear data
 		db::pg::exec("truncate table principals cascade;");
-		db::pg::exec("truncate table records;");
+		db::pg::exec("truncate table tuples;");
 	}
 
 	static void TearDownTestSuite() { db::testing::teardown(); }
@@ -31,18 +31,18 @@ TEST_F(svc_ResourcesTest, List) {
 
 	// Success: list
 	{
-		db::Record record({
+		db::Tuple tuple({
 			.attrs        = R"({"foo":"bar"})",
-			.principalId  = principal.id(),
-			.resourceId   = "List",
-			.resourceType = "svc_ResourcesTest",
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "List",
+			.rEntityType  = "svc_ResourcesTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		rpcList::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type(record.resourceType());
+		request.set_resource_type(tuple.rEntityType());
 
 		rpcList::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
@@ -52,12 +52,12 @@ TEST_F(svc_ResourcesTest, List) {
 
 		auto &actual = result.response->resources();
 		ASSERT_EQ(1, actual.size());
-		EXPECT_EQ(record.resourceId(), actual[0].id());
-		EXPECT_EQ(record.resourceType(), actual[0].type());
+		EXPECT_EQ(tuple.rEntityId(), actual[0].id());
+		EXPECT_EQ(tuple.rEntityType(), actual[0].type());
 
 		std::string responseAttrs;
 		google::protobuf::util::MessageToJsonString(actual[0].attrs(), &responseAttrs);
-		EXPECT_EQ(record.attrs(), responseAttrs);
+		EXPECT_EQ(tuple.attrs(), responseAttrs);
 	}
 
 	// Success: list with space-id
@@ -68,13 +68,13 @@ TEST_F(svc_ResourcesTest, List) {
 		});
 		ASSERT_NO_THROW(principal.store());
 
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "List-with_space_id",
-			.resourceType = "svc_ResourcesTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "List-with_space_id",
+			.rEntityType  = "svc_ResourcesTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		grpcxx::detail::request r(1);
 		r.header(std::string(svc::common::space_id_v), std::string(principal.spaceId()));
@@ -83,7 +83,7 @@ TEST_F(svc_ResourcesTest, List) {
 
 		rpcList::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type(record.resourceType());
+		request.set_resource_type(tuple.rEntityType());
 
 		rpcList::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
@@ -93,34 +93,34 @@ TEST_F(svc_ResourcesTest, List) {
 
 		auto &actual = result.response->resources();
 		ASSERT_EQ(1, actual.size());
-		EXPECT_EQ(record.resourceId(), actual[0].id());
-		EXPECT_EQ(record.resourceType(), actual[0].type());
+		EXPECT_EQ(tuple.rEntityId(), actual[0].id());
+		EXPECT_EQ(tuple.rEntityType(), actual[0].type());
 	}
 
 	// Success: list with pagination
 	{
-		db::Records records({
+		db::Tuples tuples({
 			{{
-				.principalId  = principal.id(),
-				.resourceId   = "List-with_pagination[0]",
-				.resourceType = "svc_ResourcesTest",
+				.lPrincipalId = principal.id(),
+				.rEntityId    = "List-with_pagination[0]",
+				.rEntityType  = "svc_ResourcesTest",
 				.spaceId      = principal.spaceId(),
 			}},
 			{{
-				.principalId  = principal.id(),
-				.resourceId   = "List-with_pagination[1]",
-				.resourceType = "svc_ResourcesTest",
+				.lPrincipalId = principal.id(),
+				.rEntityId    = "List-with_pagination[1]",
+				.rEntityType  = "svc_ResourcesTest",
 				.spaceId      = principal.spaceId(),
 			}},
 		});
 
-		for (auto &r : records) {
-			ASSERT_NO_THROW(r.store());
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
 		}
 
 		rpcList::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type(records[0].resourceType());
+		request.set_resource_type(tuples[0].rEntityType());
 		request.set_pagination_limit(1);
 
 		rpcList::result_type result;
@@ -137,8 +137,8 @@ TEST_F(svc_ResourcesTest, List) {
 
 			auto &actual = result.response->resources();
 			ASSERT_EQ(1, actual.size());
-			EXPECT_EQ(records[1].resourceId(), actual[0].id());
-			EXPECT_EQ(records[1].resourceType(), actual[0].type());
+			EXPECT_EQ(tuples[1].rEntityId(), actual[0].id());
+			EXPECT_EQ(tuples[1].rEntityType(), actual[0].type());
 			EXPECT_FALSE(actual[0].has_attrs());
 		}
 
@@ -157,8 +157,8 @@ TEST_F(svc_ResourcesTest, List) {
 
 			auto &actual = result.response->resources();
 			ASSERT_EQ(1, actual.size());
-			EXPECT_EQ(records[0].resourceId(), actual[0].id());
-			EXPECT_EQ(records[0].resourceType(), actual[0].type());
+			EXPECT_EQ(tuples[0].rEntityId(), actual[0].id());
+			EXPECT_EQ(tuples[0].rEntityType(), actual[0].type());
 			EXPECT_FALSE(actual[0].has_attrs());
 		}
 	}
@@ -173,18 +173,18 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		db::Principal principal({.id = "id:svc_ResourcesTest.ListPrincipals"});
 		ASSERT_NO_THROW(principal.store());
 
-		db::Record record({
+		db::Tuple tuple({
 			.attrs        = R"({"foo":"bar"})",
-			.principalId  = principal.id(),
-			.resourceId   = "ListPrincipals",
-			.resourceType = "svc_ResourcesTest",
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "ListPrincipals",
+			.rEntityType  = "svc_ResourcesTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		rpcListPrincipals::request_type request;
-		request.set_resource_id(record.resourceId());
-		request.set_resource_type(record.resourceType());
+		request.set_resource_id(tuple.rEntityId());
+		request.set_resource_type(tuple.rEntityType());
 
 		rpcListPrincipals::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcListPrincipals>(ctx, request));
@@ -198,7 +198,7 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 
 		std::string responseAttrs;
 		google::protobuf::util::MessageToJsonString(actual[0].attrs(), &responseAttrs);
-		EXPECT_EQ(record.attrs(), responseAttrs);
+		EXPECT_EQ(tuple.attrs(), responseAttrs);
 	}
 
 	// Success: list (space-id mismatch)
@@ -209,13 +209,13 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		});
 		ASSERT_NO_THROW(principal.store());
 
-		db::Record record({
-			.principalId  = principal.id(),
-			.resourceId   = "ListPrincipals-space_id_mismatch",
-			.resourceType = "svc_ResourcesTest",
+		db::Tuple tuple({
+			.lPrincipalId = principal.id(),
+			.rEntityId    = "ListPrincipals-space_id_mismatch",
+			.rEntityType  = "svc_ResourcesTest",
 			.spaceId      = principal.spaceId(),
 		});
-		ASSERT_NO_THROW(record.store());
+		ASSERT_NO_THROW(tuple.store());
 
 		grpcxx::detail::request r(1);
 		r.header(std::string(svc::common::space_id_v), "invalid");
@@ -223,8 +223,8 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		grpcxx::context ctx(r);
 
 		rpcListPrincipals::request_type request;
-		request.set_resource_id(record.resourceId());
-		request.set_resource_type(record.resourceType());
+		request.set_resource_id(tuple.rEntityId());
+		request.set_resource_type(tuple.rEntityType());
 
 		rpcListPrincipals::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcListPrincipals>(ctx, request));
@@ -247,28 +247,28 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 			ASSERT_NO_THROW(p.store());
 		}
 
-		db::Records records({
+		db::Tuples tuples({
 			{{
-				.principalId  = principals[0].id(),
-				.resourceId   = "ListPrincipals-with_pagination",
-				.resourceType = "svc_ResourcesTest",
+				.lPrincipalId = principals[0].id(),
+				.rEntityId    = "ListPrincipals-with_pagination",
+				.rEntityType  = "svc_ResourcesTest",
 				.spaceId      = principals[0].spaceId(),
 			}},
 			{{
-				.principalId  = principals[1].id(),
-				.resourceId   = "ListPrincipals-with_pagination",
-				.resourceType = "svc_ResourcesTest",
+				.lPrincipalId = principals[1].id(),
+				.rEntityId    = "ListPrincipals-with_pagination",
+				.rEntityType  = "svc_ResourcesTest",
 				.spaceId      = principals[1].spaceId(),
 			}},
 		});
 
-		for (auto &r : records) {
+		for (auto &r : tuples) {
 			ASSERT_NO_THROW(r.store());
 		}
 
 		rpcListPrincipals::request_type request;
-		request.set_resource_id(records[0].resourceId());
-		request.set_resource_type(records[0].resourceType());
+		request.set_resource_id(tuples[0].rEntityId());
+		request.set_resource_type(tuples[0].rEntityType());
 		request.set_pagination_limit(1);
 
 		rpcListPrincipals::result_type result;

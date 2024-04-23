@@ -2,7 +2,7 @@
 
 #include <google/rpc/status.pb.h>
 
-#include "db/records.h"
+#include "db/tuples.h"
 #include "sentium/api/v1/resources.grpcxx.pb.h"
 
 namespace svc {
@@ -30,11 +30,11 @@ public:
 private:
 	template <typename T, typename F> T map(const F &) const noexcept;
 
-	template <> rpcList::response_type           map(const db::Records &from) const noexcept;
-	template <> rpcListPrincipals::response_type map(const db::Records &from) const noexcept;
+	template <> rpcList::response_type           map(const db::Tuples &from) const noexcept;
+	template <> rpcListPrincipals::response_type map(const db::Tuples &from) const noexcept;
 
-	template <> sentium::api::v1::Resource           map(const db::Record &from) const noexcept;
-	template <> sentium::api::v1::ResourcesPrincipal map(const db::Record &from) const noexcept;
+	template <> sentium::api::v1::Resource           map(const db::Tuple &from) const noexcept;
+	template <> sentium::api::v1::ResourcesPrincipal map(const db::Tuple &from) const noexcept;
 };
 } // namespace resources
 } // namespace svc
