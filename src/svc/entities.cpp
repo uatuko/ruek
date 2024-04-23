@@ -1,4 +1,4 @@
-#include "resources.h"
+#include "entities.h"
 
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
@@ -9,7 +9,7 @@
 #include "common.h"
 
 namespace svc {
-namespace resources {
+namespace entities {
 template <>
 rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::request_type &req) {
 	std::string lastId;
@@ -38,7 +38,7 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 
 		lastId = tuples.back().rEntityId();
 		for (auto &t : tuples) {
-			if (t.rEntityType() != req.resource_type()) {
+			if (t.rEntityType() != req.entity_type()) {
 				continue;
 			}
 
@@ -83,11 +83,7 @@ rpcListPrincipals::result_type Impl::call<rpcListPrincipals>(
 
 	while (results.size() < limit) {
 		auto tuples = db::ListTuplesLeft(
-			ctx.meta(common::space_id_v),
-			{req.resource_type(), req.resource_id()},
-			{},
-			lastId,
-			limit);
+			ctx.meta(common::space_id_v), {req.entity_type(), req.entity_id()}, {}, lastId, limit);
 
 		if (tuples.empty()) {
 			break;
@@ -130,10 +126,10 @@ google::rpc::Status Impl::exception() noexcept {
 template <> rpcList::response_type Impl::map(const db::Tuples &from) const noexcept {
 	rpcList::response_type to;
 
-	auto *arr = to.mutable_resources();
+	auto *arr = to.mutable_entities();
 	arr->Reserve(from.size());
 	for (const auto &t : from) {
-		arr->Add(map<sentium::api::v1::Resource>(t));
+		arr->Add(map<sentium::api::v1::EntitiesEntity>(t));
 	}
 
 	return to;
@@ -145,14 +141,14 @@ template <> rpcListPrincipals::response_type Impl::map(const db::Tuples &from) c
 	auto *arr = to.mutable_principals();
 	arr->Reserve(from.size());
 	for (const auto &t : from) {
-		arr->Add(map<sentium::api::v1::ResourcesPrincipal>(t));
+		arr->Add(map<sentium::api::v1::EntitiesPrincipal>(t));
 	}
 
 	return to;
 }
 
-template <> sentium::api::v1::Resource Impl::map(const db::Tuple &from) const noexcept {
-	sentium::api::v1::Resource to;
+template <> sentium::api::v1::EntitiesEntity Impl::map(const db::Tuple &from) const noexcept {
+	sentium::api::v1::EntitiesEntity to;
 	to.set_id(from.rEntityId());
 	to.set_type(from.rEntityType());
 
@@ -163,8 +159,8 @@ template <> sentium::api::v1::Resource Impl::map(const db::Tuple &from) const no
 	return to;
 }
 
-template <> sentium::api::v1::ResourcesPrincipal Impl::map(const db::Tuple &from) const noexcept {
-	sentium::api::v1::ResourcesPrincipal to;
+template <> sentium::api::v1::EntitiesPrincipal Impl::map(const db::Tuple &from) const noexcept {
+	sentium::api::v1::EntitiesPrincipal to;
 	to.set_id(*from.lPrincipalId());
 
 	if (from.attrs()) {
@@ -173,5 +169,5 @@ template <> sentium::api::v1::ResourcesPrincipal Impl::map(const db::Tuple &from
 
 	return to;
 }
-} // namespace resources
+} // namespace entities
 } // namespace svc

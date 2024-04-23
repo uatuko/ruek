@@ -7,9 +7,9 @@
 #include "common.h"
 #include "svc.h"
 
-using namespace sentium::api::v1::Resources;
+using namespace sentium::api::v1::Entities;
 
-class svc_ResourcesTest : public testing::Test {
+class svc_EntitiesTest : public testing::Test {
 protected:
 	static void SetUpTestSuite() {
 		db::testing::setup();
@@ -22,11 +22,11 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
-TEST_F(svc_ResourcesTest, List) {
+TEST_F(svc_EntitiesTest, List) {
 	grpcxx::context ctx;
-	svc::Resources  svc;
+	svc::Entities   svc;
 
-	db::Principal principal({.id = "id:svc_ResourcesTest.List"});
+	db::Principal principal({.id = "id:svc_EntitiesTest.List"});
 	ASSERT_NO_THROW(principal.store());
 
 	// Success: list
@@ -35,14 +35,14 @@ TEST_F(svc_ResourcesTest, List) {
 			.attrs        = R"({"foo":"bar"})",
 			.lPrincipalId = principal.id(),
 			.rEntityId    = "List",
-			.rEntityType  = "svc_ResourcesTest",
+			.rEntityType  = "svc_EntitiesTest",
 			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcList::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type(tuple.rEntityType());
+		request.set_entity_type(tuple.rEntityType());
 
 		rpcList::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
@@ -50,7 +50,7 @@ TEST_F(svc_ResourcesTest, List) {
 		ASSERT_TRUE(result.response);
 		EXPECT_FALSE(result.response->has_pagination_token());
 
-		auto &actual = result.response->resources();
+		auto &actual = result.response->entities();
 		ASSERT_EQ(1, actual.size());
 		EXPECT_EQ(tuple.rEntityId(), actual[0].id());
 		EXPECT_EQ(tuple.rEntityType(), actual[0].type());
@@ -63,15 +63,15 @@ TEST_F(svc_ResourcesTest, List) {
 	// Success: list with space-id
 	{
 		db::Principal principal({
-			.id      = "id:svc_ResourcesTest.List-with_space_id",
-			.spaceId = "space_id:svc_ResourcesTest.List-with_space_id",
+			.id      = "id:svc_EntitiesTest.List-with_space_id",
+			.spaceId = "space_id:svc_EntitiesTest.List-with_space_id",
 		});
 		ASSERT_NO_THROW(principal.store());
 
 		db::Tuple tuple({
 			.lPrincipalId = principal.id(),
 			.rEntityId    = "List-with_space_id",
-			.rEntityType  = "svc_ResourcesTest",
+			.rEntityType  = "svc_EntitiesTest",
 			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(tuple.store());
@@ -83,7 +83,7 @@ TEST_F(svc_ResourcesTest, List) {
 
 		rpcList::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type(tuple.rEntityType());
+		request.set_entity_type(tuple.rEntityType());
 
 		rpcList::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcList>(ctx, request));
@@ -91,7 +91,7 @@ TEST_F(svc_ResourcesTest, List) {
 		ASSERT_TRUE(result.response);
 		EXPECT_FALSE(result.response->has_pagination_token());
 
-		auto &actual = result.response->resources();
+		auto &actual = result.response->entities();
 		ASSERT_EQ(1, actual.size());
 		EXPECT_EQ(tuple.rEntityId(), actual[0].id());
 		EXPECT_EQ(tuple.rEntityType(), actual[0].type());
@@ -103,13 +103,13 @@ TEST_F(svc_ResourcesTest, List) {
 			{{
 				.lPrincipalId = principal.id(),
 				.rEntityId    = "List-with_pagination[0]",
-				.rEntityType  = "svc_ResourcesTest",
+				.rEntityType  = "svc_EntitiesTest",
 				.spaceId      = principal.spaceId(),
 			}},
 			{{
 				.lPrincipalId = principal.id(),
 				.rEntityId    = "List-with_pagination[1]",
-				.rEntityType  = "svc_ResourcesTest",
+				.rEntityType  = "svc_EntitiesTest",
 				.spaceId      = principal.spaceId(),
 			}},
 		});
@@ -120,7 +120,7 @@ TEST_F(svc_ResourcesTest, List) {
 
 		rpcList::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type(tuples[0].rEntityType());
+		request.set_entity_type(tuples[0].rEntityType());
 		request.set_pagination_limit(1);
 
 		rpcList::result_type result;
@@ -135,7 +135,7 @@ TEST_F(svc_ResourcesTest, List) {
 			EXPECT_EQ(
 				"18bkoqbjegmneqbkd1fn0ob7d5n62t39dtn5mcat", result.response->pagination_token());
 
-			auto &actual = result.response->resources();
+			auto &actual = result.response->entities();
 			ASSERT_EQ(1, actual.size());
 			EXPECT_EQ(tuples[1].rEntityId(), actual[0].id());
 			EXPECT_EQ(tuples[1].rEntityType(), actual[0].type());
@@ -155,7 +155,7 @@ TEST_F(svc_ResourcesTest, List) {
 			EXPECT_EQ(
 				"18bkoqbjegmneqbkd1fn0ob7d5n62t39dtn5mc2t", result.response->pagination_token());
 
-			auto &actual = result.response->resources();
+			auto &actual = result.response->entities();
 			ASSERT_EQ(1, actual.size());
 			EXPECT_EQ(tuples[0].rEntityId(), actual[0].id());
 			EXPECT_EQ(tuples[0].rEntityType(), actual[0].type());
@@ -164,27 +164,27 @@ TEST_F(svc_ResourcesTest, List) {
 	}
 }
 
-TEST_F(svc_ResourcesTest, ListPrincipals) {
+TEST_F(svc_EntitiesTest, ListPrincipals) {
 	grpcxx::context ctx;
-	svc::Resources  svc;
+	svc::Entities   svc;
 
 	// Success: list
 	{
-		db::Principal principal({.id = "id:svc_ResourcesTest.ListPrincipals"});
+		db::Principal principal({.id = "id:svc_EntitiesTest.ListPrincipals"});
 		ASSERT_NO_THROW(principal.store());
 
 		db::Tuple tuple({
 			.attrs        = R"({"foo":"bar"})",
 			.lPrincipalId = principal.id(),
 			.rEntityId    = "ListPrincipals",
-			.rEntityType  = "svc_ResourcesTest",
+			.rEntityType  = "svc_EntitiesTest",
 			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcListPrincipals::request_type request;
-		request.set_resource_id(tuple.rEntityId());
-		request.set_resource_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
 
 		rpcListPrincipals::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcListPrincipals>(ctx, request));
@@ -204,15 +204,15 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 	// Success: list (space-id mismatch)
 	{
 		db::Principal principal({
-			.id      = "id:svc_ResourcesTest.ListPrincipals-space_id_mismatch",
-			.spaceId = "space_id:svc_ResourcesTest.ListPrincipals-space_id_mismatch",
+			.id      = "id:svc_EntitiesTest.ListPrincipals-space_id_mismatch",
+			.spaceId = "space_id:svc_EntitiesTest.ListPrincipals-space_id_mismatch",
 		});
 		ASSERT_NO_THROW(principal.store());
 
 		db::Tuple tuple({
 			.lPrincipalId = principal.id(),
 			.rEntityId    = "ListPrincipals-space_id_mismatch",
-			.rEntityType  = "svc_ResourcesTest",
+			.rEntityType  = "svc_EntitiesTest",
 			.spaceId      = principal.spaceId(),
 		});
 		ASSERT_NO_THROW(tuple.store());
@@ -223,8 +223,8 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		grpcxx::context ctx(r);
 
 		rpcListPrincipals::request_type request;
-		request.set_resource_id(tuple.rEntityId());
-		request.set_resource_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
 
 		rpcListPrincipals::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcListPrincipals>(ctx, request));
@@ -239,8 +239,8 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 	// Success: list with pagination
 	{
 		db::Principals principals({
-			{{.id = "id:svc_ResourcesTest.ListPrincipals-with_pagination[0]"}},
-			{{.id = "id:svc_ResourcesTest.ListPrincipals-with_pagination[1]"}},
+			{{.id = "id:svc_EntitiesTest.ListPrincipals-with_pagination[0]"}},
+			{{.id = "id:svc_EntitiesTest.ListPrincipals-with_pagination[1]"}},
 		});
 
 		for (auto &p : principals) {
@@ -251,13 +251,13 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 			{{
 				.lPrincipalId = principals[0].id(),
 				.rEntityId    = "ListPrincipals-with_pagination",
-				.rEntityType  = "svc_ResourcesTest",
+				.rEntityType  = "svc_EntitiesTest",
 				.spaceId      = principals[0].spaceId(),
 			}},
 			{{
 				.lPrincipalId = principals[1].id(),
 				.rEntityId    = "ListPrincipals-with_pagination",
-				.rEntityType  = "svc_ResourcesTest",
+				.rEntityType  = "svc_EntitiesTest",
 				.spaceId      = principals[1].spaceId(),
 			}},
 		});
@@ -267,8 +267,8 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 		}
 
 		rpcListPrincipals::request_type request;
-		request.set_resource_id(tuples[0].rEntityId());
-		request.set_resource_type(tuples[0].rEntityType());
+		request.set_entity_id(tuples[0].rEntityId());
+		request.set_entity_type(tuples[0].rEntityType());
 		request.set_pagination_limit(1);
 
 		rpcListPrincipals::result_type result;
@@ -281,8 +281,8 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18r6ip1qedr66nqiclpmutbicdin6l35edq2sj39edq50sj9dphmis31dhpiqtr9ehk5us31ctkmsobkd5"
-				"nmsmphbk",
+				"18qmip1qedr66nq5dpq6it39clpl8pbjegn4oqbjeh874qbecdkn0obcecmneqbkd1fn0ob7d5n62t39dt"
+				"n5mcat",
 				result.response->pagination_token());
 
 			auto &actual = result.response->principals();
@@ -302,8 +302,8 @@ TEST_F(svc_ResourcesTest, ListPrincipals) {
 
 			EXPECT_TRUE(result.response->has_pagination_token());
 			EXPECT_EQ(
-				"18r6ip1qedr66nqiclpmutbicdin6l35edq2sj39edq50sj9dphmis31dhpiqtr9ehk5us31ctkmsobkd5"
-				"nmsmpgbk",
+				"18qmip1qedr66nq5dpq6it39clpl8pbjegn4oqbjeh874qbecdkn0obcecmneqbkd1fn0ob7d5n62t39dt"
+				"n5mc2t",
 				result.response->pagination_token());
 
 			auto &actual = result.response->principals();
