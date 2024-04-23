@@ -116,8 +116,8 @@ Listening on [127.0.0.1:8080] ...
   -plaintext \
   -d '{
     "principal_id": "cn7qtdu56a1cqrj8kur0",
-    "resource_type": "documents",
-    "resource_id": "65bd28aaa076ee8c8463cff8"
+    "entity_type": "documents",
+    "entity_id": "65bd28aaa076ee8c8463cff8"
   }' \
   localhost:8080 sentium.api.v1.Authz/Grant
 
@@ -134,8 +134,8 @@ Listening on [127.0.0.1:8080] ...
   -plaintext \
   -d '{
     "principal_id": "cn7qtdu56a1cqrj8kur0",
-    "resource_type": "documents",
-    "resource_id": "65bd28aaa076ee8c8463cff8"
+    "entity_type": "documents",
+    "entity_id": "65bd28aaa076ee8c8463cff8"
   }' \
   localhost:8080 sentium.api.v1.Authz/Check
 
