@@ -3,7 +3,6 @@ target_sources(db
 	PRIVATE
 		pg.cpp
 		principals.cpp
-		records.cpp
 		tuples.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
@@ -11,7 +10,6 @@ target_sources(db
 			config.h
 			pg.h
 			principals.h
-			records.h
 			tuples.h
 	PRIVATE
 		FILE_SET private_headers TYPE HEADERS
@@ -52,7 +50,6 @@ if (SENTIUM_BUILD_TESTING)
 		PRIVATE
 			pg_test.cpp
 			principals_test.cpp
-			records_test.cpp
 			tuples_test.cpp
 	)
 
