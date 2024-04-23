@@ -37,7 +37,7 @@ integrate, quick to master and flexible enough to handle complex requirements.
 * Cloud native at global scale[^2]
 * ABAC, RBAC & ReBAC[^4]
 * Multi-tenancy support, if you need it
-* Not just authorization checks, list users, resources a user can access and users with access to a resource
+* Not just authorization checks, list users, entities a user can access and users with access to an entity
 * First class treatment for listing endpoints with pagination and limits to handle large datasets
 * Built using the fastest gRPC server implementation[^3]
 
@@ -166,22 +166,22 @@ Listening on [127.0.0.1:8080] ...
 }
 ```
 
-### Listing resources a user can access
+### Listing entities a user can access
 
 ```
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/resources.proto \
+  -proto proto/sentium/api/v1/entities.proto \
   -plaintext \
   -d '{
     "principal_id": "cn7qtdu56a1cqrj8kur0",
-    "resource_type": "documents"
+    "entity_type": "documents"
   }' \
-  localhost:8080 sentium.api.v1.Resources/List
+  localhost:8080 sentium.api.v1.Entities/List
 
 {
-  "resources": [
+  "entities": [
     {
       "id": "65bd28aaa076ee8c8463cff8",
       "type": "documents"
@@ -190,19 +190,19 @@ Listening on [127.0.0.1:8080] ...
 }
 ```
 
-### Listing users that has access to a resource
+### Listing users that has access to an entity
 
 ```
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/resources.proto \
+  -proto proto/sentium/api/v1/entities.proto \
   -plaintext \
   -d '{
-    "resource_type": "documents",
-    "resource_id": "65bd28aaa076ee8c8463cff8"
+    "entity_type": "documents",
+    "entity_id": "65bd28aaa076ee8c8463cff8"
   }' \
-  localhost:8080 sentium.api.v1.Resources/ListPrincipals
+  localhost:8080 sentium.api.v1.Entities/ListPrincipals
 
 {
   "principals": [
