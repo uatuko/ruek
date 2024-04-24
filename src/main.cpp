@@ -24,6 +24,9 @@ int main() {
 	svc::Principals p;
 	server.add(p.service());
 
+	svc::Relations r;
+	server.add(r.service());
+
 	std::printf("Listening on [127.0.0.1:8080] ...\n");
 	server.run("127.0.0.1", 8080);
 
