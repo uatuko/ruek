@@ -2,16 +2,16 @@ add_library(svc)
 target_sources(svc
 	PRIVATE
 		authz.cpp
+		entities.cpp
 		principals.cpp
 		relations.cpp
-		resources.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
 			authz.h
+			entities.h
 			principals.h
 			relations.h
-			resources.h
 			svc.h
 			wrapper.h
 	PRIVATE
@@ -43,9 +43,9 @@ if (SENTIUM_BUILD_TESTING)
 	target_sources(svc_tests
 		PRIVATE
 			authz_test.cpp
+			entities_test.cpp
 			principals_test.cpp
 			relations_test.cpp
-			resources_test.cpp
 	)
 
 	target_link_libraries(svc_tests

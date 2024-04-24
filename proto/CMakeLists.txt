@@ -13,30 +13,30 @@ cmake_path(SET relations_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v
 cmake_path(SET relations_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/relations.pb.h)
 cmake_path(SET relations_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/relations.pb.cc)
 
-cmake_path(SET resources_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/resources.proto)
-cmake_path(SET resources_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/resources.grpcxx.pb.h)
-cmake_path(SET resources_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/resources.pb.h)
-cmake_path(SET resources_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/resources.pb.cc)
+cmake_path(SET entities_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/entities.proto)
+cmake_path(SET entities_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/entities.grpcxx.pb.h)
+cmake_path(SET entities_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/entities.pb.h)
+cmake_path(SET entities_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/entities.pb.cc)
 
 set(protos
 	${authz_proto}
 	${principals_proto}
 	${relations_proto}
-	${resources_proto}
+	${entities_proto}
 )
 
 set(headers
 	${authz_header} ${authz_grpcxx_header}
 	${principals_header} ${principals_grpcxx_header}
 	${relations_header} ${relations_grpcxx_header}
-	${resources_header} ${resources_grpcxx_header}
+	${entities_header} ${entities_grpcxx_header}
 )
 
 set(sources
 	${authz_source}
 	${principals_source}
 	${relations_source}
-	${resources_source}
+	${entities_source}
 )
 
 add_custom_command(

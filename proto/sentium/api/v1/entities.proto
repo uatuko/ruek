@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package sentium.api.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+service Entities {
+	rpc List(EntitiesListRequest) returns (EntitiesListResponse) {
+		option (google.api.http) = {
+			get : "/v1/entities"
+		};
+	}
+
+	rpc ListPrincipals(EntitiesListPrincipalsRequest) returns (EntitiesListPrincipalsResponse) {
+		option (google.api.http) = {
+			get : "/v1/entities:principals"
+		};
+	}
+}
+
+message EntitiesEntity {
+	string id   = 1;
+	string type = 2;
+
+	optional google.protobuf.Struct attrs = 3;
+}
+
+message EntitiesPrincipal {
+	string id = 1;
+
+	optional google.protobuf.Struct attrs = 2;
+}
+
+message EntitiesListRequest {
+	string principal_id = 1;
+	string entity_type  = 2;
+
+	optional uint32 pagination_limit = 3;
+	optional string pagination_token = 4;
+}
+
+message EntitiesListResponse {
+	repeated EntitiesEntity entities = 1;
+
+	optional string pagination_token = 2;
+}
+
+message EntitiesListPrincipalsRequest {
+	string entity_id   = 2;
+	string entity_type = 1;
+
+	optional uint32 pagination_limit = 3;
+	optional string pagination_token = 4;
+}
+
+message EntitiesListPrincipalsResponse {
+	repeated EntitiesPrincipal principals = 1;
+
+	optional string pagination_token = 2;
+}

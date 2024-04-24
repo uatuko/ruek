@@ -3,11 +3,11 @@
 #include <google/rpc/status.pb.h>
 
 #include "db/tuples.h"
-#include "sentium/api/v1/resources.grpcxx.pb.h"
+#include "sentium/api/v1/entities.grpcxx.pb.h"
 
 namespace svc {
-namespace resources {
-using namespace sentium::api::v1::Resources;
+namespace entities {
+using namespace sentium::api::v1::Entities;
 
 class Impl {
 public:
@@ -33,8 +33,8 @@ private:
 	template <> rpcList::response_type           map(const db::Tuples &from) const noexcept;
 	template <> rpcListPrincipals::response_type map(const db::Tuples &from) const noexcept;
 
-	template <> sentium::api::v1::Resource           map(const db::Tuple &from) const noexcept;
-	template <> sentium::api::v1::ResourcesPrincipal map(const db::Tuple &from) const noexcept;
+	template <> sentium::api::v1::EntitiesEntity    map(const db::Tuple &from) const noexcept;
+	template <> sentium::api::v1::EntitiesPrincipal map(const db::Tuple &from) const noexcept;
 };
-} // namespace resources
+} // namespace entities
 } // namespace svc

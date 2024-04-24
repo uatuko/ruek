@@ -18,11 +18,11 @@ int main() {
 	svc::Authz a;
 	server.add(a.service());
 
+	svc::Entities e;
+	server.add(e.service());
+
 	svc::Principals p;
 	server.add(p.service());
-
-	svc::Resources r;
-	server.add(r.service());
 
 	std::printf("Listening on [127.0.0.1:8080] ...\n");
 	server.run("127.0.0.1", 8080);
