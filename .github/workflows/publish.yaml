@@ -1,0 +1,84 @@
+name: Publish
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow_ref }}-${{ github.job }}
+    container: debian:12-slim
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+          cmake ninja-build \
+          clang libclang-rt-dev \
+          protobuf-compiler libprotobuf-dev libprotoc-dev \
+          libpq-dev
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.arch }}_${{ github.job }}-${{ hashFiles('cmake/dependencies.cmake') }}
+      - name: Build
+        run: |
+          cmake -B .build -G Ninja -DCMAKE_BUILD_TYPE=Release -DSENTIUM_BUILD_TESTING=OFF
+          cmake --build .build --config Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary_${{ runner.arch }}
+          path: .build/bin/sentium
+          retention-days: 1
+
+  container:
+    needs: compile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: binary_${{ runner.arch }}
+          path: ${{ runner.temp }}/${{ github.job }}/app/bin
+      - name: Prepare
+        run: |
+          chmod +x ${{ runner.temp }}/${{ github.job }}/app/bin/sentium
+      - name: Package
+        working-directory: ${{ runner.temp }}/${{ github.job }}
+        run: |
+          cat <<EOF > Dockerfile
+          FROM debian:12-slim
+          RUN apt-get update \
+            && \
+            apt-get install -y --no-install-recommends \
+              libpq5 \
+              libprotobuf32
+
+          COPY app /opt/sentium
+
+          WORKDIR /opt/sentium
+          ENTRYPOINT [ "bin/sentium" ]
+          EXPOSE 8080
+          EOF
+
+          docker build --tag ghcr.io/${{ github.repository }}:latest .
+      - name: Publish
+        run: |
+          docker push ghcr.io/${{ github.repository }}:latest
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: sentium
+          package-type: container
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: true
