@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 jobs:
@@ -73,9 +76,24 @@ jobs:
           EOF
 
           docker build --tag ghcr.io/${{ github.repository }}:latest .
-      - name: Publish
+      - name: Publish latest
         run: |
           docker push ghcr.io/${{ github.repository }}:latest
+      - name: Publish tags
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+        run: |
+          image=ghcr.io/${{ github.repository }}
+          tag=${{ github.ref_name }}
+          version=${tag:1}
+
+          docker tag "${image}:latest" "${image}:${version}"
+          docker push "${image}:${version}"
+
+          docker tag "${image}:latest" "${image}:${version%.*}"
+          docker push "${image}:${version%.*}"
+
+          docker tag "${image}:latest" "${image}:${version%%.*}"
+          docker push "${image}:${version%%.*}"
       - uses: actions/delete-package-versions@v5
         with:
           package-name: sentium
