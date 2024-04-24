@@ -13,9 +13,7 @@ template <>
 rpcCheck::result_type Impl::call<rpcCheck>(
 	grpcxx::context &ctx, const rpcCheck::request_type &req) {
 	auto r = db::Tuple::lookup(
-		ctx.meta(common::space_id_v),
-		{req.principal_id()},
-		{req.resource_type(), req.resource_id()});
+		ctx.meta(common::space_id_v), {req.principal_id()}, {req.entity_type(), req.entity_id()});
 	return {grpcxx::status::code_t::ok, map(r)};
 }
 
@@ -26,7 +24,7 @@ rpcGrant::result_type Impl::call<rpcGrant>(
 	if (auto r = db::Tuple::lookup(
 			ctx.meta(common::space_id_v),
 			{req.principal_id()},
-			{req.resource_type(), req.resource_id()});
+			{req.entity_type(), req.entity_id()});
 		r) {
 		if (req.has_attrs()) {
 			std::string attrs;
@@ -51,7 +49,7 @@ rpcRevoke::result_type Impl::call<rpcRevoke>(
 	if (auto r = db::Tuple::lookup(
 			ctx.meta(common::space_id_v),
 			{req.principal_id()},
-			{req.resource_type(), req.resource_id()});
+			{req.entity_type(), req.entity_id()});
 		r) {
 		db::Tuple::discard(r->id());
 	}
@@ -85,8 +83,8 @@ google::rpc::Status Impl::exception() noexcept {
 db::Tuple Impl::map(const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept {
 	db::Tuple to({
 		.lPrincipalId = from.principal_id(),
-		.rEntityId    = from.resource_id(),
-		.rEntityType  = from.resource_type(),
+		.rEntityId    = from.entity_id(),
+		.rEntityType  = from.entity_type(),
 		.spaceId      = std::string(ctx.meta(common::space_id_v)),
 	});
 

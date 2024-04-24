@@ -43,8 +43,8 @@ TEST_F(svc_AuthzTest, Check) {
 
 		rpcCheck::request_type request;
 		request.set_principal_id(*tuple.lPrincipalId());
-		request.set_resource_type(tuple.rEntityType());
-		request.set_resource_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -68,8 +68,8 @@ TEST_F(svc_AuthzTest, Check) {
 
 		rpcCheck::request_type request;
 		request.set_principal_id(*tuple.lPrincipalId());
-		request.set_resource_type(tuple.rEntityType());
-		request.set_resource_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -106,8 +106,8 @@ TEST_F(svc_AuthzTest, Check) {
 
 		rpcCheck::request_type request;
 		request.set_principal_id(*tuple.lPrincipalId());
-		request.set_resource_type(tuple.rEntityType());
-		request.set_resource_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -122,8 +122,8 @@ TEST_F(svc_AuthzTest, Check) {
 	{
 		rpcCheck::request_type request;
 		request.set_principal_id("non-existent");
-		request.set_resource_type("svc_AuthzTest");
-		request.set_resource_id("Check-non_existent");
+		request.set_entity_type("svc_AuthzTest");
+		request.set_entity_id("Check-non_existent");
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -151,8 +151,8 @@ TEST_F(svc_AuthzTest, Check) {
 
 		rpcCheck::request_type request;
 		request.set_principal_id(*tuple.lPrincipalId());
-		request.set_resource_type(tuple.rEntityType());
-		request.set_resource_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
 
 		rpcCheck::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
@@ -177,8 +177,8 @@ TEST_F(svc_AuthzTest, Grant) {
 	{
 		rpcGrant::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type("svc_AuthzTest");
-		request.set_resource_id("Grant");
+		request.set_entity_type("svc_AuthzTest");
+		request.set_entity_id("Grant");
 
 		rpcGrant::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcGrant>(ctx, request));
@@ -202,8 +202,8 @@ TEST_F(svc_AuthzTest, Grant) {
 
 		rpcGrant::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type("svc_AuthzTest");
-		request.set_resource_id("Grant-with_space_id");
+		request.set_entity_type("svc_AuthzTest");
+		request.set_entity_id("Grant-with_space_id");
 
 		rpcGrant::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcGrant>(ctx, request));
@@ -224,8 +224,8 @@ TEST_F(svc_AuthzTest, Grant) {
 
 		rpcGrant::request_type request;
 		request.set_principal_id(*tuple.lPrincipalId());
-		request.set_resource_type(tuple.rEntityType());
-		request.set_resource_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
 
 		const std::string attrs(R"({"foo":"bar"})");
 		google::protobuf::util::JsonStringToMessage(attrs, request.mutable_attrs());
@@ -258,8 +258,8 @@ TEST_F(svc_AuthzTest, Grant) {
 	{
 		rpcGrant::request_type request;
 		request.set_principal_id("invalid");
-		request.set_resource_type("svc_AuthzTest");
-		request.set_resource_id("Grant-invalid_principal_id");
+		request.set_entity_type("svc_AuthzTest");
+		request.set_entity_id("Grant-invalid_principal_id");
 
 		rpcGrant::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcGrant>(ctx, request));
@@ -277,8 +277,8 @@ TEST_F(svc_AuthzTest, Grant) {
 
 		rpcGrant::request_type request;
 		request.set_principal_id(principal.id());
-		request.set_resource_type("svc_AuthzTest");
-		request.set_resource_id("Grant-invalid_space_id");
+		request.set_entity_type("svc_AuthzTest");
+		request.set_entity_id("Grant-invalid_space_id");
 
 		rpcGrant::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcGrant>(ctx, request));
@@ -309,8 +309,8 @@ TEST_F(svc_AuthzTest, Revoke) {
 
 		rpcRevoke::request_type request;
 		request.set_principal_id(*tuple.lPrincipalId());
-		request.set_resource_type(tuple.rEntityType());
-		request.set_resource_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
 
 		rpcRevoke::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcRevoke>(ctx, request));
@@ -339,8 +339,8 @@ TEST_F(svc_AuthzTest, Revoke) {
 
 		rpcRevoke::request_type request;
 		request.set_principal_id(*tuple.lPrincipalId());
-		request.set_resource_type(tuple.rEntityType());
-		request.set_resource_id(tuple.rEntityId());
+		request.set_entity_type(tuple.rEntityType());
+		request.set_entity_id(tuple.rEntityId());
 
 		rpcRevoke::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcRevoke>(ctx, request));
