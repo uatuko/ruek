@@ -68,7 +68,7 @@ lint\:fix:
 	clang-format --style=file -i $(sources)
 
 run: $(binary)
-	$(binary)
+	$(binary) -4 127.0.0.1
 
 test: $(binary)
 	ctest --test-dir $(builddir) --output-on-failure
