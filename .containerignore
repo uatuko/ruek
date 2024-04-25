@@ -1,0 +1,14 @@
+# .containerignore
+#
+
+# files
+.local.env
+*.swo
+*.swp
+*~
+
+# folders
+.build/
+.git/
+.vscode/
+tmp/
