@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 	extern char *optarg;
 	extern int   optind;
 
-	std::string_view ipv4 = "127.0.0.1";
+	std::string_view ipv4 = "0.0.0.0";
 	int              port = 8080;
 
 	int opt;
