@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db::init();
 	} catch (const std::exception &e) {
-		std::cout << "[FATAL] " << e.what() << std::endl;
+		std::fprintf(stderr, "[fatal] %s\n", e.what());
 		return EXIT_FAILURE;
 	}
 
@@ -57,8 +57,13 @@ int main(int argc, char *argv[]) {
 	svc::Relations r;
 	server.add(r.service());
 
-	std::printf("Listening on [127.0.0.1:8080] ...\n");
-	server.run(ipv4, port);
+	std::printf("[info] listening on tcp4 socket \"%s:%d\"\n", ipv4.data(), port);
+	try {
+		server.run(ipv4, port);
+	} catch (const std::exception &e) {
+		std::fprintf(stderr, "[fatal] %s\n", e.what());
+		return EXIT_FAILURE;
+	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
