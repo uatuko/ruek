@@ -5,11 +5,11 @@
 [![discussions](https://img.shields.io/github/discussions/uatuko/sentium)](https://github.com/uatuko/sentium/discussions)
 [![release](https://img.shields.io/github/v/release/uatuko/sentium)](https://github.com/uatuko/sentium/releases)
 
-Lightning fast, global scale authorization service without the overhead of yet another DSL[^5].
+Lightning fast, global scale authorization service without the overhead of yet another DSL[^1].
 
 ## What is Sentium?
 
-Sentium is an authorization service for securing your applications and services using zero trust[^1]
+Sentium is an authorization service for securing your applications and services using zero trust[^2]
 fine-grained authorization (FGA).
 
 We designed Sentium to be as powerful and scalable as [Zanzibar — Google’s Consistent, Global Authorization System](https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/)
@@ -34,12 +34,12 @@ integrate, quick to master and flexible enough to handle complex requirements.
 * Zero-trust, least privilege architecture (ZTA)
 * Predictable constant time authorization checks (O(1))
 * Strongly consistent with no cache
-* Cloud native at global scale[^2]
+* Cloud native at global scale[^3]
 * ABAC, RBAC & ReBAC[^4]
 * Multi-tenancy support, if you need it
 * Not just authorization checks, list users, entities a user can access and users with access to an entity
 * First class treatment for listing endpoints with pagination and limits to handle large datasets
-* Built using the fastest gRPC server implementation[^3]
+* Built using the fastest gRPC server implementation[^5]
 
 
 ## Getting started
@@ -229,8 +229,8 @@ Listening on [127.0.0.1:8080] ...
 * Thanks to [@kw510](https://github.com/kw510), [@neculalaura](https://github.com/neculalaura) and [@td0m](https://github.com/td0m)
 for their contributions on the `gatekeeper` branch.
 
-[^1]: [Zero trust architecture (ZTA)](https://en.wikipedia.org/wiki/Zero_trust_security_model)
-[^2]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
-[^3]: [gRPCxx](https://github.com/uatuko/grpcxx) is benchmarked to be the fastest in February 2024.
+[^1]: [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language)
+[^2]: [Zero trust architecture (ZTA)](https://en.wikipedia.org/wiki/Zero_trust_security_model)
+[^3]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
 [^4]: [RFC #72](https://github.com/uatuko/sentium/discussions/72)
-[^5]: [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language)
+[^5]: [gRPCxx](https://github.com/uatuko/grpcxx) is benchmarked to be the fastest in February 2024.
