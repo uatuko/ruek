@@ -1,11 +1,6 @@
 # Changelog
 
-## 0.1.0 - 21st March, 2024
-
-* Initial release.
-
-
-## 0.2.0 - 27th April, 2024
+## v0.2.0 - 27th April, 2024
 
 ### 🔦 Spotlight
 * ReBAC implementation without computed relations or optimisations (using Relation Tuples proposal from RFC https://github.com/uatuko/sentium/discussions/72)
@@ -40,3 +35,8 @@
 * @Pr301 made their first contribution in https://github.com/uatuko/sentium/pull/76
 
 **Full Changelog**: https://github.com/uatuko/sentium/compare/v0.1.0...v0.2.0
+
+
+## v0.1.0 - 21st March, 2024
+
+* Initial release.
