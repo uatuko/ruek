@@ -82,7 +82,8 @@ public:
 
 	const std::string &id() const noexcept { return _id; }
 	const int         &rev() const noexcept { return _rev; }
-	const rid_t       &rid() const noexcept { return _rid; }
+	const rid_t       &ridL() const noexcept { return _ridL; }
+	const rid_t       &ridR() const noexcept { return _ridR; }
 
 	void store();
 
@@ -100,7 +101,8 @@ private:
 	Data        _data;
 	std::string _id;
 	int         _rev;
-	rid_t       _rid;
+	rid_t       _ridL;
+	rid_t       _ridR;
 };
 
 using Tuples = std::vector<Tuple>;

@@ -36,8 +36,12 @@ create table if not exists tuples (
 	r_principal_id  text,
 
 	_id   text    not null,
-	_rid  text,  -- self reference for computed tuples
 	_rev  integer not null,
+
+	-- Self references for computed tuples
+	--
+	_rid_l  text,
+	_rid_r  text, 
 
 	constraint "tuples.pkey" primary key (_id),
 	constraint "tuples.unique" unique (
@@ -47,7 +51,11 @@ create table if not exists tuples (
 		r_entity_type, r_entity_id,
 		strand),
 
-	constraint "tuples.fkey-_rid" foreign key (_rid)
+	constraint "tuples.fkey-_rid_l" foreign key (_rid_l)
+		references tuples(_id)
+		on delete cascade,
+
+	constraint "tuples.fkey-_rid_r" foreign key (_rid_r)
 		references tuples(_id)
 		on delete cascade,
 

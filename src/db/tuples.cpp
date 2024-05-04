@@ -8,12 +8,13 @@
 #include "common.h"
 
 namespace db {
-Tuple::Tuple(const Tuple::Data &data) noexcept : _data(data), _id(xid::next()), _rev(0), _rid() {
+Tuple::Tuple(const Tuple::Data &data) noexcept :
+	_data(data), _id(xid::next()), _rev(0), _ridL(), _ridR() {
 	sanitise();
 }
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
-	_data(std::move(data)), _id(xid::next()), _rev(0), _rid() {
+	_data(std::move(data)), _id(xid::next()), _rev(0), _ridL(), _ridR() {
 	sanitise();
 }
 
@@ -30,7 +31,8 @@ Tuple::Tuple(const pg::row_t &r) :
 		.spaceId      = r["space_id"].as<std::string>(),
 		.strand       = r["strand"].as<std::string>(),
 	}),
-	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _rid(r["_rid"].as<rid_t>()) {}
+	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _ridL(r["_rid_l"].as<rid_t>()),
+	_ridR(r["_rid_r"].as<rid_t>()) {}
 
 bool Tuple::discard(std::string_view id) {
 	std::string_view qry = R"(
@@ -65,7 +67,8 @@ Tuple Tuple::retrieve(std::string_view id) {
 			r_entity_type, r_entity_id,
 			attrs,
 			l_principal_id, r_principal_id,
-			_id, _rid, _rev
+			_id, _rev,
+			_rid_l, _rid_r
 		from tuples
 		where _id = $1::text;
 	)";
@@ -100,7 +103,8 @@ void Tuple::store() {
 			r_entity_type, r_entity_id,
 			attrs,
 			l_principal_id, r_principal_id,
-			_id, _rid, _rev
+			_id, _rev,
+			_rid_l, _rid_r
 		) values (
 			$1::text,
 			$2::text,
@@ -109,7 +113,8 @@ void Tuple::store() {
 			$6::text, $7::text,
 			$8::jsonb,
 			$9::text, $10::text,
-			$11::text, $12::text, $13::integer
+			$11::text, $12::integer,
+			$13::text, $14::text 
 		)
 		on conflict (_id)
 		do update
@@ -120,7 +125,7 @@ void Tuple::store() {
 				$8::jsonb,
 				excluded._rev + 1
 			)
-			where t._rev = $13::integer
+			where t._rev = $12::integer
 		returning _rev;
 	)";
 
@@ -139,8 +144,9 @@ void Tuple::store() {
 			_data.lPrincipalId,
 			_data.rPrincipalId,
 			_id,
-			_rid,
-			_rev);
+			_rev,
+			_ridL,
+			_ridR);
 	} catch (pqxx::check_violation &) {
 		throw err::DbTupleInvalidData();
 	} catch (pg::fkey_violation_t &) {
@@ -204,7 +210,8 @@ Tuples ListTuples(
 				r_entity_type, r_entity_id,
 				attrs,
 				l_principal_id, r_principal_id,
-				_id, _rid, _rev
+				_id, _rev,
+				_rid_l, _rid_r
 			from tuples
 			{}
 			order by {} desc
@@ -277,7 +284,8 @@ Tuples LookupTuples(
 				r_entity_type, r_entity_id,
 				attrs,
 				l_principal_id, r_principal_id,
-				_id, _rid, _rev
+				_id, _rev,
+				_rid_l, _rid_r
 			from tuples
 			{}
 			order by _id desc

@@ -418,7 +418,8 @@ TEST_F(db_TuplesTest, retrieve) {
 			1729));
 
 		auto tuple = db::Tuple::retrieve("_id:db_TuplesTest.retrieve");
-		EXPECT_FALSE(tuple.rid());
+		EXPECT_FALSE(tuple.ridL());
+		EXPECT_FALSE(tuple.ridR());
 		EXPECT_EQ(1729, tuple.rev());
 
 		EXPECT_EQ("db_TuplesTest.retrieve", tuple.lEntityType());
@@ -544,7 +545,8 @@ TEST_F(db_TuplesTest, store) {
 				r_entity_type, r_entity_id,
 				attrs,
 				l_principal_id, r_principal_id,
-				_id, _rid, _rev
+				_id, _rev,
+				_rid_l, _rid_r
 			from tuples
 			where _id = $1::text;
 		)";
@@ -564,8 +566,9 @@ TEST_F(db_TuplesTest, store) {
 			 lPrincipalId,
 			 rPrincipalId,
 			 _id,
-			 _rid,
-			 _rev] =
+			 _rev,
+			 _ridL,
+			 _ridR] =
 				res[0]
 					.as<std::string,
 						std::string,
@@ -578,8 +581,9 @@ TEST_F(db_TuplesTest, store) {
 						db::Tuple::Data::pid_t,
 						db::Tuple::Data::pid_t,
 						std::string,
+						int,
 						db::Tuple::rid_t,
-						int>();
+						db::Tuple::rid_t>();
 
 		EXPECT_EQ(tuple.spaceId(), spaceId);
 		EXPECT_EQ(tuple.strand(), strand);
@@ -593,7 +597,8 @@ TEST_F(db_TuplesTest, store) {
 		EXPECT_EQ(tuple.rPrincipalId(), rPrincipalId);
 		EXPECT_EQ(tuple.id(), _id);
 		EXPECT_EQ(tuple.rev(), _rev);
-		EXPECT_EQ(tuple.rid(), _rid);
+		EXPECT_EQ(tuple.ridL(), _ridL);
+		EXPECT_EQ(tuple.ridR(), _ridR);
 	}
 
 	// Error: invalid `attrs`
