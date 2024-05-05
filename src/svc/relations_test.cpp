@@ -71,7 +71,8 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_EQ(tuple.rEntityType(), actual.right_entity().type());
 		EXPECT_EQ(tuple.strand(), actual.strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: found with principals
@@ -113,7 +114,8 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_EQ(*tuple.rPrincipalId(), actual.right_principal_id());
 		EXPECT_FALSE(actual.has_strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: not found (space-id mismatch)
@@ -203,7 +205,8 @@ TEST_F(svc_RelationsTest, Create) {
 		google::protobuf::util::MessageToJsonString(actual.attrs(), &responseAttrs);
 		EXPECT_EQ(attrs, responseAttrs);
 
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: create relation with principals
@@ -235,7 +238,8 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_FALSE(actual.has_strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: create relation with space-id
@@ -280,7 +284,8 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_FALSE(actual.has_strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Error: invalid entity
@@ -475,7 +480,8 @@ TEST_F(svc_RelationsTest, ListLeft) {
 		EXPECT_EQ(principal.id(), actual[0].right_principal_id());
 		EXPECT_FALSE(actual[0].has_strand());
 		EXPECT_FALSE(actual[0].has_attrs());
-		EXPECT_FALSE(actual[0].has_ref_id());
+		EXPECT_FALSE(actual[0].has_ref_id_left());
+		EXPECT_FALSE(actual[0].has_ref_id_right());
 	}
 
 	// Success: list left with relation
@@ -700,7 +706,8 @@ TEST_F(svc_RelationsTest, ListRight) {
 		EXPECT_EQ(tuple.rEntityType(), actual[0].right_entity().type());
 		EXPECT_FALSE(actual[0].has_strand());
 		EXPECT_FALSE(actual[0].has_attrs());
-		EXPECT_FALSE(actual[0].has_ref_id());
+		EXPECT_FALSE(actual[0].has_ref_id_left());
+		EXPECT_FALSE(actual[0].has_ref_id_right());
 	}
 
 	// Success: list right with relation

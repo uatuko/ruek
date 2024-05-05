@@ -259,8 +259,12 @@ void Impl::map(const db::Tuple &from, sentium::api::v1::Tuple *to) const noexcep
 		google::protobuf::util::JsonStringToMessage(*from.attrs(), to->mutable_attrs());
 	}
 
-	if (from.rid()) {
-		to->set_ref_id(*from.rid());
+	if (from.ridL()) {
+		to->set_ref_id_left(*from.ridL());
+	}
+
+	if (from.ridR()) {
+		to->set_ref_id_right(*from.ridR());
 	}
 }
 

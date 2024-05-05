@@ -64,7 +64,8 @@ message Tuple {
 	optional string strand                = 8;
 	optional google.protobuf.Struct attrs = 9;
 
-	optional string ref_id = 10;
+	optional string ref_id_left  = 10;
+	optional string ref_id_right = 11;
 }
 
 message RelationsCheckRequest {
