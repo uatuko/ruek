@@ -114,7 +114,7 @@ void Tuple::store() {
 			$8::jsonb,
 			$9::text, $10::text,
 			$11::text, $12::integer,
-			$13::text, $14::text 
+			$13::text, $14::text
 		)
 		on conflict (_id)
 		do update
