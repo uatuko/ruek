@@ -187,6 +187,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(1, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
 
 		auto &actual = result.response->tuple();
 		EXPECT_FALSE(actual.id().empty());
@@ -225,6 +226,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(1, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
 
 		auto &actual = result.response->tuple();
 		EXPECT_FALSE(actual.id().empty());
@@ -269,6 +271,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(1, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
 
 		auto &actual = result.response->tuple();
 		EXPECT_FALSE(actual.id().empty());
