@@ -70,11 +70,8 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 		auto results = db::ListTuplesLeft(
 			tuple.spaceId(), {tuple.lEntityType(), tuple.lEntityId()}, tuple.strand(), {}, limit);
 
+		cost += results.size();
 		for (const auto &r : results) {
-			if (++cost > limit) {
-				break;
-			}
-
 			computed.emplace_back(r, tuple);
 		}
 	}
@@ -83,11 +80,8 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 		auto results = db::ListTuplesRight(
 			tuple.spaceId(), {tuple.rEntityType(), tuple.rEntityId()}, {}, {}, limit - cost);
 
+		cost += results.size();
 		for (const auto &r : results) {
-			if (++cost > limit) {
-				break;
-			}
-
 			if (tuple.relation() != r.strand()) {
 				continue;
 			}
