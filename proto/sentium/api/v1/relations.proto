@@ -106,14 +106,26 @@ message RelationsCreateRequest {
 
 	optional google.protobuf.Struct attrs = 7;
 
-	optional bool   optimise   = 8;
+	// Indicates whether to optimise for lookups by computing and storing derived relations.
+	// Defaults to `false`.
+	optional bool optimise = 8;
+
+	// Limits the cost for computing and storing derived relations. The value must be within `1` and `65535`.
+	// Defaults to `1000`.
 	optional uint32 cost_limit = 9;
 }
 
 message RelationsCreateResponse {
-	Tuple  tuple = 1;
-	uint32 cost  = 2;
+	// Tuple containing the relation data.
+	Tuple tuple = 1;
 
+	// Cost of creating the relation. A cost higher than the limit indicates only the relation was
+	// created but computing and storing derived relations was aborted.
+	uint32 cost = 2;
+
+	// Computed and _maybe_ stored derived relation tuples. If the `cost` returned is higher than the
+	// limit, this _may_ contain a partial list.
+	// Any tuple with an empty id indicates it's only computed but not stored (i.e. dirty).
 	repeated Tuple computed_tuples = 3;
 }
 
