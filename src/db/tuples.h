@@ -52,6 +52,8 @@ public:
 
 	Tuple(const pg::row_t &r);
 
+	Tuple(const Tuple &left, const Tuple &right) noexcept;
+
 	bool operator==(const Tuple &) const noexcept = default;
 
 	const Data::attrs_t &attrs() const noexcept { return _data.attrs; }

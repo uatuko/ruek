@@ -34,6 +34,19 @@ Tuple::Tuple(const pg::row_t &r) :
 	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _ridL(r["_rid_l"].as<rid_t>()),
 	_ridR(r["_rid_r"].as<rid_t>()) {}
 
+Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
+	_data({
+		.lEntityId    = left.lEntityId(),
+		.lEntityType  = left.lEntityType(),
+		.lPrincipalId = left.lPrincipalId(),
+		.relation     = right.relation(),
+		.rEntityId    = right.rEntityId(),
+		.rEntityType  = right.rEntityType(),
+		.rPrincipalId = right.rPrincipalId(),
+		.spaceId      = left.spaceId(),
+	}),
+	_id(xid::next()), _rev(0), _ridL(left.id()), _ridR(right.id()) {}
+
 bool Tuple::discard(std::string_view id) {
 	std::string_view qry = R"(
 		delete from tuples

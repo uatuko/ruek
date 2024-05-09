@@ -24,6 +24,48 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
+TEST_F(db_TuplesTest, constructor) {
+	// Success: join tuples
+	{
+		db::Tuple left({
+			.lEntityId   = "(left)left",
+			.lEntityType = "(left)db_TuplesTest.constructor",
+			.relation    = "(left)relation",
+			.rEntityId   = "(left)right",
+			.rEntityType = "(left)db_TuplesTest.constructor",
+			.spaceId     = "space-id",
+		});
+		ASSERT_NO_THROW(left.store());
+
+		db::Tuple right({
+			.lEntityId   = "(right)left",
+			.lEntityType = "(right)db_TuplesTest.constructor",
+			.relation    = "(right)relation",
+			.rEntityId   = "(right)right",
+			.rEntityType = "(right)db_TuplesTest.constructor",
+			.spaceId     = "space-id",
+		});
+		ASSERT_NO_THROW(right.store());
+
+		db::Tuple joined(left, right);
+		ASSERT_NO_THROW(joined.store());
+
+		EXPECT_EQ(left.lEntityId(), joined.lEntityId());
+		EXPECT_EQ(left.lEntityType(), joined.lEntityType());
+		EXPECT_EQ(right.relation(), joined.relation());
+		EXPECT_EQ(right.rEntityId(), joined.rEntityId());
+		EXPECT_EQ(right.rEntityType(), joined.rEntityType());
+		EXPECT_EQ(left.spaceId(), joined.spaceId());
+		EXPECT_TRUE(joined.strand().empty());
+		EXPECT_EQ(left.id(), joined.ridL());
+		EXPECT_EQ(right.id(), joined.ridR());
+
+		EXPECT_FALSE(joined.attrs());
+		EXPECT_FALSE(joined.lPrincipalId());
+		EXPECT_FALSE(joined.rPrincipalId());
+	}
+}
+
 TEST_F(db_TuplesTest, discard) {
 	db::Tuple tuple({
 		.lEntityId   = "left",
