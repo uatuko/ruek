@@ -113,6 +113,8 @@ message RelationsCreateRequest {
 message RelationsCreateResponse {
 	Tuple  tuple = 1;
 	uint32 cost  = 2;
+
+	repeated Tuple computed_tuples = 3;
 }
 
 message RelationsDeleteRequest {
