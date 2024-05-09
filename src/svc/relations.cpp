@@ -49,7 +49,63 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	tuple.store();
 
 	rpcCreate::response_type response = map(tuple);
-	response.set_cost(1);
+
+	if (!req.has_optimise() || req.optimise() == false) {
+		response.set_cost(1);
+
+		return {grpcxx::status::code_t::ok, response};
+	}
+
+	// Optimise
+	std::uint32_t cost  = 0;
+	std::uint16_t limit = common::cost_limit_v;
+
+	if (req.cost_limit() > 0 && req.cost_limit() < std::numeric_limits<std::uint16_t>::max()) {
+		limit = req.cost_limit();
+	}
+
+	db::Tuples computed;
+
+	if (tuple.strand() != "") {
+		auto results = db::ListTuplesLeft(
+			tuple.spaceId(), {tuple.lEntityType(), tuple.lEntityId()}, tuple.strand(), {}, limit);
+
+		for (const auto &r : results) {
+			if (++cost > limit) {
+				break;
+			}
+
+			computed.emplace_back(r, tuple);
+		}
+	}
+
+	if (cost < limit && tuple.relation() != "") {
+		auto results = db::ListTuplesRight(
+			tuple.spaceId(), {tuple.rEntityType(), tuple.rEntityId()}, {}, {}, limit - cost);
+
+		for (const auto &r : results) {
+			if (++cost > limit) {
+				break;
+			}
+
+			if (tuple.relation() != r.strand()) {
+				continue;
+			}
+
+			computed.emplace_back(tuple, r);
+		}
+	}
+
+	cost++; // add initial tuple insert cost
+
+	if (cost <= limit) {
+		for (auto &tuple : computed) {
+			tuple.store();
+		}
+	}
+
+	map(computed, response.mutable_computed_tuples());
+	response.set_cost(cost);
 
 	return {grpcxx::status::code_t::ok, response};
 }
