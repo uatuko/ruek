@@ -512,36 +512,15 @@ TEST_F(db_TuplesTest, rev) {
 			.rEntityId   = "right",
 			.rEntityType = "db_TuplesTest.rev-mismatch",
 		});
+		ASSERT_NO_THROW(tuple.store());
 
 		std::string_view qry = R"(
-			insert into tuples as t (
-				space_id,
-				strand,
-				l_entity_type, l_entity_id,
-				relation,
-				r_entity_type, r_entity_id,
-				_id, _rev
-			) values (
-				$1::text,
-				$2::text,
-				$3::text, $4::text,
-				$5::text,
-				$6::text, $7::text,
-				$8::text, $9::integer
-			);
+			update tuples
+			set
+				_rev = $2::integer
+			where _id = $1::text;
 		)";
-
-		ASSERT_NO_THROW(db::pg::exec(
-			qry,
-			tuple.spaceId(),
-			tuple.strand(),
-			tuple.lEntityType(),
-			tuple.lEntityId(),
-			tuple.relation(),
-			tuple.rEntityType(),
-			tuple.rEntityId(),
-			tuple.id(),
-			tuple.rev() + 1));
+		ASSERT_NO_THROW(db::pg::exec(qry, tuple.id(), tuple.rev() + 1));
 
 		EXPECT_THROW(tuple.store(), err::DbRevisionMismatch);
 	}

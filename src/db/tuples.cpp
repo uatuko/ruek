@@ -8,13 +8,12 @@
 #include "common.h"
 
 namespace db {
-Tuple::Tuple(const Tuple::Data &data) noexcept :
-	_data(data), _id(xid::next()), _rev(0), _ridL(), _ridR() {
+Tuple::Tuple(const Tuple::Data &data) noexcept : _data(data), _id(), _rev(0), _ridL(), _ridR() {
 	sanitise();
 }
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
-	_data(std::move(data)), _id(xid::next()), _rev(0), _ridL(), _ridR() {
+	_data(std::move(data)), _id(), _rev(0), _ridL(), _ridR() {
 	sanitise();
 }
 
@@ -45,7 +44,7 @@ Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 		.rPrincipalId = right.rPrincipalId(),
 		.spaceId      = left.spaceId(),
 	}),
-	_id(xid::next()), _rev(0), _ridL(left.id()), _ridR(right.id()) {}
+	_id(), _rev(0), _ridL(left.id()), _ridR(right.id()) {}
 
 bool Tuple::discard(std::string_view id) {
 	std::string_view qry = R"(
@@ -107,6 +106,10 @@ void Tuple::sanitise() noexcept {
 }
 
 void Tuple::store() {
+	if (_id.empty()) {
+		_id = xid::next();
+	}
+
 	std::string_view qry = R"(
 		insert into tuples as t (
 			space_id,
