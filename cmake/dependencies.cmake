@@ -41,6 +41,18 @@ FetchContent_Declare(libxid
 FetchContent_MakeAvailable(libxid)
 
 
+if (SENTIUM_BUILD_BENCHMARKS)
+	# google benchmark
+	FetchContent_Declare(benchmark
+		URL      https://github.com/google/benchmark/archive/refs/tags/v1.8.3.tar.gz
+		URL_HASH SHA256=6bc180a57d23d4d9515519f92b0c83d61b05b5bab188961f36ac7b06b0d9e9ce
+	)
+
+	set(BENCHMARK_ENABLE_TESTING     OFF CACHE BOOL "Disable tests for google benchmark")
+	set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "Disable google benchmark unit tests")
+	FetchContent_MakeAvailable(benchmark)
+endif()
+
 if (SENTIUM_BUILD_TESTING)
 	# googletest
 	FetchContent_Declare(googletest

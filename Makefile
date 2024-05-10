@@ -1,13 +1,16 @@
 builddir  = .build
 bindir    = $(builddir)/bin
 binary    = $(bindir)/sentium
+benchbin  = $(binary)_bench
 buildfile = $(builddir)/build.ninja
 
+benchdir = bench
 protodir = proto
 srcdir   = src
 
 sources := $(shell find $(protodir) -type f -name '*.proto')
 sources += $(shell find $(srcdir) -type f -name '*.h' -o -name '*.cpp')
+sources += $(shell find $(benchdir) -type f -name '*.h' -o -name '*.cpp')
 
 lcov_output       = $(builddir)/coverage.out
 profdata_output   = $(builddir)/coverage.profdata
@@ -35,6 +38,9 @@ $(binary): $(buildfile)
 
 $(buildfile):
 	cmake -B $(builddir) -G Ninja
+
+bench: $(binary)
+	$(benchbin)
 
 clean:
 	cmake --build $(builddir) --target clean

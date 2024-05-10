@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
+option(SENTIUM_BUILD_BENCHMARKS
+	"Build benchmarks" OFF
+)
+
 include(CMakeDependentOption)
 cmake_dependent_option(SENTIUM_BUILD_TESTING
 	"Build tests when this is the root project" ON
@@ -35,5 +39,6 @@ if (SENTIUM_BUILD_TESTING)
 	enable_testing()
 endif()
 
+add_subdirectory(bench)
 add_subdirectory(proto)
 add_subdirectory(src)
