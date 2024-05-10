@@ -96,6 +96,8 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 		for (auto &tuple : computed) {
 			tuple.store();
 		}
+	} else {
+		cost *= -1;
 	}
 
 	map(computed, response.mutable_computed_tuples());

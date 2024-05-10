@@ -478,7 +478,7 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
-		EXPECT_EQ(request.cost_limit() + 1, result.response->cost());
+		EXPECT_EQ((request.cost_limit() + 1) * -1, result.response->cost());
 		EXPECT_EQ(1, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples()[0];
