@@ -39,6 +39,9 @@ if (SENTIUM_BUILD_TESTING)
 	enable_testing()
 endif()
 
-add_subdirectory(bench)
+if (SENTIUM_BUILD_BENCHMARKS)
+	add_subdirectory(bench)
+endif()
+
 add_subdirectory(proto)
 add_subdirectory(src)
