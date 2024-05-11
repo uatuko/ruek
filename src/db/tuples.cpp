@@ -167,6 +167,8 @@ void Tuple::store() {
 		throw err::DbTupleInvalidData();
 	} catch (pg::fkey_violation_t &) {
 		throw err::DbTupleInvalidKey();
+	} catch (pqxx::unique_violation &e) {
+		throw err::DbTupleAlreadyExists();
 	}
 
 	if (res.empty()) {

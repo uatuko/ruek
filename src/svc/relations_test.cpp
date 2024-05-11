@@ -485,6 +485,59 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_TRUE(actual.id().empty());
 	}
 
+	// Success: create relation with optimise resulting in duplicate computed entry
+	{
+		//  strand |  l_entity_id  | relation |  r_entity_id
+		// --------+---------------+----------+---------------
+		//         | user:jane     | member   | group:editors     <- already exists
+		//         | user:jane     | member   | group:viewers     <- already exists
+		//  member | group:editors | member   | group:viewers     <- create
+
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "user:jane",
+				.lEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.relation    = "member",
+				.rEntityId   = "group:editors",
+				.rEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+			}},
+			{{
+				.lEntityId   = "user:jane",
+				.lEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.relation    = "member",
+				.rEntityId   = "group:viewers",
+				.rEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		rpcCreate::request_type request;
+		request.set_optimise(true);
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuples[0].rEntityId()); // group:editors
+		left->set_type(tuples[0].rEntityType());
+
+		request.set_relation(tuples[1].relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuples[1].rEntityId()); // group:viewers
+		right->set_type(tuples[1].rEntityType());
+
+		request.set_strand(tuples[0].relation());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(2, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
+	}
+
 	// Error: invalid entity
 	{
 		rpcCreate::request_type request;

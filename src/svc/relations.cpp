@@ -93,8 +93,14 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	cost++; // add initial tuple insert cost
 
 	if (cost <= limit) {
-		for (auto &tuple : computed) {
-			tuple.store();
+		for (db::Tuples::iterator it = computed.begin(); it != computed.end();) {
+			try {
+				it->store();
+				it++;
+			} catch (const err::DbTupleAlreadyExists &) {
+				// Tuple already exists, don't need the computed entry
+				computed.erase(it);
+			}
 		}
 	} else {
 		cost *= -1;
