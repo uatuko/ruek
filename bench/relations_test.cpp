@@ -60,11 +60,11 @@ BENCHMARK_F(bm_relations, create)(benchmark::State &st) {
 
 // Benchmark optimise algorithm for a simple use case with different numbers of pre-existing
 // relations. e.g.
-//       strand |  l_entity_id  | relation |  r_entity_id
-//      --------+---------------+----------+---------------
-//              | user:jane     | member   | group:editors     <- already exists
-//       member | group:editors | parent   | group:viewers     <- create
-//              | user:jane     | parent   | group:viewers     <- compute
+//     strand |  l_entity_id  | relation |  r_entity_id
+//     -------+---------------+----------+---------------
+//            | user:jane     | member   | group:editors     <- already exists
+//     member | group:editors | parent   | group:viewers     <- create
+//            | user:jane     | parent   | group:viewers     <- compute
 BENCHMARK_DEFINE_F(bm_relations, optimise)(benchmark::State &st) {
 	for (int n = st.range(0); n > 0; n--) {
 		db::Tuple tuple({
