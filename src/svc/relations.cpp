@@ -81,24 +81,33 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 
 	db::Tuples computed;
 
-	if (tuple.strand() != "" && (common::strategy_t::direct == strategy || tuple.lPrincipalId())) {
+	if (tuple.strand() != "" && (common::strategy_t::direct == strategy || tuple.rPrincipalId())) {
 		auto results = db::ListTuplesLeft(
 			tuple.spaceId(), {tuple.lEntityType(), tuple.lEntityId()}, tuple.strand(), {}, limit);
 
 		cost += results.size();
 		for (const auto &r : results) {
+			if (common::strategy_t::set == strategy && !r.lPrincipalId()) {
+				continue;
+			}
+
 			computed.emplace_back(r, tuple);
 		}
 	}
 
 	if (cost < limit && tuple.relation() != "" &&
-		(common::strategy_t::direct == strategy || tuple.rPrincipalId())) {
+		(common::strategy_t::direct == strategy || tuple.lPrincipalId())) {
+
 		auto results = db::ListTuplesRight(
 			tuple.spaceId(), {tuple.rEntityType(), tuple.rEntityId()}, {}, {}, limit - cost);
 
 		cost += results.size();
 		for (const auto &r : results) {
 			if (tuple.relation() != r.strand()) {
+				continue;
+			}
+
+			if (common::strategy_t::set == strategy && !r.rPrincipalId()) {
 				continue;
 			}
 

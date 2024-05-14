@@ -538,6 +538,87 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_TRUE(result.response->computed_tuples().empty());
 	}
 
+	// Success: create relation with set optimize strategy
+	{
+		//  strand |  l_entity_id  | relation |  r_entity_id
+		// --------+---------------+----------+---------------
+		//         | user:jane     | member   | group:writers     <- already exists
+		//  member | group:writers | member   | group:readers     <- create(1)
+		//  member | group:readers | reader   | doc:notes.txt     <- create(2)
+		//         | user:jane     | member   | group:readers     <- compute(1)
+
+		db::Principals principals({
+			{{
+				.attrs   = R"({"name": "jane", "type": "user"})",
+				.segment = "svc_RelationsTest.Create-with_optimize_set",
+			}},
+			{{
+				.attrs   = R"({"name": "writers", "type": "group"})",
+				.segment = "svc_RelationsTest.Create-with_optimize_set",
+			}},
+			{{
+				.attrs   = R"({"name": "readers", "type": "group"})",
+				.segment = "svc_RelationsTest.Create-with_optimize_set",
+			}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Tuple tuple({
+			.lPrincipalId = principals[0].id(),
+			.relation     = "member",
+			.rPrincipalId = principals[1].id(),
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCreate::request_type request;
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::set));
+
+		rpcCreate::result_type result;
+
+		// Create(1), [member]group:writers/member/group:readers
+		{
+			request.set_left_principal_id(principals[1].id()); // group:writers
+			request.set_relation("member");
+			request.set_right_principal_id(principals[2].id()); // group:readers
+			request.set_strand(tuple.relation());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(2, result.response->cost());
+			ASSERT_EQ(1, result.response->computed_tuples().size());
+
+			const auto &actual = result.response->computed_tuples();
+			// []user:jane/member/group:readers
+			EXPECT_EQ(principals[0].id(), actual[0].left_principal_id());
+			EXPECT_EQ(request.relation(), actual[0].relation());
+			EXPECT_EQ(principals[2].id(), actual[0].right_principal_id());
+		}
+
+		// Create(2), [member]group:readers/reader/doc:notes.txt
+		{
+			request.set_left_principal_id(principals[2].id()); // group:readers
+			request.set_relation("reader");
+
+			auto *right = request.mutable_right_entity();
+			right->set_id("doc:notes.txt");
+			right->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_strand(tuple.relation());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(1, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
+	}
+
 	// Error: invalid entity
 	{
 		rpcCreate::request_type request;
