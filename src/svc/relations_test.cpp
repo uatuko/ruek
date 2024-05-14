@@ -291,7 +291,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
-	// Success: create relation with optimize (left)
+	// Success: create relation with direct optimize strategy (left)
 	{
 		//  strand |  l_entity_id  | relation |  r_entity_id
 		// --------+---------------+----------+---------------
@@ -328,7 +328,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(2, result.response->cost());
-		EXPECT_EQ(1, result.response->computed_tuples().size());
+		ASSERT_EQ(1, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples()[0];
 		EXPECT_EQ(tuple.lEntityId(), actual.left_entity().id());
@@ -336,7 +336,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(request.right_entity().id(), actual.right_entity().id());
 	}
 
-	// Success: create relation with optimize (right)
+	// Success: create relation with direct optimize strategy (right)
 	{
 		//  strand |  l_entity_id  | relation |  r_entity_id
 		// --------+---------------+----------+---------------
@@ -373,7 +373,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(2, result.response->cost());
-		EXPECT_EQ(1, result.response->computed_tuples().size());
+		ASSERT_EQ(1, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples()[0];
 		EXPECT_EQ(request.left_entity().id(), actual.left_entity().id());
@@ -381,7 +381,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(tuple.rEntityId(), actual.right_entity().id());
 	}
 
-	// Success: create relation with optimize
+	// Success: create relation with direct optimize strategy
 	{
 		//  strand  |  l_entity_id  | relation |  r_entity_id
 		// ---------+---------------+----------+---------------
@@ -433,7 +433,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(3, result.response->cost());
-		EXPECT_EQ(2, result.response->computed_tuples().size());
+		ASSERT_EQ(2, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples();
 		// []group:admins/editors/group:writers
@@ -447,7 +447,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(tuples[1].rEntityId(), actual[1].right_entity().id());
 	}
 
-	// Success: create relation with optimize and cost limit
+	// Success: create relation with direct optimize strategy and cost limit
 	{
 		db::Tuple tuple({
 			.lEntityId   = "group:writers",
@@ -479,13 +479,13 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ((request.cost_limit() + 1) * -1, result.response->cost());
-		EXPECT_EQ(1, result.response->computed_tuples().size());
+		ASSERT_EQ(1, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples()[0];
 		EXPECT_TRUE(actual.id().empty());
 	}
 
-	// Success: create relation with optimize resulting in duplicate computed entry
+	// Success: create relation with direct optimize strategy resulting in duplicate computed entry
 	{
 		//  strand |  l_entity_id  | relation |  r_entity_id
 		// --------+---------------+----------+---------------

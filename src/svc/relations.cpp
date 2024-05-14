@@ -45,6 +45,7 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 template <>
 rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
+
 	auto tuple = map(ctx, req);
 	tuple.store();
 

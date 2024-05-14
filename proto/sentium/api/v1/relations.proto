@@ -107,7 +107,7 @@ message RelationsCreateRequest {
 	optional google.protobuf.Struct attrs = 7;
 
 	// Optimization strategy to use when computing and storing derived relations to improve lookup speeds.
-	// Defaults to `8` (graph).
+	// Defaults to `4` (graph).
 	//
 	// Strategies:
 	//   2 (direct) - Optimize for direct lookups. Best for lookup speeds but can produce large numbers
@@ -118,8 +118,8 @@ message RelationsCreateRequest {
 	//                can utilise using a set matching algorithm.
 	optional uint32 optimize = 8;
 
-	// Limits the cost for computing and storing derived relations. The value must be within `1` and `65535`.
-	// Defaults to `1000`.
+	// Limits the cost for computing and storing derived relations. The value must be within `1` and
+	// `65535`. Defaults to `1000`.
 	optional uint32 cost_limit = 9;
 }
 
