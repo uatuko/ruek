@@ -115,7 +115,7 @@ message RelationsCreateRequest {
 	//   4 (graph)  - Don't optimize. Lookups will need to use a graph traversal algorithm to derive
 	//                relations.
 	//   8 (set)    - Optimize by computing derived relations between principals, which the lookups
-	//                can utilise using a set matching algorithm.
+	//                can utilise in a set intersection algorithm.
 	optional uint32 optimize = 8;
 
 	// Limits the cost for computing and storing derived relations. The value must be within `1` and
