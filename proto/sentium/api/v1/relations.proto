@@ -64,7 +64,8 @@ message Tuple {
 	optional string strand                = 8;
 	optional google.protobuf.Struct attrs = 9;
 
-	optional string ref_id = 10;
+	optional string ref_id_left  = 10;
+	optional string ref_id_right = 11;
 }
 
 message RelationsCheckRequest {
@@ -82,8 +83,8 @@ message RelationsCheckRequest {
 }
 
 message RelationsCheckResponse {
-	bool   found = 1;
-	uint32 cost  = 2;
+	bool  found = 1;
+	int32 cost  = 2;
 
 	optional Tuple tuple = 3;
 }
@@ -105,13 +106,27 @@ message RelationsCreateRequest {
 
 	optional google.protobuf.Struct attrs = 7;
 
-	optional bool   optimise   = 8;
+	// Indicates whether to optimise for lookups by computing and storing derived relations.
+	// Defaults to `false`.
+	optional bool optimise = 8;
+
+	// Limits the cost for computing and storing derived relations. The value must be within `1` and `65535`.
+	// Defaults to `1000`.
 	optional uint32 cost_limit = 9;
 }
 
 message RelationsCreateResponse {
-	Tuple  tuple = 1;
-	uint32 cost  = 2;
+	// Tuple containing the relation data.
+	Tuple tuple = 1;
+
+	// Cost of creating the relation. A negative cost indicates only the relation was created but computing
+	// and storing derived relations was aborted.
+	int32 cost = 2;
+
+	// Computed and _maybe_ stored derived relation tuples. If the `cost` returned is negative, this
+	// _may_ contain a partial list. Any tuple with an empty id indicates it's only computed but not
+	// stored (i.e. dirty).
+	repeated Tuple computed_tuples = 3;
 }
 
 message RelationsDeleteRequest {

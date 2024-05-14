@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
+option(SENTIUM_BUILD_BENCHMARKS
+	"Build benchmarks" OFF
+)
+
 include(CMakeDependentOption)
 cmake_dependent_option(SENTIUM_BUILD_TESTING
 	"Build tests when this is the root project" ON
@@ -33,6 +37,10 @@ include(cmake/googleapis.cmake)
 
 if (SENTIUM_BUILD_TESTING)
 	enable_testing()
+endif()
+
+if (SENTIUM_BUILD_BENCHMARKS)
+	add_subdirectory(bench)
 endif()
 
 add_subdirectory(proto)

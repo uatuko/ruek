@@ -24,6 +24,48 @@ protected:
 	static void TearDownTestSuite() { db::testing::teardown(); }
 };
 
+TEST_F(db_TuplesTest, constructor) {
+	// Success: join tuples
+	{
+		db::Tuple left({
+			.lEntityId   = "(left)left",
+			.lEntityType = "(left)db_TuplesTest.constructor",
+			.relation    = "(left)relation",
+			.rEntityId   = "(left)right",
+			.rEntityType = "(left)db_TuplesTest.constructor",
+			.spaceId     = "space-id",
+		});
+		ASSERT_NO_THROW(left.store());
+
+		db::Tuple right({
+			.lEntityId   = "(right)left",
+			.lEntityType = "(right)db_TuplesTest.constructor",
+			.relation    = "(right)relation",
+			.rEntityId   = "(right)right",
+			.rEntityType = "(right)db_TuplesTest.constructor",
+			.spaceId     = "space-id",
+		});
+		ASSERT_NO_THROW(right.store());
+
+		db::Tuple joined(left, right);
+		ASSERT_NO_THROW(joined.store());
+
+		EXPECT_EQ(left.lEntityId(), joined.lEntityId());
+		EXPECT_EQ(left.lEntityType(), joined.lEntityType());
+		EXPECT_EQ(right.relation(), joined.relation());
+		EXPECT_EQ(right.rEntityId(), joined.rEntityId());
+		EXPECT_EQ(right.rEntityType(), joined.rEntityType());
+		EXPECT_EQ(left.spaceId(), joined.spaceId());
+		EXPECT_TRUE(joined.strand().empty());
+		EXPECT_EQ(left.id(), joined.ridL());
+		EXPECT_EQ(right.id(), joined.ridR());
+
+		EXPECT_FALSE(joined.attrs());
+		EXPECT_FALSE(joined.lPrincipalId());
+		EXPECT_FALSE(joined.rPrincipalId());
+	}
+}
+
 TEST_F(db_TuplesTest, discard) {
 	db::Tuple tuple({
 		.lEntityId   = "left",
@@ -418,7 +460,8 @@ TEST_F(db_TuplesTest, retrieve) {
 			1729));
 
 		auto tuple = db::Tuple::retrieve("_id:db_TuplesTest.retrieve");
-		EXPECT_FALSE(tuple.rid());
+		EXPECT_FALSE(tuple.ridL());
+		EXPECT_FALSE(tuple.ridR());
 		EXPECT_EQ(1729, tuple.rev());
 
 		EXPECT_EQ("db_TuplesTest.retrieve", tuple.lEntityType());
@@ -469,36 +512,15 @@ TEST_F(db_TuplesTest, rev) {
 			.rEntityId   = "right",
 			.rEntityType = "db_TuplesTest.rev-mismatch",
 		});
+		ASSERT_NO_THROW(tuple.store());
 
 		std::string_view qry = R"(
-			insert into tuples as t (
-				space_id,
-				strand,
-				l_entity_type, l_entity_id,
-				relation,
-				r_entity_type, r_entity_id,
-				_id, _rev
-			) values (
-				$1::text,
-				$2::text,
-				$3::text, $4::text,
-				$5::text,
-				$6::text, $7::text,
-				$8::text, $9::integer
-			);
+			update tuples
+			set
+				_rev = $2::integer
+			where _id = $1::text;
 		)";
-
-		ASSERT_NO_THROW(db::pg::exec(
-			qry,
-			tuple.spaceId(),
-			tuple.strand(),
-			tuple.lEntityType(),
-			tuple.lEntityId(),
-			tuple.relation(),
-			tuple.rEntityType(),
-			tuple.rEntityId(),
-			tuple.id(),
-			tuple.rev() + 1));
+		ASSERT_NO_THROW(db::pg::exec(qry, tuple.id(), tuple.rev() + 1));
 
 		EXPECT_THROW(tuple.store(), err::DbRevisionMismatch);
 	}
@@ -544,7 +566,8 @@ TEST_F(db_TuplesTest, store) {
 				r_entity_type, r_entity_id,
 				attrs,
 				l_principal_id, r_principal_id,
-				_id, _rid, _rev
+				_id, _rev,
+				_rid_l, _rid_r
 			from tuples
 			where _id = $1::text;
 		)";
@@ -564,8 +587,9 @@ TEST_F(db_TuplesTest, store) {
 			 lPrincipalId,
 			 rPrincipalId,
 			 _id,
-			 _rid,
-			 _rev] =
+			 _rev,
+			 _ridL,
+			 _ridR] =
 				res[0]
 					.as<std::string,
 						std::string,
@@ -578,8 +602,9 @@ TEST_F(db_TuplesTest, store) {
 						db::Tuple::Data::pid_t,
 						db::Tuple::Data::pid_t,
 						std::string,
+						int,
 						db::Tuple::rid_t,
-						int>();
+						db::Tuple::rid_t>();
 
 		EXPECT_EQ(tuple.spaceId(), spaceId);
 		EXPECT_EQ(tuple.strand(), strand);
@@ -593,7 +618,8 @@ TEST_F(db_TuplesTest, store) {
 		EXPECT_EQ(tuple.rPrincipalId(), rPrincipalId);
 		EXPECT_EQ(tuple.id(), _id);
 		EXPECT_EQ(tuple.rev(), _rev);
-		EXPECT_EQ(tuple.rid(), _rid);
+		EXPECT_EQ(tuple.ridL(), _ridL);
+		EXPECT_EQ(tuple.ridR(), _ridR);
 	}
 
 	// Error: invalid `attrs`

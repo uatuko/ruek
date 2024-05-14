@@ -71,7 +71,8 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_EQ(tuple.rEntityType(), actual.right_entity().type());
 		EXPECT_EQ(tuple.strand(), actual.strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: found with principals
@@ -113,7 +114,8 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_EQ(*tuple.rPrincipalId(), actual.right_principal_id());
 		EXPECT_FALSE(actual.has_strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: not found (space-id mismatch)
@@ -185,6 +187,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(1, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
 
 		auto &actual = result.response->tuple();
 		EXPECT_FALSE(actual.id().empty());
@@ -203,7 +206,8 @@ TEST_F(svc_RelationsTest, Create) {
 		google::protobuf::util::MessageToJsonString(actual.attrs(), &responseAttrs);
 		EXPECT_EQ(attrs, responseAttrs);
 
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: create relation with principals
@@ -222,6 +226,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(1, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
 
 		auto &actual = result.response->tuple();
 		EXPECT_FALSE(actual.id().empty());
@@ -235,7 +240,8 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_FALSE(actual.has_strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
 	// Success: create relation with space-id
@@ -265,6 +271,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(1, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
 
 		auto &actual = result.response->tuple();
 		EXPECT_FALSE(actual.id().empty());
@@ -280,7 +287,255 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_FALSE(actual.has_strand());
 		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_FALSE(actual.has_ref_id());
+		EXPECT_FALSE(actual.has_ref_id_left());
+		EXPECT_FALSE(actual.has_ref_id_right());
+	}
+
+	// Success: create relation with optimise (left)
+	{
+		//  strand |  l_entity_id  | relation |  r_entity_id
+		// --------+---------------+----------+---------------
+		//         | user:jane     | member   | group:editors     <- already exists
+		//  member | group:editors | parent   | group:viewers     <- create
+		//         | user:jane     | parent   | group:viewers     <- compute
+
+		db::Tuple tuple({
+			.lEntityId   = "user:jane",
+			.lEntityType = "svc_RelationsTest.Create-with_optimise_l",
+			.relation    = "member",
+			.rEntityId   = "group:editors",
+			.rEntityType = "svc_RelationsTest.Create-with_optimise_l",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCreate::request_type request;
+		request.set_optimise(true);
+		request.set_strand(tuple.relation());
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuple.rEntityId()); // group:editors
+		left->set_type(tuple.rEntityType());
+
+		request.set_relation("parent");
+
+		auto *right = request.mutable_right_entity();
+		right->set_id("group:viewers");
+		right->set_type("svc_RelationsTest.Create-with_optimise_l");
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(2, result.response->cost());
+		EXPECT_EQ(1, result.response->computed_tuples().size());
+
+		const auto &actual = result.response->computed_tuples()[0];
+		EXPECT_EQ(tuple.lEntityId(), actual.left_entity().id());
+		EXPECT_EQ(request.relation(), actual.relation());
+		EXPECT_EQ(request.right_entity().id(), actual.right_entity().id());
+	}
+
+	// Success: create relation with optimise (right)
+	{
+		//  strand |  l_entity_id  | relation |  r_entity_id
+		// --------+---------------+----------+---------------
+		//         | user:john     | member   | group:writers     <- create
+		//  member | group:writers | parent   | group:readers     <- already exists
+		//         | user:john     | parent   | group:readers     <- compute
+
+		db::Tuple tuple({
+			.lEntityId   = "group:writers",
+			.lEntityType = "svc_RelationsTest.Create-with_optimise_r",
+			.relation    = "parent",
+			.rEntityId   = "group:readers",
+			.rEntityType = "svc_RelationsTest.Create-with_optimise_r",
+			.strand      = "member",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCreate::request_type request;
+		request.set_optimise(true);
+
+		auto *left = request.mutable_left_entity();
+		left->set_id("user:john");
+		left->set_type("svc_RelationsTest.Create-with_optimise_r");
+
+		request.set_relation("member");
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuple.lEntityId()); // group:writers
+		right->set_type(tuple.lEntityType());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(2, result.response->cost());
+		EXPECT_EQ(1, result.response->computed_tuples().size());
+
+		const auto &actual = result.response->computed_tuples()[0];
+		EXPECT_EQ(request.left_entity().id(), actual.left_entity().id());
+		EXPECT_EQ(tuple.relation(), actual.relation());
+		EXPECT_EQ(tuple.rEntityId(), actual.right_entity().id());
+	}
+
+	// Success: create relation with optimise
+	{
+		//  strand  |  l_entity_id  | relation |  r_entity_id
+		// ---------+---------------+----------+---------------
+		//          | group:admins  | admins   | group:editors     <- already exists
+		//  admin   | group:editors | editors  | group:writers     <- create
+		//  editors | group:writers | readers  | group:readers     <- already exists
+		//          | group:admins  | editors  | group:writers     <- compute
+		//          | group:editors | readers  | group:readers     <- compute
+
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "group:admins",
+				.lEntityType = "svc_RelationsTest.Create-with_optimise",
+				.relation    = "admin",
+				.rEntityId   = "group:editors",
+				.rEntityType = "svc_RelationsTest.Create-with_optimise",
+			}},
+			{{
+				.lEntityId   = "group:writers",
+				.lEntityType = "svc_RelationsTest.Create-with_optimise",
+				.relation    = "readers",
+				.rEntityId   = "group:readers",
+				.rEntityType = "svc_RelationsTest.Create-with_optimise",
+				.strand      = "editors",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		rpcCreate::request_type request;
+		request.set_optimise(true);
+		request.set_strand(tuples[0].relation()); // admins
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuples[0].rEntityId()); // group:editors
+		left->set_type(tuples[0].rEntityType());
+
+		request.set_relation(tuples[1].strand()); // editors
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuples[1].lEntityId()); // group:writers
+		right->set_type(tuples[1].lEntityType());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(3, result.response->cost());
+		EXPECT_EQ(2, result.response->computed_tuples().size());
+
+		const auto &actual = result.response->computed_tuples();
+		// []group:admins/editors/group:writers
+		EXPECT_EQ(tuples[0].lEntityId(), actual[0].left_entity().id());
+		EXPECT_EQ(request.relation(), actual[0].relation());
+		EXPECT_EQ(request.right_entity().id(), actual[0].right_entity().id());
+
+		// []group:editors/readers/group:writers
+		EXPECT_EQ(request.left_entity().id(), actual[1].left_entity().id());
+		EXPECT_EQ(tuples[1].relation(), actual[1].relation());
+		EXPECT_EQ(tuples[1].rEntityId(), actual[1].right_entity().id());
+	}
+
+	// Success: create relation with optimise and cost limit
+	{
+		db::Tuple tuple({
+			.lEntityId   = "group:writers",
+			.lEntityType = "svc_RelationsTest.Create-with_optimise_and_cost_limit",
+			.relation    = "readers",
+			.rEntityId   = "group:readers",
+			.rEntityType = "svc_RelationsTest.Create-with_optimise_and_cost_limit",
+			.strand      = "member",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCreate::request_type request;
+		request.set_optimise(true);
+		request.set_cost_limit(1);
+
+		auto *left = request.mutable_left_entity();
+		left->set_id("user:john");
+		left->set_type("svc_RelationsTest.Create-with_optimise_and_cost_limit");
+
+		request.set_relation("member");
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuple.lEntityId()); // group:writers
+		right->set_type(tuple.lEntityType());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ((request.cost_limit() + 1) * -1, result.response->cost());
+		EXPECT_EQ(1, result.response->computed_tuples().size());
+
+		const auto &actual = result.response->computed_tuples()[0];
+		EXPECT_TRUE(actual.id().empty());
+	}
+
+	// Success: create relation with optimise resulting in duplicate computed entry
+	{
+		//  strand |  l_entity_id  | relation |  r_entity_id
+		// --------+---------------+----------+---------------
+		//         | user:jane     | member   | group:editors     <- already exists
+		//         | user:jane     | member   | group:viewers     <- already exists
+		//  member | group:editors | member   | group:viewers     <- create
+
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "user:jane",
+				.lEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.relation    = "member",
+				.rEntityId   = "group:editors",
+				.rEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+			}},
+			{{
+				.lEntityId   = "user:jane",
+				.lEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.relation    = "member",
+				.rEntityId   = "group:viewers",
+				.rEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		rpcCreate::request_type request;
+		request.set_optimise(true);
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuples[0].rEntityId()); // group:editors
+		left->set_type(tuples[0].rEntityType());
+
+		request.set_relation(tuples[1].relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuples[1].rEntityId()); // group:viewers
+		right->set_type(tuples[1].rEntityType());
+
+		request.set_strand(tuples[0].relation());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(2, result.response->cost());
+		EXPECT_TRUE(result.response->computed_tuples().empty());
 	}
 
 	// Error: invalid entity
@@ -475,7 +730,8 @@ TEST_F(svc_RelationsTest, ListLeft) {
 		EXPECT_EQ(principal.id(), actual[0].right_principal_id());
 		EXPECT_FALSE(actual[0].has_strand());
 		EXPECT_FALSE(actual[0].has_attrs());
-		EXPECT_FALSE(actual[0].has_ref_id());
+		EXPECT_FALSE(actual[0].has_ref_id_left());
+		EXPECT_FALSE(actual[0].has_ref_id_right());
 	}
 
 	// Success: list left with relation
@@ -700,7 +956,8 @@ TEST_F(svc_RelationsTest, ListRight) {
 		EXPECT_EQ(tuple.rEntityType(), actual[0].right_entity().type());
 		EXPECT_FALSE(actual[0].has_strand());
 		EXPECT_FALSE(actual[0].has_attrs());
-		EXPECT_FALSE(actual[0].has_ref_id());
+		EXPECT_FALSE(actual[0].has_ref_id_left());
+		EXPECT_FALSE(actual[0].has_ref_id_right());
 	}
 
 	// Success: list right with relation
