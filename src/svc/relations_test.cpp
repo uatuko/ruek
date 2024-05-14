@@ -538,14 +538,17 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_TRUE(result.response->computed_tuples().empty());
 	}
 
-	// Success: create relation with set optimize strategy
+	// Success: create relations with set optimize strategy
 	{
-		//  strand |  l_entity_id  | relation |  r_entity_id
-		// --------+---------------+----------+---------------
-		//         | user:jane     | member   | group:writers     <- already exists
-		//  member | group:writers | member   | group:readers     <- create(1)
-		//  member | group:readers | reader   | doc:notes.txt     <- create(2)
-		//         | user:jane     | member   | group:readers     <- compute(1)
+		//  strand |  l_entity_id   | relation |  r_entity_id
+		// --------+----------------+----------+---------------
+		//         | user:jane      | member   | group:writers     <- already exists
+		//  member | group:writers  | member   | group:readers     <- create(1)
+		//         | user:jane      | member   | group:readers     <- compute(1)
+		//  member | group:readers  | reader   | doc:notes.txt     <- create(2)
+		//  owner  | folder:home    | parent   | doc:notes.txt     <- create(3)
+		//         | user:jane      | owner    | folder:home       <- create(4)
+		//  parent | doc:notes.txt  | describe | group:readers     <- create(5)
 
 		db::Principals principals({
 			{{
@@ -615,6 +618,65 @@ TEST_F(svc_RelationsTest, Create) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(1, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
+
+		// Create(3), [owner]folder:home/parent/doc:notes.txt
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id("folder:home");
+			left->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_relation("parent");
+
+			auto *right = request.mutable_right_entity();
+			right->set_id("doc:notes.txt");
+			right->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_strand("owner");
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(1, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
+
+		// Create(4), []user:jane/owner/folder:home
+		{
+			request.set_left_principal_id(principals[0].id()); // user:jane
+			request.set_relation("owner");
+
+			auto *right = request.mutable_right_entity();
+			right->set_id("folder:home");
+			right->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.clear_strand();
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(2, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
+
+		// Create(5), [parent]doc:notes.txt/describe/group:readers
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id("doc:notes.txt");
+			left->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_relation("describe");
+			request.set_right_principal_id(principals[2].id()); // group:readers
+			request.set_strand("parent");
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(2, result.response->cost());
 			EXPECT_TRUE(result.response->computed_tuples().empty());
 		}
 	}
