@@ -124,7 +124,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 				it++;
 			} catch (const err::DbTupleAlreadyExists &) {
 				// Tuple already exists, don't need the computed entry
-				computed.erase(it);
+				it = computed.erase(it);
 			}
 		}
 	} else {
