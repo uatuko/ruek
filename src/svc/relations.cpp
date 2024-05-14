@@ -48,15 +48,29 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	auto tuple = map(ctx, req);
 	tuple.store();
 
+	auto strategy = common::strategy_t::graph;
+	if (req.has_optimize()) {
+		switch (common::strategy_t(req.optimize())) {
+		case common::strategy_t::direct:
+			strategy = common::strategy_t::direct;
+			break;
+		case common::strategy_t::set:
+			strategy = common::strategy_t::set;
+			break;
+		default:
+			break;
+		}
+	}
+
 	rpcCreate::response_type response = map(tuple);
 
-	if (!req.has_optimise() || req.optimise() == false) {
+	if (common::strategy_t::graph == strategy) {
 		response.set_cost(1);
 
 		return {grpcxx::status::code_t::ok, response};
 	}
 
-	// Optimise
+	// Optimize
 	std::uint32_t cost  = 0;
 	std::uint16_t limit = common::cost_limit_v;
 
@@ -66,7 +80,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 
 	db::Tuples computed;
 
-	if (tuple.strand() != "") {
+	if (tuple.strand() != "" && (common::strategy_t::direct == strategy || tuple.lPrincipalId())) {
 		auto results = db::ListTuplesLeft(
 			tuple.spaceId(), {tuple.lEntityType(), tuple.lEntityId()}, tuple.strand(), {}, limit);
 
@@ -76,7 +90,8 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 		}
 	}
 
-	if (cost < limit && tuple.relation() != "") {
+	if (cost < limit && tuple.relation() != "" &&
+		(common::strategy_t::direct == strategy || tuple.rPrincipalId())) {
 		auto results = db::ListTuplesRight(
 			tuple.spaceId(), {tuple.rEntityType(), tuple.rEntityId()}, {}, {}, limit - cost);
 
