@@ -14,6 +14,29 @@ namespace relations {
 template <>
 rpcCheck::result_type Impl::call<rpcCheck>(
 	grpcxx::context &ctx, const rpcCheck::request_type &req) {
+
+	auto strategy = common::strategy_t::direct;
+	if (req.has_strategy()) {
+		switch (common::strategy_t(req.strategy())) {
+		case common::strategy_t::direct:
+			strategy = common::strategy_t::direct;
+			break;
+		case common::strategy_t::set:
+			strategy = common::strategy_t::set;
+			break;
+		default:
+			throw err::RpcRelationsInvalidStrategy();
+			break;
+		}
+	}
+
+	std::int32_t  cost  = 1;
+	std::uint16_t limit = common::cost_limit_v;
+
+	if (req.cost_limit() > 0 && req.cost_limit() <= std::numeric_limits<std::uint16_t>::max()) {
+		limit = req.cost_limit();
+	}
+
 	db::Tuple::Entity left, right;
 
 	if (req.has_left_principal_id()) {
@@ -29,15 +52,51 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 	}
 
 	rpcCheck::response_type response;
-	response.set_cost(1);
+	response.set_found(false);
+
+	// Direct strategy
 	if (auto tuples = db::LookupTuples(
 			ctx.meta(common::space_id_v), left, req.relation(), right, std::nullopt, "", 1);
 		!tuples.empty()) {
+
+		response.set_cost(cost);
 		response.set_found(true);
 		map(tuples.front(), response.mutable_tuple());
-	} else {
-		response.set_found(false);
+
+		return {grpcxx::status::code_t::ok, response};
 	}
+
+	// Set strategy
+	if (cost < limit && common::strategy_t::set == strategy) {
+		auto t1 = db::ListTuplesRight(ctx.meta(common::space_id_v), left, {}, {}, limit);
+		auto t2 =
+			db::ListTuplesLeft(ctx.meta(common::space_id_v), right, req.relation(), {}, limit);
+
+		auto i = t1.cbegin();
+		auto j = t2.cbegin();
+		while (i != t1.cend() && j != t2.cend()) {
+			cost++;
+			auto r = i->rEntityId().compare(j->lEntityId());
+
+			if (r == 0) {
+				if (i->relation() == j->strand() && i->rEntityType() == j->lEntityType()) {
+					response.set_found(true);
+					map(db::Tuple(*i, *j), response.mutable_tuple());
+					break;
+				} else {
+					i++;
+				}
+			}
+
+			if (r > 0) {
+				i++;
+			} else {
+				j++;
+			}
+		}
+	}
+
+	response.set_cost(cost);
 
 	return {grpcxx::status::code_t::ok, response};
 }

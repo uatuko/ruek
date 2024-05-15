@@ -24,4 +24,6 @@ using DbTuplesInvalidListArgs =
 
 using RpcPrincipalsAlreadyExists = basic_error<"sentium:2.1.1.409", "Principal already exists">;
 using RpcPrincipalsNotFound      = basic_error<"sentium:2.1.2.404", "Principal not found">;
+
+using RpcRelationsInvalidStrategy = basic_error<"sentium:2.2.1.400", "Invalid relations strategy">;
 } // namespace err

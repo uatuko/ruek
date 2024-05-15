@@ -156,6 +156,73 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_EQ(1, result.response->cost());
 		EXPECT_FALSE(result.response->has_tuple());
 	}
+
+	// Success: found with set strategy
+	{
+		//  strand |  l_entity_id   | relation |  r_entity_id
+		// --------+----------------+----------+---------------
+		//         | user:jane      | member   | group:readers
+		//  member | group:readers  | reader   | doc:notes.txt
+
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "user:jane",
+				.lEntityType = "svc_RelationsTest.Check-with_set_strategy",
+				.relation    = "member",
+				.rEntityId   = "group:readers",
+				.rEntityType = "svc_RelationsTest.Check-with_set_strategy",
+			}},
+			{{
+				.lEntityId   = "group:readers",
+				.lEntityType = "svc_RelationsTest.Check-with_set_strategy",
+				.relation    = "reader",
+				.rEntityId   = "doc:notes.txt",
+				.rEntityType = "svc_RelationsTest.Check-with_set_strategy",
+				.strand      = "member",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		rpcCheck::request_type request;
+		request.set_strategy(static_cast<std::uint32_t>(svc::common::strategy_t::set));
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuples[0].lEntityId());
+		left->set_type(tuples[0].lEntityType());
+
+		request.set_relation(tuples[1].relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuples[1].rEntityId());
+		right->set_type(tuples[1].rEntityType());
+
+		rpcCheck::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(true, result.response->found());
+		EXPECT_EQ(2, result.response->cost());
+		ASSERT_TRUE(result.response->has_tuple());
+
+		auto &actual = result.response->tuple();
+		EXPECT_EQ(tuples[0].spaceId(), actual.space_id());
+		EXPECT_TRUE(actual.id().empty());
+		EXPECT_FALSE(actual.has_left_principal_id());
+		EXPECT_EQ(tuples[0].lEntityId(), actual.left_entity().id());
+		EXPECT_EQ(tuples[0].lEntityType(), actual.left_entity().type());
+		EXPECT_EQ(tuples[1].relation(), actual.relation());
+		EXPECT_FALSE(actual.has_right_principal_id());
+		EXPECT_EQ(tuples[1].rEntityId(), actual.right_entity().id());
+		EXPECT_EQ(tuples[1].rEntityType(), actual.right_entity().type());
+		EXPECT_TRUE(actual.strand().empty());
+		EXPECT_FALSE(actual.has_attrs());
+		EXPECT_EQ(tuples[0].id(), actual.ref_id_left());
+		EXPECT_EQ(tuples[1].id(), actual.ref_id_right());
+	}
 }
 
 TEST_F(svc_RelationsTest, Create) {
