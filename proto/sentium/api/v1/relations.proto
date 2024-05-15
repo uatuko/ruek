@@ -80,6 +80,17 @@ message RelationsCheckRequest {
 		Entity right_entity       = 3;
 		string right_principal_id = 4;
 	}
+
+	// Lookup strategy to use. Defaults to `2` (direct).
+	//
+	// Strategies:
+	//   2 (direct) - Only check if there's a direct relation exists between the entities.
+	//   8 (set)    - Check if there's a direct relation exists between the entities and if not, use
+	//                a set intersection algorithm to derive a relation between the entities.
+	optional uint32 strategy = 6;
+
+	// Limits the lookup cost. The value must be within `1` and `65535`. Defaults to `1000`.
+	optional uint32 cost_limit = 7;
 }
 
 message RelationsCheckResponse {
