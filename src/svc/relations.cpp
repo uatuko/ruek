@@ -72,7 +72,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	}
 
 	// Optimize
-	std::uint32_t cost  = 0;
+	std::int32_t  cost  = 0;
 	std::uint16_t limit = common::cost_limit_v;
 
 	if (req.cost_limit() > 0 && req.cost_limit() <= std::numeric_limits<std::uint16_t>::max()) {
