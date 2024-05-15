@@ -291,7 +291,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_FALSE(actual.has_ref_id_right());
 	}
 
-	// Success: create relation with optimise (left)
+	// Success: create relation with direct optimize strategy (left)
 	{
 		//  strand |  l_entity_id  | relation |  r_entity_id
 		// --------+---------------+----------+---------------
@@ -301,15 +301,15 @@ TEST_F(svc_RelationsTest, Create) {
 
 		db::Tuple tuple({
 			.lEntityId   = "user:jane",
-			.lEntityType = "svc_RelationsTest.Create-with_optimise_l",
+			.lEntityType = "svc_RelationsTest.Create-with_optimize_l",
 			.relation    = "member",
 			.rEntityId   = "group:editors",
-			.rEntityType = "svc_RelationsTest.Create-with_optimise_l",
+			.rEntityType = "svc_RelationsTest.Create-with_optimize_l",
 		});
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcCreate::request_type request;
-		request.set_optimise(true);
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 		request.set_strand(tuple.relation());
 
 		auto *left = request.mutable_left_entity();
@@ -320,7 +320,7 @@ TEST_F(svc_RelationsTest, Create) {
 
 		auto *right = request.mutable_right_entity();
 		right->set_id("group:viewers");
-		right->set_type("svc_RelationsTest.Create-with_optimise_l");
+		right->set_type("svc_RelationsTest.Create-with_optimize_l");
 
 		rpcCreate::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
@@ -328,7 +328,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(2, result.response->cost());
-		EXPECT_EQ(1, result.response->computed_tuples().size());
+		ASSERT_EQ(1, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples()[0];
 		EXPECT_EQ(tuple.lEntityId(), actual.left_entity().id());
@@ -336,7 +336,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(request.right_entity().id(), actual.right_entity().id());
 	}
 
-	// Success: create relation with optimise (right)
+	// Success: create relation with direct optimize strategy (right)
 	{
 		//  strand |  l_entity_id  | relation |  r_entity_id
 		// --------+---------------+----------+---------------
@@ -346,20 +346,20 @@ TEST_F(svc_RelationsTest, Create) {
 
 		db::Tuple tuple({
 			.lEntityId   = "group:writers",
-			.lEntityType = "svc_RelationsTest.Create-with_optimise_r",
+			.lEntityType = "svc_RelationsTest.Create-with_optimize_r",
 			.relation    = "parent",
 			.rEntityId   = "group:readers",
-			.rEntityType = "svc_RelationsTest.Create-with_optimise_r",
+			.rEntityType = "svc_RelationsTest.Create-with_optimize_r",
 			.strand      = "member",
 		});
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcCreate::request_type request;
-		request.set_optimise(true);
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 
 		auto *left = request.mutable_left_entity();
 		left->set_id("user:john");
-		left->set_type("svc_RelationsTest.Create-with_optimise_r");
+		left->set_type("svc_RelationsTest.Create-with_optimize_r");
 
 		request.set_relation("member");
 
@@ -373,7 +373,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(2, result.response->cost());
-		EXPECT_EQ(1, result.response->computed_tuples().size());
+		ASSERT_EQ(1, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples()[0];
 		EXPECT_EQ(request.left_entity().id(), actual.left_entity().id());
@@ -381,7 +381,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(tuple.rEntityId(), actual.right_entity().id());
 	}
 
-	// Success: create relation with optimise
+	// Success: create relation with direct optimize strategy
 	{
 		//  strand  |  l_entity_id  | relation |  r_entity_id
 		// ---------+---------------+----------+---------------
@@ -394,17 +394,17 @@ TEST_F(svc_RelationsTest, Create) {
 		db::Tuples tuples({
 			{{
 				.lEntityId   = "group:admins",
-				.lEntityType = "svc_RelationsTest.Create-with_optimise",
+				.lEntityType = "svc_RelationsTest.Create-with_optimize",
 				.relation    = "admin",
 				.rEntityId   = "group:editors",
-				.rEntityType = "svc_RelationsTest.Create-with_optimise",
+				.rEntityType = "svc_RelationsTest.Create-with_optimize",
 			}},
 			{{
 				.lEntityId   = "group:writers",
-				.lEntityType = "svc_RelationsTest.Create-with_optimise",
+				.lEntityType = "svc_RelationsTest.Create-with_optimize",
 				.relation    = "readers",
 				.rEntityId   = "group:readers",
-				.rEntityType = "svc_RelationsTest.Create-with_optimise",
+				.rEntityType = "svc_RelationsTest.Create-with_optimize",
 				.strand      = "editors",
 			}},
 		});
@@ -414,7 +414,7 @@ TEST_F(svc_RelationsTest, Create) {
 		}
 
 		rpcCreate::request_type request;
-		request.set_optimise(true);
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 		request.set_strand(tuples[0].relation()); // admins
 
 		auto *left = request.mutable_left_entity();
@@ -433,7 +433,7 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(3, result.response->cost());
-		EXPECT_EQ(2, result.response->computed_tuples().size());
+		ASSERT_EQ(2, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples();
 		// []group:admins/editors/group:writers
@@ -447,25 +447,25 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(tuples[1].rEntityId(), actual[1].right_entity().id());
 	}
 
-	// Success: create relation with optimise and cost limit
+	// Success: create relation with direct optimize strategy and cost limit
 	{
 		db::Tuple tuple({
 			.lEntityId   = "group:writers",
-			.lEntityType = "svc_RelationsTest.Create-with_optimise_and_cost_limit",
+			.lEntityType = "svc_RelationsTest.Create-with_optimize_and_cost_limit",
 			.relation    = "readers",
 			.rEntityId   = "group:readers",
-			.rEntityType = "svc_RelationsTest.Create-with_optimise_and_cost_limit",
+			.rEntityType = "svc_RelationsTest.Create-with_optimize_and_cost_limit",
 			.strand      = "member",
 		});
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcCreate::request_type request;
-		request.set_optimise(true);
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 		request.set_cost_limit(1);
 
 		auto *left = request.mutable_left_entity();
 		left->set_id("user:john");
-		left->set_type("svc_RelationsTest.Create-with_optimise_and_cost_limit");
+		left->set_type("svc_RelationsTest.Create-with_optimize_and_cost_limit");
 
 		request.set_relation("member");
 
@@ -479,13 +479,13 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ((request.cost_limit() + 1) * -1, result.response->cost());
-		EXPECT_EQ(1, result.response->computed_tuples().size());
+		ASSERT_EQ(1, result.response->computed_tuples().size());
 
 		const auto &actual = result.response->computed_tuples()[0];
 		EXPECT_TRUE(actual.id().empty());
 	}
 
-	// Success: create relation with optimise resulting in duplicate computed entry
+	// Success: create relation with direct optimize strategy resulting in duplicate computed entry
 	{
 		//  strand |  l_entity_id  | relation |  r_entity_id
 		// --------+---------------+----------+---------------
@@ -496,17 +496,17 @@ TEST_F(svc_RelationsTest, Create) {
 		db::Tuples tuples({
 			{{
 				.lEntityId   = "user:jane",
-				.lEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.lEntityType = "svc_RelationsTest.Create-with_optimize_duplicate",
 				.relation    = "member",
 				.rEntityId   = "group:editors",
-				.rEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.rEntityType = "svc_RelationsTest.Create-with_optimize_duplicate",
 			}},
 			{{
 				.lEntityId   = "user:jane",
-				.lEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.lEntityType = "svc_RelationsTest.Create-with_optimize_duplicate",
 				.relation    = "member",
 				.rEntityId   = "group:viewers",
-				.rEntityType = "svc_RelationsTest.Create-with_optimise_duplicate",
+				.rEntityType = "svc_RelationsTest.Create-with_optimize_duplicate",
 			}},
 		});
 
@@ -515,7 +515,7 @@ TEST_F(svc_RelationsTest, Create) {
 		}
 
 		rpcCreate::request_type request;
-		request.set_optimise(true);
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 
 		auto *left = request.mutable_left_entity();
 		left->set_id(tuples[0].rEntityId()); // group:editors
@@ -536,6 +536,149 @@ TEST_F(svc_RelationsTest, Create) {
 		ASSERT_TRUE(result.response);
 		EXPECT_EQ(2, result.response->cost());
 		EXPECT_TRUE(result.response->computed_tuples().empty());
+	}
+
+	// Success: create relations with set optimize strategy
+	{
+		//  strand |  l_entity_id   | relation |  r_entity_id
+		// --------+----------------+----------+---------------
+		//         | user:jane      | member   | group:writers     <- already exists
+		//  member | group:writers  | member   | group:readers     <- create(1)
+		//         | user:jane      | member   | group:readers     <- compute(1)
+		//  member | group:readers  | reader   | doc:notes.txt     <- create(2)
+		//  owner  | folder:home    | parent   | doc:notes.txt     <- create(3)
+		//         | user:jane      | owner    | folder:home       <- create(4)
+		//  parent | doc:notes.txt  | describe | group:readers     <- create(5)
+
+		db::Principals principals({
+			{{
+				.attrs   = R"({"name": "jane", "type": "user"})",
+				.segment = "svc_RelationsTest.Create-with_optimize_set",
+			}},
+			{{
+				.attrs   = R"({"name": "writers", "type": "group"})",
+				.segment = "svc_RelationsTest.Create-with_optimize_set",
+			}},
+			{{
+				.attrs   = R"({"name": "readers", "type": "group"})",
+				.segment = "svc_RelationsTest.Create-with_optimize_set",
+			}},
+		});
+
+		for (auto &p : principals) {
+			ASSERT_NO_THROW(p.store());
+		}
+
+		db::Tuple tuple({
+			.lPrincipalId = principals[0].id(),
+			.relation     = "member",
+			.rPrincipalId = principals[1].id(),
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCreate::request_type request;
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::set));
+
+		rpcCreate::result_type result;
+
+		// Create(1), [member]group:writers/member/group:readers
+		{
+			request.set_left_principal_id(principals[1].id()); // group:writers
+			request.set_relation("member");
+			request.set_right_principal_id(principals[2].id()); // group:readers
+			request.set_strand(tuple.relation());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(2, result.response->cost());
+			ASSERT_EQ(1, result.response->computed_tuples().size());
+
+			const auto &actual = result.response->computed_tuples();
+			// []user:jane/member/group:readers
+			EXPECT_EQ(principals[0].id(), actual[0].left_principal_id());
+			EXPECT_EQ(request.relation(), actual[0].relation());
+			EXPECT_EQ(principals[2].id(), actual[0].right_principal_id());
+		}
+
+		// Create(2), [member]group:readers/reader/doc:notes.txt
+		{
+			request.set_left_principal_id(principals[2].id()); // group:readers
+			request.set_relation("reader");
+
+			auto *right = request.mutable_right_entity();
+			right->set_id("doc:notes.txt");
+			right->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_strand(tuple.relation());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(1, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
+
+		// Create(3), [owner]folder:home/parent/doc:notes.txt
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id("folder:home");
+			left->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_relation("parent");
+
+			auto *right = request.mutable_right_entity();
+			right->set_id("doc:notes.txt");
+			right->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_strand("owner");
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(1, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
+
+		// Create(4), []user:jane/owner/folder:home
+		{
+			request.set_left_principal_id(principals[0].id()); // user:jane
+			request.set_relation("owner");
+
+			auto *right = request.mutable_right_entity();
+			right->set_id("folder:home");
+			right->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.clear_strand();
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(2, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
+
+		// Create(5), [parent]doc:notes.txt/describe/group:readers
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id("doc:notes.txt");
+			left->set_type("svc_RelationsTest.Create-with_optimize_set");
+
+			request.set_relation("describe");
+			request.set_right_principal_id(principals[2].id()); // group:readers
+			request.set_strand("parent");
+
+			EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(2, result.response->cost());
+			EXPECT_TRUE(result.response->computed_tuples().empty());
+		}
 	}
 
 	// Error: invalid entity

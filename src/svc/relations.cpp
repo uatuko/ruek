@@ -45,19 +45,34 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 template <>
 rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
+
 	auto tuple = map(ctx, req);
 	tuple.store();
 
+	auto strategy = common::strategy_t::graph;
+	if (req.has_optimize()) {
+		switch (common::strategy_t(req.optimize())) {
+		case common::strategy_t::direct:
+			strategy = common::strategy_t::direct;
+			break;
+		case common::strategy_t::set:
+			strategy = common::strategy_t::set;
+			break;
+		default:
+			break;
+		}
+	}
+
 	rpcCreate::response_type response = map(tuple);
 
-	if (!req.has_optimise() || req.optimise() == false) {
+	if (common::strategy_t::graph == strategy) {
 		response.set_cost(1);
 
 		return {grpcxx::status::code_t::ok, response};
 	}
 
-	// Optimise
-	std::uint32_t cost  = 0;
+	// Optimize
+	std::int32_t  cost  = 0;
 	std::uint16_t limit = common::cost_limit_v;
 
 	if (req.cost_limit() > 0 && req.cost_limit() <= std::numeric_limits<std::uint16_t>::max()) {
@@ -66,23 +81,33 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 
 	db::Tuples computed;
 
-	if (tuple.strand() != "") {
+	if (tuple.strand() != "" && (common::strategy_t::direct == strategy || tuple.rPrincipalId())) {
 		auto results = db::ListTuplesLeft(
 			tuple.spaceId(), {tuple.lEntityType(), tuple.lEntityId()}, tuple.strand(), {}, limit);
 
 		cost += results.size();
 		for (const auto &r : results) {
+			if (common::strategy_t::set == strategy && !r.lPrincipalId()) {
+				continue;
+			}
+
 			computed.emplace_back(r, tuple);
 		}
 	}
 
-	if (cost < limit && tuple.relation() != "") {
+	if (cost < limit && tuple.relation() != "" &&
+		(common::strategy_t::direct == strategy || tuple.lPrincipalId())) {
+
 		auto results = db::ListTuplesRight(
 			tuple.spaceId(), {tuple.rEntityType(), tuple.rEntityId()}, {}, {}, limit - cost);
 
 		cost += results.size();
 		for (const auto &r : results) {
 			if (tuple.relation() != r.strand()) {
+				continue;
+			}
+
+			if (common::strategy_t::set == strategy && !r.rPrincipalId()) {
 				continue;
 			}
 
@@ -99,7 +124,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 				it++;
 			} catch (const err::DbTupleAlreadyExists &) {
 				// Tuple already exists, don't need the computed entry
-				computed.erase(it);
+				it = computed.erase(it);
 			}
 		}
 	} else {

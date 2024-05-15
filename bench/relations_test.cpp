@@ -3,6 +3,7 @@
 #include <xid/xid.h>
 
 #include "db/testing.h"
+#include "svc/common.h"
 #include "svc/svc.h"
 
 using namespace sentium::api::v1::Relations;
@@ -58,20 +59,20 @@ BENCHMARK_F(bm_relations, create)(benchmark::State &st) {
 	});
 }
 
-// Benchmark optimise algorithm for a simple use case with different numbers of pre-existing
+// Benchmark optimize algorithm for a simple use case with different numbers of pre-existing
 // relations. e.g.
 //     strand |  l_entity_id  | relation |  r_entity_id
 //     -------+---------------+----------+---------------
 //            | user:jane     | member   | group:editors     <- already exists
 //     member | group:editors | parent   | group:viewers     <- create
 //            | user:jane     | parent   | group:viewers     <- compute
-BENCHMARK_DEFINE_F(bm_relations, optimise)(benchmark::State &st) {
+BENCHMARK_DEFINE_F(bm_relations, optimize)(benchmark::State &st) {
 	for (int n = st.range(0); n > 0; n--) {
 		db::Tuple tuple({
 			.lEntityId   = xid::next(),
 			.lEntityType = "user",
 			.relation    = "member",
-			.rEntityId   = "bm_relations.optimise",
+			.rEntityId   = "bm_relations.optimize",
 			.rEntityType = "group",
 		});
 
@@ -87,17 +88,17 @@ BENCHMARK_DEFINE_F(bm_relations, optimise)(benchmark::State &st) {
 	svc::Relations  svc;
 
 	rpcCreate::request_type request;
-	request.set_optimise(true);
+	request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 	request.set_cost_limit(std::numeric_limits<std::uint16_t>::max());
 
 	auto *left = request.mutable_left_entity();
-	left->set_id("bm_relations.optimise");
+	left->set_id("bm_relations.optimize");
 	left->set_type("group");
 
 	request.set_relation("parent");
 
 	auto *right = request.mutable_right_entity();
-	right->set_type("bm_relations.optimise");
+	right->set_type("bm_relations.optimize");
 
 	request.set_strand("member");
 
@@ -124,9 +125,9 @@ BENCHMARK_DEFINE_F(bm_relations, optimise)(benchmark::State &st) {
 		{"writes", benchmark::Counter(cost, benchmark::Counter::kIsRate)},
 	});
 }
-BENCHMARK_REGISTER_F(bm_relations, optimise)->Range(8, 2 << 10);
+BENCHMARK_REGISTER_F(bm_relations, optimize)->Range(8, 2 << 10);
 
-// Benchmark optimise algorithm for creating deeply nested relations. e.g.
+// Benchmark optimize algorithm for creating deeply nested relations. e.g.
 //      strand  |  l_entity_id  | relation |  r_entity_id
 //     ---------+---------------+----------+---------------
 //              | group:admins  | admins   | group:editors     <- create(1)
@@ -134,7 +135,7 @@ BENCHMARK_REGISTER_F(bm_relations, optimise)->Range(8, 2 << 10);
 //      editors | group:writers | readers  | group:readers     <- create(3)
 //              | group:admins  | editors  | group:writers     <- compute(2)
 //              | group:editors | readers  | group:readers     <- compute(3)
-BENCHMARK_DEFINE_F(bm_relations, optimise_nested)(benchmark::State &st) {
+BENCHMARK_DEFINE_F(bm_relations, optimize_nested)(benchmark::State &st) {
 	grpcxx::context ctx;
 	svc::Relations  svc;
 
@@ -145,7 +146,7 @@ BENCHMARK_DEFINE_F(bm_relations, optimise_nested)(benchmark::State &st) {
 	for (auto _ : st) {
 		st.PauseTiming();
 		rpcCreate::request_type request;
-		request.set_optimise(true);
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 		request.set_cost_limit(std::numeric_limits<std::uint16_t>::max());
 
 		auto *left = request.mutable_left_entity();
@@ -196,4 +197,4 @@ BENCHMARK_DEFINE_F(bm_relations, optimise_nested)(benchmark::State &st) {
 		{"writes", benchmark::Counter(cost, benchmark::Counter::kIsRate)},
 	});
 }
-BENCHMARK_REGISTER_F(bm_relations, optimise_nested)->Range(8, 512);
+BENCHMARK_REGISTER_F(bm_relations, optimize_nested)->Range(8, 512);
