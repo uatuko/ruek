@@ -54,8 +54,8 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 	response.set_found(false);
 
 	// Direct strategy
-	if (auto tuples = db::LookupTuples(
-			ctx.meta(common::space_id_v), left, req.relation(), right, std::nullopt, "", 1);
+	if (auto tuples =
+			db::LookupTuples(ctx.meta(common::space_id_v), left, req.relation(), right, {}, {}, 1);
 		!tuples.empty()) {
 
 		response.set_cost(cost);
