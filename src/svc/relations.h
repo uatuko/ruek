@@ -53,7 +53,7 @@ private:
 		const db::Tuples                                            &from,
 		google::protobuf::RepeatedPtrField<sentium::api::v1::Tuple> *to) const noexcept;
 
-	// Check for a relation between left & right entities using the `spot` algorithm.
+	// Check for a relation between left and right entities using the `spot` algorithm.
 	spot_t spot(
 		std::string_view spaceId, db::Tuple::Entity left, std::string_view relation,
 		db::Tuple::Entity right, std::uint16_t limit) const;
