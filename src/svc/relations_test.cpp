@@ -39,6 +39,7 @@ TEST_F(svc_RelationsTest, Check) {
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcCheck::request_type request;
+		request.set_strategy(static_cast<std::uint32_t>(svc::common::strategy_t::direct));
 
 		auto *left = request.mutable_left_entity();
 		left->set_id(tuple.lEntityId());
