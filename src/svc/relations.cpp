@@ -95,6 +95,10 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 		}
 	}
 
+	if (cost >= limit) {
+		cost *= -1;
+	}
+
 	response.set_cost(cost);
 
 	return {grpcxx::status::code_t::ok, response};

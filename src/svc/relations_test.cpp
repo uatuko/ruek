@@ -171,6 +171,7 @@ TEST_F(svc_RelationsTest, Check) {
 		// Checks:
 		//   1. []user:jane/reader/doc:notes.txt - ✓
 		//   2. []user:jane/owner/doc:notes.txt - ✗
+		//   *. []user:jane/reader/doc:notes.txt (with cost limit of 1) - ✗
 
 		db::Tuples tuples({
 			{{
@@ -268,6 +269,30 @@ TEST_F(svc_RelationsTest, Check) {
 			ASSERT_TRUE(result.response);
 			EXPECT_FALSE(result.response->found());
 			EXPECT_EQ(3, result.response->cost());
+			EXPECT_FALSE(result.response->has_tuple());
+		}
+
+		// Check * - []user:jane/reader/doc:notes.txt (with cost limit of 1)
+		// This must be the last check to ensure it doesn't impact other tests.
+		{
+			request.set_cost_limit(1);
+
+			auto *left = request.mutable_left_entity();
+			left->set_id(tuples[0].lEntityId());
+			left->set_type(tuples[0].lEntityType());
+
+			request.set_relation(tuples[1].relation());
+
+			auto *right = request.mutable_right_entity();
+			right->set_id(tuples[1].rEntityId());
+			right->set_type(tuples[1].rEntityType());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_FALSE(result.response->found());
+			EXPECT_EQ(-1, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
 		}
 	}
