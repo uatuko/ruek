@@ -157,12 +157,20 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_FALSE(result.response->has_tuple());
 	}
 
-	// Success: found with set strategy
+	// Success: check with set strategy
 	{
+		// Data:
+		//
 		//  strand |  l_entity_id   | relation |  r_entity_id
 		// --------+----------------+----------+---------------
 		//         | user:jane      | member   | group:readers
 		//  member | group:readers  | reader   | doc:notes.txt
+		//         | user:jane      | member   | group:owners
+		//  owner  | group:owners   | owner    | doc:notes.txt
+		//
+		// Checks:
+		//   1. []user:jane/reader/doc:notes.txt - ✓
+		//   2. []user:jane/owner/doc:notes.txt - ✗
 
 		db::Tuples tuples({
 			{{
@@ -180,6 +188,21 @@ TEST_F(svc_RelationsTest, Check) {
 				.rEntityType = "svc_RelationsTest.Check-with_set_strategy",
 				.strand      = "member",
 			}},
+			{{
+				.lEntityId   = "user:jane",
+				.lEntityType = "svc_RelationsTest.Check-with_set_strategy",
+				.relation    = "member",
+				.rEntityId   = "group:owners",
+				.rEntityType = "svc_RelationsTest.Check-with_set_strategy",
+			}},
+			{{
+				.lEntityId   = "group:owners",
+				.lEntityType = "svc_RelationsTest.Check-with_set_strategy",
+				.relation    = "owner",
+				.rEntityId   = "doc:notes.txt",
+				.rEntityType = "svc_RelationsTest.Check-with_set_strategy",
+				.strand      = "owner",
+			}},
 		});
 
 		for (auto &t : tuples) {
@@ -189,39 +212,64 @@ TEST_F(svc_RelationsTest, Check) {
 		rpcCheck::request_type request;
 		request.set_strategy(static_cast<std::uint32_t>(svc::common::strategy_t::set));
 
-		auto *left = request.mutable_left_entity();
-		left->set_id(tuples[0].lEntityId());
-		left->set_type(tuples[0].lEntityType());
-
-		request.set_relation(tuples[1].relation());
-
-		auto *right = request.mutable_right_entity();
-		right->set_id(tuples[1].rEntityId());
-		right->set_type(tuples[1].rEntityType());
-
 		rpcCheck::result_type result;
-		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
 
-		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		ASSERT_TRUE(result.response);
-		EXPECT_EQ(true, result.response->found());
-		EXPECT_EQ(2, result.response->cost());
-		ASSERT_TRUE(result.response->has_tuple());
+		// Check 1 - []user:jane/reader/doc:notes.txt
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id(tuples[0].lEntityId());
+			left->set_type(tuples[0].lEntityType());
 
-		auto &actual = result.response->tuple();
-		EXPECT_EQ(tuples[0].spaceId(), actual.space_id());
-		EXPECT_TRUE(actual.id().empty());
-		EXPECT_FALSE(actual.has_left_principal_id());
-		EXPECT_EQ(tuples[0].lEntityId(), actual.left_entity().id());
-		EXPECT_EQ(tuples[0].lEntityType(), actual.left_entity().type());
-		EXPECT_EQ(tuples[1].relation(), actual.relation());
-		EXPECT_FALSE(actual.has_right_principal_id());
-		EXPECT_EQ(tuples[1].rEntityId(), actual.right_entity().id());
-		EXPECT_EQ(tuples[1].rEntityType(), actual.right_entity().type());
-		EXPECT_TRUE(actual.strand().empty());
-		EXPECT_FALSE(actual.has_attrs());
-		EXPECT_EQ(tuples[0].id(), actual.ref_id_left());
-		EXPECT_EQ(tuples[1].id(), actual.ref_id_right());
+			request.set_relation(tuples[1].relation());
+
+			auto *right = request.mutable_right_entity();
+			right->set_id(tuples[1].rEntityId());
+			right->set_type(tuples[1].rEntityType());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(true, result.response->found());
+			EXPECT_EQ(2, result.response->cost());
+			ASSERT_TRUE(result.response->has_tuple());
+
+			auto &actual = result.response->tuple();
+			EXPECT_EQ(tuples[0].spaceId(), actual.space_id());
+			EXPECT_TRUE(actual.id().empty());
+			EXPECT_FALSE(actual.has_left_principal_id());
+			EXPECT_EQ(tuples[0].lEntityId(), actual.left_entity().id());
+			EXPECT_EQ(tuples[0].lEntityType(), actual.left_entity().type());
+			EXPECT_EQ(tuples[1].relation(), actual.relation());
+			EXPECT_FALSE(actual.has_right_principal_id());
+			EXPECT_EQ(tuples[1].rEntityId(), actual.right_entity().id());
+			EXPECT_EQ(tuples[1].rEntityType(), actual.right_entity().type());
+			EXPECT_TRUE(actual.strand().empty());
+			EXPECT_FALSE(actual.has_attrs());
+			EXPECT_EQ(tuples[0].id(), actual.ref_id_left());
+			EXPECT_EQ(tuples[1].id(), actual.ref_id_right());
+		}
+
+		// Check 2 - []user:jane/owner/doc:notes.txt
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id(tuples[0].lEntityId());
+			left->set_type(tuples[0].lEntityType());
+
+			request.set_relation(tuples[3].relation());
+
+			auto *right = request.mutable_right_entity();
+			right->set_id(tuples[3].rEntityId());
+			right->set_type(tuples[3].rEntityType());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_FALSE(result.response->found());
+			EXPECT_EQ(3, result.response->cost());
+			EXPECT_FALSE(result.response->has_tuple());
+		}
 	}
 
 	// Error: invalid strategy
