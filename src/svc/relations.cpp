@@ -26,7 +26,6 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 			break;
 		default:
 			throw err::RpcRelationsInvalidStrategy();
-			break;
 		}
 	}
 
@@ -119,7 +118,6 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 			break;
 		default:
 			throw err::RpcRelationsInvalidStrategy();
-			break;
 		}
 	}
 
