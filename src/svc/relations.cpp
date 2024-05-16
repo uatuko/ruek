@@ -67,31 +67,12 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 
 	// Set strategy
 	if (cost < limit && common::strategy_t::set == strategy) {
-		auto t1 = db::ListTuplesRight(ctx.meta(common::space_id_v), left, {}, {}, limit);
-		auto t2 =
-			db::ListTuplesLeft(ctx.meta(common::space_id_v), right, req.relation(), {}, limit);
+		auto r = spot(ctx.meta(common::space_id_v), left, req.relation(), right, limit);
 
-		auto i = t1.cbegin();
-		auto j = t2.cbegin();
-		while (i != t1.cend() && j != t2.cend()) {
-			cost++;
-			auto r = i->rEntityId().compare(j->lEntityId());
-
-			if (r == 0) {
-				if (i->relation() == j->strand() && i->rEntityType() == j->lEntityType()) {
-					response.set_found(true);
-					map(db::Tuple(*i, *j), response.mutable_tuple());
-					break;
-				} else {
-					i++;
-				}
-			}
-
-			if (r > 0) {
-				i++;
-			} else {
-				j++;
-			}
+		cost += r.cost;
+		if (r.tuple) {
+			response.set_found(true);
+			map(*r.tuple, response.mutable_tuple());
 		}
 	}
 
@@ -427,6 +408,39 @@ void Impl::map(
 	for (const auto &t : from) {
 		map(t, to->Add());
 	}
+}
+
+Impl::spot_t Impl::spot(
+	std::string_view spaceId, db::Tuple::Entity left, std::string_view relation,
+	db::Tuple::Entity right, std::uint16_t limit) const {
+
+	std::int32_t cost = 0;
+
+	auto t1 = db::ListTuplesRight(spaceId, left, {}, {}, limit);
+	auto t2 = db::ListTuplesLeft(spaceId, right, relation, {}, limit);
+
+	auto i = t1.cbegin();
+	auto j = t2.cbegin();
+	while (i != t1.cend() && j != t2.cend()) {
+		cost++;
+		auto r = i->rEntityId().compare(j->lEntityId());
+
+		if (r == 0) {
+			if (i->relation() == j->strand() && i->rEntityType() == j->lEntityType()) {
+				return {cost, db::Tuple(*i, *j)};
+			} else {
+				i++;
+			}
+		}
+
+		if (r > 0) {
+			i++;
+		} else {
+			j++;
+		}
+	}
+
+	return {cost, {}};
 }
 } // namespace relations
 } // namespace svc
