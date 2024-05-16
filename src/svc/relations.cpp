@@ -105,22 +105,26 @@ template <>
 rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
 
-	auto tuple = map(ctx, req);
-	tuple.store();
-
 	auto strategy = common::strategy_t::graph;
 	if (req.has_optimize()) {
 		switch (common::strategy_t(req.optimize())) {
 		case common::strategy_t::direct:
 			strategy = common::strategy_t::direct;
 			break;
+		case common::strategy_t::graph:
+			strategy = common::strategy_t::graph;
+			break;
 		case common::strategy_t::set:
 			strategy = common::strategy_t::set;
 			break;
 		default:
+			throw err::RpcRelationsInvalidStrategy();
 			break;
 		}
 	}
+
+	auto tuple = map(ctx, req);
+	tuple.store();
 
 	rpcCreate::response_type response = map(tuple);
 
@@ -322,6 +326,9 @@ google::rpc::Status Impl::exception() noexcept {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbTupleInvalidKey &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
+	} catch (const err::RpcRelationsInvalidStrategy &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
 	} catch (const std::exception &e) {

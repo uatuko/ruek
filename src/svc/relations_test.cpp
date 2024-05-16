@@ -223,6 +223,22 @@ TEST_F(svc_RelationsTest, Check) {
 		EXPECT_EQ(tuples[0].id(), actual.ref_id_left());
 		EXPECT_EQ(tuples[1].id(), actual.ref_id_right());
 	}
+
+	// Error: invalid strategy
+	{
+		rpcCheck::request_type request;
+		request.set_strategy(0);
+
+		rpcCheck::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
+		EXPECT_EQ(
+			"CAMSLltzZW50aXVtOjIuMi4xLjQwMF0gSW52YWxpZCByZWxhdGlvbnMgc3RyYXRlZ3k=",
+			result.status.details());
+
+		EXPECT_FALSE(result.response);
+	}
 }
 
 TEST_F(svc_RelationsTest, Create) {
@@ -232,6 +248,7 @@ TEST_F(svc_RelationsTest, Create) {
 	// Success: create relation
 	{
 		rpcCreate::request_type request;
+		request.set_optimize(static_cast<std::uint32_t>(svc::common::strategy_t::graph));
 
 		auto *left = request.mutable_left_entity();
 		left->set_id("left");
@@ -786,6 +803,22 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
 		ASSERT_FALSE(result.response);
+	}
+
+	// Error: invalid optmization strategy
+	{
+		rpcCreate::request_type request;
+		request.set_optimize(0);
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
+		EXPECT_EQ(
+			"CAMSLltzZW50aXVtOjIuMi4xLjQwMF0gSW52YWxpZCByZWxhdGlvbnMgc3RyYXRlZ3k=",
+			result.status.details());
+
+		EXPECT_FALSE(result.response);
 	}
 }
 
