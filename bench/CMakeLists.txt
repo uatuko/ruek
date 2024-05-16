@@ -1,4 +1,5 @@
 add_executable(${PROJECT_NAME}_bench
+	algorithms_test.cpp
 	main.cpp
 	relations_test.cpp
 )

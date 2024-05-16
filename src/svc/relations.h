@@ -39,6 +39,11 @@ public:
 	google::rpc::Status exception() noexcept;
 
 private:
+	struct spot_t {
+		std::int32_t             cost;
+		std::optional<db::Tuple> tuple;
+	};
+
 	db::Tuple map(const grpcxx::context &ctx, const rpcCreate::request_type &from) const noexcept;
 
 	rpcCreate::response_type map(const db::Tuple &from) const noexcept;
@@ -47,6 +52,11 @@ private:
 	void map(
 		const db::Tuples                                            &from,
 		google::protobuf::RepeatedPtrField<sentium::api::v1::Tuple> *to) const noexcept;
+
+	// Check for a relation between left and right entities using the `spot` algorithm.
+	spot_t spot(
+		std::string_view spaceId, db::Tuple::Entity left, std::string_view relation,
+		db::Tuple::Entity right, std::uint16_t limit) const;
 };
 } // namespace relations
 } // namespace svc

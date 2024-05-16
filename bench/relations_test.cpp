@@ -20,6 +20,87 @@ public:
 	void TearDown(benchmark::State &state) { db::testing::teardown(); }
 };
 
+// Benchmark check relations with set strategy.
+// Different numbers of tuple "sets" are generated and linked randomly. e.g.
+//    strand |  l_entity_id   | relation |  r_entity_id
+//   --------+----------------+----------+---------------
+//           | user:jane      | member   | group:readers
+//    member | group:readers  | reader   | doc:notes.txt
+BENCHMARK_DEFINE_F(bm_relations, check_set)(benchmark::State &st) {
+	for (auto n = st.range(0); n > 0; n--) {
+		auto       gid = xid::next();
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "bm_relations.check_set",
+				.lEntityType = "user",
+				.relation    = "member",
+				.rEntityId   = gid,
+				.rEntityType = "group",
+			}},
+			{{
+				.lEntityId   = gid,
+				.lEntityType = "group",
+				.relation    = "reader",
+				.rEntityId   = "bm_relations.check_set",
+				.rEntityType = "doc",
+			}},
+		});
+
+		if (std::rand() % n == 0) {
+			tuples[1].strand(tuples[0].relation());
+		}
+
+		for (auto &t : tuples) {
+			try {
+				t.store();
+			} catch (const std::exception &e) {
+				st.SkipWithError(e.what());
+				break;
+			}
+		}
+	}
+
+	grpcxx::context ctx;
+	svc::Relations  svc;
+
+	rpcCheck::request_type request;
+	request.set_strategy(static_cast<std::uint32_t>(svc::common::strategy_t::set));
+	request.set_cost_limit(std::numeric_limits<std::uint16_t>::max());
+
+	auto *left = request.mutable_left_entity();
+	left->set_id("bm_relations.check_set");
+	left->set_type("user");
+
+	request.set_relation("reader");
+
+	auto *right = request.mutable_right_entity();
+	right->set_id("bm_relations.check_set");
+	right->set_type("doc");
+
+	std::size_t ops  = 0;
+	std::size_t cost = 0;
+
+	rpcCheck::result_type result;
+
+	for (auto _ : st) {
+		st.PauseTiming();
+		ops++;
+		st.ResumeTiming();
+
+		result = svc.call<rpcCheck>(ctx, request);
+
+		st.PauseTiming();
+		cost += result.response->cost();
+		st.ResumeTiming();
+	}
+
+	st.counters.insert({
+		{"ops", benchmark::Counter(ops, benchmark::Counter::kIsRate)},
+		{"comparisons", benchmark::Counter(cost, benchmark::Counter::kIsRate)},
+	});
+}
+BENCHMARK_REGISTER_F(bm_relations, check_set)->Range(8, 8 << 10);
+
 // Attempts to create as many direct relations as possible.
 // e.g. []user:jane/member/group:viewers
 BENCHMARK_F(bm_relations, create)(benchmark::State &st) {

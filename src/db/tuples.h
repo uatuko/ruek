@@ -80,7 +80,9 @@ public:
 	}
 
 	const std::string &spaceId() const noexcept { return _data.spaceId; }
+
 	const std::string &strand() const noexcept { return _data.strand; }
+	void               strand(const std::string &strand) noexcept { _data.strand = strand; }
 
 	const std::string &id() const noexcept { return _id; }
 	const int         &rev() const noexcept { return _rev; }

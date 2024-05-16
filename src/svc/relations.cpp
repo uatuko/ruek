@@ -14,6 +14,28 @@ namespace relations {
 template <>
 rpcCheck::result_type Impl::call<rpcCheck>(
 	grpcxx::context &ctx, const rpcCheck::request_type &req) {
+
+	auto strategy = common::strategy_t::direct;
+	if (req.has_strategy()) {
+		switch (common::strategy_t(req.strategy())) {
+		case common::strategy_t::direct:
+			strategy = common::strategy_t::direct;
+			break;
+		case common::strategy_t::set:
+			strategy = common::strategy_t::set;
+			break;
+		default:
+			throw err::RpcRelationsInvalidStrategy();
+		}
+	}
+
+	std::int32_t  cost  = 1;
+	std::uint16_t limit = common::cost_limit_v;
+
+	if (req.cost_limit() > 0 && req.cost_limit() <= std::numeric_limits<std::uint16_t>::max()) {
+		limit = req.cost_limit();
+	}
+
 	db::Tuple::Entity left, right;
 
 	if (req.has_left_principal_id()) {
@@ -29,15 +51,36 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 	}
 
 	rpcCheck::response_type response;
-	response.set_cost(1);
-	if (auto tuples = db::LookupTuples(
-			ctx.meta(common::space_id_v), left, req.relation(), right, std::nullopt, "", 1);
+	response.set_found(false);
+
+	// Direct strategy
+	if (auto tuples =
+			db::LookupTuples(ctx.meta(common::space_id_v), left, req.relation(), right, {}, {}, 1);
 		!tuples.empty()) {
+
+		response.set_cost(cost);
 		response.set_found(true);
 		map(tuples.front(), response.mutable_tuple());
-	} else {
-		response.set_found(false);
+
+		return {grpcxx::status::code_t::ok, response};
 	}
+
+	// Set strategy
+	if (cost < limit && common::strategy_t::set == strategy) {
+		auto r = spot(ctx.meta(common::space_id_v), left, req.relation(), right, limit);
+
+		cost += r.cost;
+		if (r.tuple) {
+			response.set_found(true);
+			map(*r.tuple, response.mutable_tuple());
+		}
+	}
+
+	if (cost >= limit) {
+		cost *= -1;
+	}
+
+	response.set_cost(cost);
 
 	return {grpcxx::status::code_t::ok, response};
 }
@@ -46,22 +89,25 @@ template <>
 rpcCreate::result_type Impl::call<rpcCreate>(
 	grpcxx::context &ctx, const rpcCreate::request_type &req) {
 
-	auto tuple = map(ctx, req);
-	tuple.store();
-
 	auto strategy = common::strategy_t::graph;
 	if (req.has_optimize()) {
 		switch (common::strategy_t(req.optimize())) {
 		case common::strategy_t::direct:
 			strategy = common::strategy_t::direct;
 			break;
+		case common::strategy_t::graph:
+			strategy = common::strategy_t::graph;
+			break;
 		case common::strategy_t::set:
 			strategy = common::strategy_t::set;
 			break;
 		default:
-			break;
+			throw err::RpcRelationsInvalidStrategy();
 		}
 	}
+
+	auto tuple = map(ctx, req);
+	tuple.store();
 
 	rpcCreate::response_type response = map(tuple);
 
@@ -265,6 +311,9 @@ google::rpc::Status Impl::exception() noexcept {
 	} catch (const err::DbTupleInvalidKey &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
+	} catch (const err::RpcRelationsInvalidStrategy &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
 	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);
 		status.set_message(e.what());
@@ -359,6 +408,39 @@ void Impl::map(
 	for (const auto &t : from) {
 		map(t, to->Add());
 	}
+}
+
+Impl::spot_t Impl::spot(
+	std::string_view spaceId, db::Tuple::Entity left, std::string_view relation,
+	db::Tuple::Entity right, std::uint16_t limit) const {
+
+	std::int32_t cost = 0;
+
+	auto t1 = db::ListTuplesRight(spaceId, left, {}, {}, limit);
+	auto t2 = db::ListTuplesLeft(spaceId, right, relation, {}, limit);
+
+	auto i = t1.cbegin();
+	auto j = t2.cbegin();
+	while (i != t1.cend() && j != t2.cend()) {
+		cost++;
+		auto r = i->rEntityId().compare(j->lEntityId());
+
+		if (r == 0) {
+			if (i->relation() == j->strand() && i->rEntityType() == j->lEntityType()) {
+				return {cost, db::Tuple(*i, *j)};
+			} else {
+				i++;
+			}
+		}
+
+		if (r > 0) {
+			i++;
+		} else {
+			j++;
+		}
+	}
+
+	return {cost, {}};
 }
 } // namespace relations
 } // namespace svc
