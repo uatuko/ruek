@@ -31,6 +31,9 @@ endif
 .PHONY: $(binary) clean lint lint\:ci lint\:fix
 .SILENT: coverage lint lint\:fix
 
+%:
+	@:
+
 all: $(binary)
 
 $(binary): $(buildfile)
@@ -40,7 +43,7 @@ $(buildfile):
 	cmake -B $(builddir) -G Ninja
 
 bench: $(binary)
-	$(benchbin)
+	$(benchbin) $(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)
 
 clean:
 	cmake --build $(builddir) --target clean
