@@ -298,6 +298,133 @@ TEST_F(svc_RelationsTest, Check) {
 		}
 	}
 
+	// Success: check with graph strategy
+	{
+		// Data:
+		//
+		//  strand |  l_entity_id   | relation |  r_entity_id
+		// --------+----------------+----------+---------------
+		//         | user:jane      | member   | group:writers
+		//  member | group:writers  | member   | group:readers
+		//  member | group:readers  | reader   | doc:notes.txt
+		//  member | group:readers  | member   | group:loop
+		//  member | group:loop     | member   | group:writers
+		//  owner  | group:writers  | owner    | doc:notes.txt
+		//
+		// Checks:
+		//   1. []user:jane/reader/doc:notes.txt - ✓
+		//   2. []user:jane/owner/doc:notes.txt - ✗
+		//   *. []user:jane/reader/doc:notes.txt (with cost limit of 1) - ✗
+
+		db::Tuples tuples({
+			{{
+				.lEntityId   = "user:jane",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "member",
+				.rEntityId   = "group:writers",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+			}},
+			{{
+				.lEntityId   = "group:writers",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "member",
+				.rEntityId   = "group:readers",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.strand      = "member",
+			}},
+			{{
+				.lEntityId   = "group:readers",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "reader",
+				.rEntityId   = "doc:notes.txt",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.strand      = "member",
+			}},
+			{{
+				.lEntityId   = "group:readers",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "member",
+				.rEntityId   = "group:loop",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.strand      = "member",
+			}},
+			{{
+				.lEntityId   = "group:loop",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "member",
+				.rEntityId   = "group:writers",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.strand      = "member",
+			}},
+			{{
+				.lEntityId   = "group:writers",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "owner",
+				.rEntityId   = "doc:notes.txt",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.strand      = "owner",
+			}},
+		});
+
+		for (auto &t : tuples) {
+			ASSERT_NO_THROW(t.store());
+		}
+
+		rpcCheck::request_type request;
+		request.set_strategy(static_cast<std::uint32_t>(svc::common::strategy_t::graph));
+
+		rpcCheck::result_type result;
+
+		// Check 1 - []user:jane/reader/doc:notes.txt
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id(tuples[0].lEntityId());
+			left->set_type(tuples[0].lEntityType());
+
+			request.set_relation(tuples[2].relation());
+
+			auto *right = request.mutable_right_entity();
+			right->set_id(tuples[2].rEntityId());
+			right->set_type(tuples[2].rEntityType());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(true, result.response->found());
+			EXPECT_EQ(3, result.response->cost());
+			EXPECT_FALSE(result.response->has_tuple());
+			ASSERT_EQ(3, result.response->path().size());
+
+			const auto &actual = result.response->path();
+			EXPECT_EQ(tuples[0].id(), actual[0].id());
+			EXPECT_EQ(tuples[1].id(), actual[1].id());
+			EXPECT_EQ(tuples[2].id(), actual[2].id());
+		}
+
+		// Check 2 - []user:jane/owner/doc:notes.txt
+		{
+			auto *left = request.mutable_left_entity();
+			left->set_id(tuples[0].lEntityId());
+			left->set_type(tuples[0].lEntityType());
+
+			request.set_relation("woner");
+
+			auto *right = request.mutable_right_entity();
+			right->set_id(tuples[2].rEntityId());
+			right->set_type(tuples[2].rEntityType());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_EQ(false, result.response->found());
+			EXPECT_EQ(6, result.response->cost());
+			EXPECT_FALSE(result.response->has_tuple());
+			EXPECT_TRUE(result.response->path().empty());
+		}
+	}
+
 	// Error: invalid strategy
 	{
 		rpcCheck::request_type request;

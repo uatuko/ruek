@@ -1,5 +1,7 @@
 #include "relations.h"
 
+#include <unordered_set>
+
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
@@ -20,6 +22,9 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 		switch (common::strategy_t(req.strategy())) {
 		case common::strategy_t::direct:
 			strategy = common::strategy_t::direct;
+			break;
+		case common::strategy_t::graph:
+			strategy = common::strategy_t::graph;
 			break;
 		case common::strategy_t::set:
 			strategy = common::strategy_t::set;
@@ -73,6 +78,24 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 		if (r.tuple) {
 			response.set_found(true);
 			map(*r.tuple, response.mutable_tuple());
+		}
+	}
+
+	// Graph strategy
+	if (cost < limit && common::strategy_t::graph == strategy) {
+		auto r = graph(ctx.meta(common::space_id_v), left, req.relation(), right, limit);
+
+		cost += r.cost;
+		if (!r.path.empty()) {
+			response.set_found(true);
+
+			auto *path = response.mutable_path();
+			path->Reserve(r.path.size());
+
+			while (!r.path.empty()) {
+				map(r.path.front(), path->Add());
+				r.path.pop();
+			}
 		}
 	}
 
@@ -320,6 +343,109 @@ google::rpc::Status Impl::exception() noexcept {
 	}
 
 	return status;
+}
+
+Impl::graph_t Impl::graph(
+	std::string_view spaceId, db::Tuple::Entity left, std::string_view relation,
+	db::Tuple::Entity right, std::uint16_t limit) const {
+
+	class vertex_t {
+	public:
+		using path_t = std::queue<db::Tuple>;
+
+		struct hasher {
+			void combine(std::size_t &seed, const std::string &v) const noexcept {
+				seed ^= std::hash<std::string>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			}
+
+			std::size_t operator()(const vertex_t &v) const noexcept {
+				std::size_t seed = 0;
+				combine(seed, v.relation());
+				combine(seed, v.entityType());
+				combine(seed, v.entityId());
+
+				return seed;
+			}
+		};
+
+		vertex_t(vertex_t &&) = default;
+
+		// Copy constructor is _only_ used when keeping track of visited vertices. In order to
+		// _potentially_ save memory `_path` is ignored.
+		vertex_t(const vertex_t &v) noexcept :
+			_entityId(v._entityId), _entityType(v._entityType), _relation(v._relation){};
+
+		vertex_t(db::Tuple &&t) :
+			_entityId(t.rEntityId()), _entityType(t.rEntityType()), _relation(t.relation()) {
+			_path.push(std::move(t));
+		}
+
+		vertex_t(const vertex_t &v, db::Tuple &&t) :
+			_entityId(t.rEntityId()), _entityType(t.rEntityType()), _path(v._path),
+			_relation(t.relation()) {
+			_path.push(std::move(t));
+		}
+
+		bool operator==(const vertex_t &rhs) const noexcept {
+			return (
+				_entityId == rhs._entityId && _entityType == rhs._entityType &&
+				_relation == rhs._relation);
+		}
+
+		const std::string &entityId() const noexcept { return _entityId; }
+		const std::string &entityType() const noexcept { return _entityType; }
+		const std::string &relation() const noexcept { return _relation; }
+
+		path_t &path() noexcept { return _path; }
+
+	private:
+		std::string _entityId;
+		std::string _entityType;
+		path_t      _path;
+		std::string _relation;
+	};
+
+	std::int32_t         cost = 0;
+	std::queue<vertex_t> queue;
+
+	// Assume there's no direct relation between left and right entities to begin with
+	{
+		auto tuples = db::ListTuplesRight(spaceId, left, {}, {}, limit);
+		for (auto &t : tuples) {
+			queue.emplace(std::move(t));
+		}
+	}
+
+	// Keep track of visited vertices to avoid circular lookups
+	std::unordered_set<vertex_t, vertex_t::hasher> visited;
+
+	while (!queue.empty() && cost++ < limit) {
+		auto v = std::move(queue.front());
+		queue.pop();
+
+		if (visited.contains(v)) {
+			continue;
+		}
+
+		visited.insert(v);
+		for (auto &t :
+			 db::ListTuplesRight(spaceId, {v.entityType(), v.entityId()}, {}, {}, limit)) {
+			if (v.relation() != t.strand()) {
+				continue;
+			}
+
+			if (t.relation() == relation && t.rEntityId() == right.id() &&
+				t.rEntityType() == right.type()) {
+				// Found
+				v.path().push(std::move(t));
+				return {cost, v.path()};
+			}
+
+			queue.emplace(v, std::move(t));
+		}
+	}
+
+	return {cost, {}};
 }
 
 db::Tuple Impl::map(
