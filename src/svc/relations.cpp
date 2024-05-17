@@ -70,32 +70,43 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 		return {grpcxx::status::code_t::ok, response};
 	}
 
-	// Set strategy
-	if (cost < limit && common::strategy_t::set == strategy) {
-		auto r = spot(ctx.meta(common::space_id_v), left, req.relation(), right, limit);
+	if (cost < limit) {
+		switch (strategy) {
 
-		cost += r.cost;
-		if (r.tuple) {
-			response.set_found(true);
-			map(*r.tuple, response.mutable_tuple());
-		}
-	}
+		// Graph strategy
+		case common::strategy_t::graph: {
+			auto r = graph(ctx.meta(common::space_id_v), left, req.relation(), right, limit);
 
-	// Graph strategy
-	if (cost < limit && common::strategy_t::graph == strategy) {
-		auto r = graph(ctx.meta(common::space_id_v), left, req.relation(), right, limit);
+			cost += r.cost;
+			if (!r.path.empty()) {
+				response.set_found(true);
 
-		cost += r.cost;
-		if (!r.path.empty()) {
-			response.set_found(true);
-
-			auto *path = response.mutable_path();
-			path->Reserve(r.path.size());
-
-			while (!r.path.empty()) {
-				map(r.path.front(), path->Add());
-				r.path.pop();
+				auto *path = response.mutable_path();
+				path->Reserve(r.path.size());
+				while (!r.path.empty()) {
+					map(r.path.front(), path->Add());
+					r.path.pop();
+				}
 			}
+
+			break;
+		}
+
+		// Set strategy
+		case common::strategy_t::set: {
+			auto r = spot(ctx.meta(common::space_id_v), left, req.relation(), right, limit);
+
+			cost += r.cost;
+			if (r.tuple) {
+				response.set_found(true);
+				map(*r.tuple, response.mutable_tuple());
+			}
+
+			break;
+		}
+
+		default:
+			break;
 		}
 	}
 
