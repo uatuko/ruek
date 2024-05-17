@@ -304,7 +304,8 @@ TEST_F(svc_RelationsTest, Check) {
 		//
 		//  strand |  l_entity_id   | relation |  r_entity_id
 		// --------+----------------+----------+---------------
-		//         | user:jane      | member   | group:writers
+		//         | user:jane      | member   | group:admins
+		//  member | group:admins   | member   | group:writers
 		//  member | group:writers  | member   | group:readers
 		//  member | group:readers  | reader   | doc:notes.txt
 		//  member | group:readers  | member   | group:loop
@@ -314,15 +315,23 @@ TEST_F(svc_RelationsTest, Check) {
 		// Checks:
 		//   1. []user:jane/reader/doc:notes.txt - ✓
 		//   2. []user:jane/owner/doc:notes.txt - ✗
-		//   *. []user:jane/reader/doc:notes.txt (with cost limit of 1) - ✗
+		//   *. []user:jane/member/group:loop (with cost limit of 2) - ✗
 
 		db::Tuples tuples({
 			{{
 				.lEntityId   = "user:jane",
 				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
 				.relation    = "member",
+				.rEntityId   = "group:admins",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+			}},
+			{{
+				.lEntityId   = "group:admins",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "member",
 				.rEntityId   = "group:writers",
 				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.strand      = "member",
 			}},
 			{{
 				.lEntityId   = "group:writers",
@@ -381,25 +390,26 @@ TEST_F(svc_RelationsTest, Check) {
 			left->set_id(tuples[0].lEntityId());
 			left->set_type(tuples[0].lEntityType());
 
-			request.set_relation(tuples[2].relation());
+			request.set_relation(tuples[3].relation());
 
 			auto *right = request.mutable_right_entity();
-			right->set_id(tuples[2].rEntityId());
-			right->set_type(tuples[2].rEntityType());
+			right->set_id(tuples[3].rEntityId());
+			right->set_type(tuples[3].rEntityType());
 
 			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
 
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(true, result.response->found());
-			EXPECT_EQ(3, result.response->cost());
+			EXPECT_EQ(4, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
-			ASSERT_EQ(3, result.response->path().size());
+			ASSERT_EQ(4, result.response->path().size());
 
 			const auto &actual = result.response->path();
 			EXPECT_EQ(tuples[0].id(), actual[0].id());
 			EXPECT_EQ(tuples[1].id(), actual[1].id());
 			EXPECT_EQ(tuples[2].id(), actual[2].id());
+			EXPECT_EQ(tuples[3].id(), actual[3].id());
 		}
 
 		// Check 2 - []user:jane/owner/doc:notes.txt
@@ -419,7 +429,32 @@ TEST_F(svc_RelationsTest, Check) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(false, result.response->found());
-			EXPECT_EQ(6, result.response->cost());
+			EXPECT_EQ(7, result.response->cost());
+			EXPECT_FALSE(result.response->has_tuple());
+			EXPECT_TRUE(result.response->path().empty());
+		}
+
+		// Check * - []user:jane/reader/doc:notes.txt (with cost limit of 2)
+		// This must be the last check to ensure it doesn't impact other tests.
+		{
+			request.set_cost_limit(2);
+
+			auto *left = request.mutable_left_entity();
+			left->set_id(tuples[0].lEntityId());
+			left->set_type(tuples[0].lEntityType());
+
+			request.set_relation(tuples[3].relation());
+
+			auto *right = request.mutable_right_entity();
+			right->set_id(tuples[3].rEntityId());
+			right->set_type(tuples[3].rEntityType());
+
+			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
+
+			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+			ASSERT_TRUE(result.response);
+			EXPECT_FALSE(result.response->found());
+			EXPECT_EQ(-4, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
 			EXPECT_TRUE(result.response->path().empty());
 		}
