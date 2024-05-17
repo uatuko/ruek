@@ -104,6 +104,9 @@ message RelationsCheckResponse {
 	// Tuple containing relation data that matched the query. An empty tuple `id` indicates a computed
 	// tuple which isn't stored.
 	optional Tuple tuple = 3;
+
+	// Path that derived the relation between entities when using the `graph` lookup strategy.
+	repeated Tuple path = 4;
 }
 
 message RelationsCreateRequest {
