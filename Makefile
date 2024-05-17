@@ -80,4 +80,4 @@ run: $(binary)
 	$(binary) -4 127.0.0.1
 
 test: $(binary)
-	ctest --test-dir $(builddir) --output-on-failure
+	ctest --test-dir $(builddir) --output-on-failure $(filter-out $@,$(MAKECMDGOALS))
