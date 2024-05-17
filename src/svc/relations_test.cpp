@@ -421,8 +421,8 @@ TEST_F(svc_RelationsTest, Check) {
 			request.set_relation("woner");
 
 			auto *right = request.mutable_right_entity();
-			right->set_id(tuples[2].rEntityId());
-			right->set_type(tuples[2].rEntityType());
+			right->set_id(tuples[3].rEntityId());
+			right->set_type(tuples[3].rEntityType());
 
 			EXPECT_NO_THROW(result = svc.call<rpcCheck>(ctx, request));
 
