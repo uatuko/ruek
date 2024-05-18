@@ -85,6 +85,8 @@ message RelationsCheckRequest {
 	//
 	// Strategies:
 	//   2 (direct) - Only check if there's a direct relation exists between the entities.
+	//   4 (graph)  - If a direct relation cannot be found between the entities, use a graph traversal
+	//                algorithm to derive a relation.
 	//   8 (set)    - Check if there's a direct relation exists between the entities and if not, use
 	//                a set intersection algorithm to derive a relation between the entities.
 	optional uint32 strategy = 6;
@@ -104,6 +106,9 @@ message RelationsCheckResponse {
 	// Tuple containing relation data that matched the query. An empty tuple `id` indicates a computed
 	// tuple which isn't stored.
 	optional Tuple tuple = 3;
+
+	// Path that derived the relation between entities when using the `graph` lookup strategy.
+	repeated Tuple path = 4;
 }
 
 message RelationsCreateRequest {

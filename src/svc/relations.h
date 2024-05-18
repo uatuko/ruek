@@ -1,4 +1,8 @@
 #pragma once
+#include <optional>
+#include <queue>
+#include <string_view>
+
 #include <google/rpc/status.pb.h>
 
 #include "db/tuples.h"
@@ -39,6 +43,11 @@ public:
 	google::rpc::Status exception() noexcept;
 
 private:
+	struct graph_t {
+		std::int32_t          cost;
+		std::queue<db::Tuple> path;
+	};
+
 	struct spot_t {
 		std::int32_t             cost;
 		std::optional<db::Tuple> tuple;
@@ -52,6 +61,11 @@ private:
 	void map(
 		const db::Tuples                                            &from,
 		google::protobuf::RepeatedPtrField<sentium::api::v1::Tuple> *to) const noexcept;
+
+	// Check for a relation between left and right entities using the `graph` algorithm.
+	graph_t graph(
+		std::string_view spaceId, db::Tuple::Entity left, std::string_view relation,
+		db::Tuple::Entity right, std::uint16_t limit) const;
 
 	// Check for a relation between left and right entities using the `spot` algorithm.
 	spot_t spot(

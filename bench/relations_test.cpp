@@ -20,6 +20,100 @@ public:
 	void TearDown(benchmark::State &state) { db::testing::teardown(); }
 };
 
+// Benchmark check relations with graph strategy with different depth and breadth values.
+BENCHMARK_DEFINE_F(bm_relations, check_graph)(benchmark::State &st) {
+	db::Tuple start({
+		.lEntityId   = "bm_relations.check_set",
+		.lEntityType = "user",
+		.relation    = "member",
+		.rEntityId   = xid::next(),
+		.rEntityType = "bm_relations.check_graph",
+	});
+	start.store();
+
+	db::Tuple last({
+		.lEntityId   = start.rEntityId(),
+		.lEntityType = start.rEntityType(),
+		.relation    = "member",
+		.rEntityId   = xid::next(),
+		.rEntityType = "bm_relations.check_graph",
+		.strand      = start.relation(),
+	});
+	last.store();
+
+	for (auto n = st.range(0); n > 0; n--) {
+		// Add depth
+		db::Tuple tuple({
+			.lEntityId   = last.rEntityId(),
+			.lEntityType = last.rEntityType(),
+			.relation    = "member",
+			.rEntityId   = xid::next(),
+			.rEntityType = "bm_relations.check_graph",
+			.strand      = last.relation(),
+		});
+		tuple.store();
+
+		for (auto m = st.range(1); m > 0; m--) {
+			// Add breadth
+			db::Tuple tuple({
+				.lEntityId   = last.rEntityId(),
+				.lEntityType = last.rEntityType(),
+				.relation    = "reader",
+				.rEntityId   = xid::next(),
+				.rEntityType = "bm_relations.check_graph",
+				.strand      = last.relation(),
+			});
+			tuple.store();
+		}
+
+		last = tuple;
+	}
+
+	grpcxx::context ctx;
+	svc::Relations  svc;
+
+	rpcCheck::request_type request;
+	request.set_strategy(static_cast<std::uint32_t>(svc::common::strategy_t::graph));
+	request.set_cost_limit(std::numeric_limits<std::uint16_t>::max());
+
+	auto *left = request.mutable_left_entity();
+	left->set_id(start.lEntityId());
+	left->set_type(start.lEntityType());
+
+	request.set_relation(last.relation());
+
+	auto *right = request.mutable_right_entity();
+	right->set_id(last.rEntityId());
+	right->set_type(last.rEntityType());
+
+	std::size_t ops  = 0;
+	std::size_t cost = 0;
+
+	rpcCheck::result_type result;
+
+	for (auto _ : st) {
+		st.PauseTiming();
+		ops++;
+		st.ResumeTiming();
+
+		result = svc.call<rpcCheck>(ctx, request);
+		if (result.response->found() != true) {
+			st.SkipWithError("[error] Traversal failed!");
+		}
+
+		st.PauseTiming();
+		cost += result.response->cost();
+		st.ResumeTiming();
+	}
+
+	st.counters.insert({
+		{"ops", benchmark::Counter(ops, benchmark::Counter::kIsRate)},
+		{"vertices", benchmark::Counter(cost, benchmark::Counter::kIsRate)},
+	});
+}
+BENCHMARK_REGISTER_F(bm_relations, check_graph)
+	->ArgsProduct({{4, 8, 32}, benchmark::CreateRange(128, 2 << 10, 8)});
+
 // Benchmark check relations with set strategy.
 // Different numbers of tuple "sets" are generated and linked randomly. e.g.
 //    strand |  l_entity_id   | relation |  r_entity_id
