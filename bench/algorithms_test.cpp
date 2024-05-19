@@ -17,13 +17,22 @@ BENCHMARK([](benchmark::State &st) {
 		right.emplace_back(xid::next());
 	}
 
+	std::size_t ops = 0;
 	for (auto _ : st) {
+		st.PauseTiming();
+		ops++;
+		st.ResumeTiming();
+
 		for (const auto &s : left) {
 			if (std::binary_search(right.begin(), right.end(), s)) {
 				break;
 			}
 		}
 	}
+
+	st.counters.insert({
+		{"ops", benchmark::Counter(ops, benchmark::Counter::kIsRate)},
+	});
 })
 	->Name("bm_binary_intersection")
 	->Range(8, 8 << 10);
@@ -35,18 +44,27 @@ BENCHMARK([](benchmark::State &st) {
 	left.reserve(st.range(0));
 	right.reserve(st.range(0));
 
-	std::vector<std::string> intersection;
-
 	for (int n = st.range(0); n > 0; n--) {
 		left.emplace_back(xid::next());
 		right.emplace_back(xid::next());
 	}
 
+	std::size_t              ops = 0;
+	std::vector<std::string> intersection;
+
 	for (auto _ : st) {
+		st.PauseTiming();
+		ops++;
 		intersection.clear();
+		st.ResumeTiming();
+
 		std::set_intersection(
 			left.begin(), left.end(), right.begin(), right.end(), std::back_inserter(intersection));
 	}
+
+	st.counters.insert({
+		{"ops", benchmark::Counter(ops, benchmark::Counter::kIsRate)},
+	});
 })
 	->Name("bm_set_intersection")
 	->Range(8, 8 << 10);
@@ -63,7 +81,12 @@ BENCHMARK([](benchmark::State &st) {
 		right.emplace_back(xid::next());
 	}
 
+	std::size_t ops = 0;
 	for (auto _ : st) {
+		st.PauseTiming();
+		ops++;
+		st.ResumeTiming();
+
 		auto i = left.cbegin();
 		auto j = right.cbegin();
 
@@ -81,6 +104,10 @@ BENCHMARK([](benchmark::State &st) {
 			}
 		}
 	}
+
+	st.counters.insert({
+		{"ops", benchmark::Counter(ops, benchmark::Counter::kIsRate)},
+	});
 })
 	->Name("bm_spot_intersection")
 	->Range(8, 8 << 10);
