@@ -1,0 +1,14 @@
+direction: right
+
+user: user:jane
+group: group:readers
+doc: doc:notes.txt
+
+user -> group: member
+group -> doc: reader
+user -> doc: (reader) {
+	style: {
+		opacity: 0.5
+		stroke-dash: 4
+	}
+}
