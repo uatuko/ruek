@@ -42,6 +42,11 @@ integrate, quick to master and flexible enough to handle complex requirements.
 * Built using the fastest gRPC server implementation[^5]
 
 
+## Documentation
+
+You can find a bit more detailed documentation in [docs/](docs/README.md).
+
+
 ## Getting started
 
 ### Prerequisites
