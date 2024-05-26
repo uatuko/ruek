@@ -1,8 +1,8 @@
 # ReBAC
 
-You can use Relations-Based Access Control (ReBAC) to define and check permissions between entities as
-a relations graph. Relations graphs enable Sentium to derive implicit relations when there aren't any
-direct relations.
+You can use Relations-Based Access Control (ReBAC) to define and check fine-grained permissions between
+entities as a relations graph. Relations graphs enable Sentium to derive implicit relations when there
+aren't any direct relations.
 
 For example, in the following relations graph there's no direct relation created between `user:jane`
 and `doc:notes.txt`. But by examining the relations, Sentium can derive `user:jane -> reader -> doc:notes.txt`
@@ -38,4 +38,8 @@ For example, `[]user:alice/member/team:writers` can be chained with `[member]tea
 but not with `[owner]team:writers/edit/doc:notes.txt` (since first tuple's _relation_, `member`, doesn't
 match second tuple's _strand_, `owner`).
 
+<details>
+<summary>Example - Two tuples linked by a strand</summary>
+
 ![Strand Example](./assets/rebac-strand-example.svg)
+</details>
