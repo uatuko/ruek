@@ -1,0 +1,18 @@
+direction: right
+
+user: user:jane
+writers: group:writers
+readers: group:readers
+doc: doc:notes.txt
+
+user -> writers: (member)
+writers -> readers: (member)
+readers -> doc: (reader)
+
+docs: 10K documents {
+	doc_1: doc:1.txt
+	doc_2: doc:2.txt
+	doc_n: doc:n.txt
+}
+
+writers -> docs: (writer)

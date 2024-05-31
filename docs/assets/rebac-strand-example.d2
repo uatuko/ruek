@@ -1,0 +1,59 @@
+t1: {
+	user: user:jane
+	group: group:writers
+
+	relation: member {
+		shape: diamond
+	}
+
+	user -> relation {
+		source-arrowhead: left
+		target-arrowhead: relation
+	}
+
+	relation -> group {
+		source-arrowhead: relation
+		target-arrowhead: right
+	}
+}
+
+t2: {
+	strand: member {
+		shape: step
+	}
+
+	parent: group:writers
+	child: group:readers
+
+	relation: member {
+		shape: diamond
+	}
+
+	parent -> relation {
+		source-arrowhead: left
+		target-arrowhead: relation
+	}
+
+	relation -> child {
+		source-arrowhead: relation
+		target-arrowhead: right
+	}
+}
+
+t1.relation -> t2.strand: (t1.relation == t2.strand) {
+	source-arrowhead: relation
+	target-arrowhead: strand
+	style: {
+		opacity: 0.7
+		stroke-dash: 4
+	}
+}
+
+t1.group -> t2.parent: (t1.right == t2.left) {
+	source-arrowhead: right
+	target-arrowhead: left
+	style: {
+		opacity: 0.7
+		stroke-dash: 4
+	}
+}

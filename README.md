@@ -30,16 +30,21 @@ integrate, quick to master and flexible enough to handle complex requirements.
 
 ## Features
 
+* ABAC, RBAC & ReBAC
 * Schema-less fine-grained authorization (FGA)
 * Zero-trust, least privilege architecture (ZTA)
-* Predictable constant time authorization checks (O(1))
+* Predictable constant time authorization checks (**O(1)**)[^3]
 * Strongly consistent with no cache
-* Cloud native at global scale[^3]
-* ABAC, RBAC & ReBAC[^4]
+* Cloud native at global scale[^4]
 * Multi-tenancy support, if you need it
 * Not just authorization checks, list users, entities a user can access and users with access to an entity
 * First class treatment for listing endpoints with pagination and limits to handle large datasets
 * Built using the fastest gRPC server implementation[^5]
+
+
+## Documentation
+
+You can find a bit more detailed documentation in [docs/](docs/README.md).
 
 
 ## Getting started
@@ -219,6 +224,7 @@ Listening on [127.0.0.1:8080] ...
 * [fmt](https://github.com/fmtlib/fmt) - For string formatting.
 * [googleapis](https://github.com/googleapis/googleapis) - For annotations to help with gRPC/JSON transcoding.
 * [googletest](https://github.com/google/googletest) - For tests.
+* [benchmark](https://github.com/google/benchmark) - For benchmarks.
 * [grpcxx](https://github.com/uatuko/grpcxx) - For the gRPC server.
 * [libpqxx](https://github.com/jtv/libpqxx) - For PostgreSQL connections.
 * [libxid](https://github.com/uatuko/libxid) - For globally unique IDs.
@@ -231,6 +237,6 @@ for their contributions on the `gatekeeper` branch.
 
 [^1]: [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language)
 [^2]: [Zero trust architecture (ZTA)](https://en.wikipedia.org/wiki/Zero_trust_security_model)
-[^3]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
-[^4]: [RFC #72](https://github.com/uatuko/sentium/discussions/72)
+[^3]: Authorization check using ReBAC `set` (**O(1+n+m)**) and `graph` (**O(1+v+e)**) strategies are not constant time.
+[^4]: Scalability depends on underlying PostgreSQL protocol compatible database scalability.
 [^5]: [gRPCxx](https://github.com/uatuko/grpcxx) is benchmarked to be the fastest in February 2024.
