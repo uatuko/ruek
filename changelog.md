@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.3.0 - 1st June, 2024
+
+### 🔦 Spotlight
+* Full ReBAC implementation with multiple optimisation strategies (https://github.com/uatuko/sentium/issues/73)
+
+### ⚠️ Breaking changes
+* **DB**: Unused `_rid` column is removed from `tuples` table and replaced by new `_rid_l` and `_rid_r` columns (https://github.com/uatuko/sentium/pull/98)
+* **gRPC**: `cost` fields in _Relations_ service response messages have been changed from `uint32` to `int32` (https://github.com/uatuko/sentium/pull/98)
+
+### What's Changed
+* Bump golang.org/x/net from 0.19.0 to 0.23.0 in /examples/fileshare by @dependabot in https://github.com/uatuko/sentium/pull/87
+* ReBAC: Optimise when creating relations by @uatuko in https://github.com/uatuko/sentium/pull/98
+* ReBAC: Optimisation strategies by @uatuko in https://github.com/uatuko/sentium/pull/99
+* ReBAC: `set` strategy for checking relations by @uatuko in https://github.com/uatuko/sentium/pull/100
+* ReBAC: `graph` strategy for checking relations by @uatuko in https://github.com/uatuko/sentium/pull/101
+* Update docs by @uatuko in https://github.com/uatuko/sentium/pull/102
+
+**Full Changelog**: https://github.com/uatuko/sentium/compare/v0.2.0...v0.3.0
+
+
 ## v0.2.0 - 27th April, 2024
 
 ### 🔦 Spotlight
