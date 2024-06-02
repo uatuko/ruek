@@ -309,7 +309,7 @@ TEST_F(svc_RelationsTest, Check) {
 		//  member | group:writers  | member   | group:readers
 		//  member | group:readers  | reader   | doc:notes.txt
 		//  member | group:readers  | member   | group:loop
-		//  member | group:loop     | member   | group:writers
+		//  member | group:loop     | reader   | doc:notes.txt
 		//  owner  | group:writers  | owner    | doc:notes.txt
 		//
 		// Checks:
@@ -360,8 +360,8 @@ TEST_F(svc_RelationsTest, Check) {
 			{{
 				.lEntityId   = "group:loop",
 				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
-				.relation    = "member",
-				.rEntityId   = "group:writers",
+				.relation    = "reader",
+				.rEntityId   = "doc:notes.txt",
 				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
 				.strand      = "member",
 			}},
@@ -401,7 +401,7 @@ TEST_F(svc_RelationsTest, Check) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(true, result.response->found());
-			EXPECT_EQ(5, result.response->cost());
+			EXPECT_EQ(6, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
 			ASSERT_EQ(4, result.response->path().size());
 
