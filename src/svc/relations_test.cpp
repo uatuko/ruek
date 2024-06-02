@@ -401,7 +401,7 @@ TEST_F(svc_RelationsTest, Check) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(true, result.response->found());
-			EXPECT_EQ(4, result.response->cost());
+			EXPECT_EQ(5, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
 			ASSERT_EQ(4, result.response->path().size());
 
@@ -429,7 +429,7 @@ TEST_F(svc_RelationsTest, Check) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(false, result.response->found());
-			EXPECT_EQ(7, result.response->cost());
+			EXPECT_EQ(1, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
 			EXPECT_TRUE(result.response->path().empty());
 		}

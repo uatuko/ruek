@@ -1,6 +1,6 @@
 #pragma once
+#include <deque>
 #include <optional>
-#include <queue>
 #include <string_view>
 
 #include <google/rpc/status.pb.h>
@@ -45,7 +45,7 @@ public:
 private:
 	struct graph_t {
 		std::int32_t          cost;
-		std::queue<db::Tuple> path;
+		std::deque<db::Tuple> path;
 	};
 
 	struct spot_t {
