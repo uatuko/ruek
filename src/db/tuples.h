@@ -42,6 +42,8 @@ public:
 		std::string_view id() const noexcept { return _id; }
 		std::string_view type() const noexcept { return _type; }
 
+		std::int64_t hash() const noexcept;
+
 	private:
 		std::string_view _id;
 		std::string_view _type;
@@ -85,6 +87,8 @@ public:
 	void               strand(const std::string &strand) noexcept { _data.strand = strand; }
 
 	const std::string &id() const noexcept { return _id; }
+	const std::int64_t hashL() const noexcept { return _hashL; }
+	const std::int64_t hashR() const noexcept { return _hashR; }
 	const int         &rev() const noexcept { return _rev; }
 	const rid_t       &ridL() const noexcept { return _ridL; }
 	const rid_t       &ridR() const noexcept { return _ridR; }
@@ -100,13 +104,15 @@ public:
 	static Tuple retrieve(std::string_view id);
 
 private:
+	void hash() noexcept;
+
 	void sanitise() noexcept;
 
-	Data        _data;
-	std::string _id;
-	int         _rev;
-	rid_t       _ridL;
-	rid_t       _ridR;
+	Data         _data;
+	std::int64_t _hashL, _hashR;
+	std::string  _id;
+	int          _rev;
+	rid_t        _ridL, _ridR;
 };
 
 using Tuples = std::vector<Tuple>;

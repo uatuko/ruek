@@ -57,6 +57,8 @@ TEST_F(db_TuplesTest, constructor) {
 		EXPECT_EQ(right.rEntityType(), joined.rEntityType());
 		EXPECT_EQ(left.spaceId(), joined.spaceId());
 		EXPECT_TRUE(joined.strand().empty());
+		EXPECT_EQ(left.hashL(), joined.hashL());
+		EXPECT_EQ(right.hashR(), joined.hashR());
 		EXPECT_EQ(left.id(), joined.ridL());
 		EXPECT_EQ(right.id(), joined.ridR());
 
@@ -434,7 +436,8 @@ TEST_F(db_TuplesTest, retrieve) {
 				relation,
 				r_entity_type, r_entity_id,
 				attrs,
-				_id, _rev
+				_id, _rev,
+				_hash_l, _hash_r
 			) values (
 				$1::text,
 				$2::text,
@@ -442,7 +445,8 @@ TEST_F(db_TuplesTest, retrieve) {
 				$5::text,
 				$6::text, $7::text,
 				$8::jsonb,
-				$9::text, $10::integer
+				$9::text, $10::integer,
+				$11::bigint, $12::bigint
 			);
 		)";
 
@@ -457,12 +461,16 @@ TEST_F(db_TuplesTest, retrieve) {
 			"right",
 			R"({"foo": "bar"})",
 			"_id:db_TuplesTest.retrieve",
-			1729));
+			1729,
+			-3631866150419398620,
+			7468059380061813551));
 
 		auto tuple = db::Tuple::retrieve("_id:db_TuplesTest.retrieve");
 		EXPECT_FALSE(tuple.ridL());
 		EXPECT_FALSE(tuple.ridR());
 		EXPECT_EQ(1729, tuple.rev());
+		EXPECT_EQ(-3631866150419398620, tuple.hashL());
+		EXPECT_EQ(7468059380061813551, tuple.hashR());
 
 		EXPECT_EQ("db_TuplesTest.retrieve", tuple.lEntityType());
 		EXPECT_EQ("left", tuple.lEntityId());
@@ -542,6 +550,8 @@ TEST_F(db_TuplesTest, sanitise) {
 		EXPECT_EQ(tuple.lPrincipalId(), tuple.lEntityId());
 		EXPECT_EQ(db::common::principal_entity_v, tuple.rEntityType());
 		EXPECT_EQ(tuple.rPrincipalId(), tuple.rEntityId());
+		EXPECT_EQ(4978332106395442344, tuple.hashL());
+		EXPECT_EQ(459406847117771879, tuple.hashR());
 	}
 }
 
@@ -567,6 +577,7 @@ TEST_F(db_TuplesTest, store) {
 				attrs,
 				l_principal_id, r_principal_id,
 				_id, _rev,
+				_hash_l, _hash_r,
 				_rid_l, _rid_r
 			from tuples
 			where _id = $1::text;
@@ -588,6 +599,8 @@ TEST_F(db_TuplesTest, store) {
 			 rPrincipalId,
 			 _id,
 			 _rev,
+			 _hashL,
+			 _hashR,
 			 _ridL,
 			 _ridR] =
 				res[0]
@@ -603,6 +616,8 @@ TEST_F(db_TuplesTest, store) {
 						db::Tuple::Data::pid_t,
 						std::string,
 						int,
+						std::int64_t,
+						std::int64_t,
 						db::Tuple::rid_t,
 						db::Tuple::rid_t>();
 
@@ -618,6 +633,8 @@ TEST_F(db_TuplesTest, store) {
 		EXPECT_EQ(tuple.rPrincipalId(), rPrincipalId);
 		EXPECT_EQ(tuple.id(), _id);
 		EXPECT_EQ(tuple.rev(), _rev);
+		EXPECT_EQ(tuple.hashL(), _hashL);
+		EXPECT_EQ(tuple.hashR(), _hashR);
 		EXPECT_EQ(tuple.ridL(), _ridL);
 		EXPECT_EQ(tuple.ridR(), _ridR);
 	}
