@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.1 - 4th June, 2024
+
+### 🔦 Spotlight
+* Significantly reduce the lookup costs for checking relations when using _graph_ strategy (https://github.com/uatuko/sentium/pull/103)
+
+
+### What's Changed
+* Traverse relations graph right to left when checking relations by @uatuko in https://github.com/uatuko/sentium/pull/103
+
+**Full Changelog**: https://github.com/uatuko/sentium/compare/v0.3.0...v0.3.1
+
+
 ## v0.3.0 - 1st June, 2024
 
 ### 🔦 Spotlight
