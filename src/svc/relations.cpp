@@ -1,5 +1,6 @@
 #include "relations.h"
 
+#include <queue>
 #include <unordered_set>
 
 #include <google/protobuf/util/json_util.h>
@@ -83,9 +84,8 @@ rpcCheck::result_type Impl::call<rpcCheck>(
 
 				auto *path = response.mutable_path();
 				path->Reserve(r.path.size());
-				while (!r.path.empty()) {
-					map(r.path.front(), path->Add());
-					r.path.pop();
+				for (const auto &t : r.path) {
+					map(t, path->Add());
 				}
 			}
 
@@ -362,7 +362,7 @@ Impl::graph_t Impl::graph(
 
 	class vertex_t {
 	public:
-		using path_t = std::queue<db::Tuple>;
+		using path_t = std::deque<db::Tuple>;
 
 		struct hasher {
 			void combine(std::size_t &seed, const std::string &v) const noexcept {
@@ -371,7 +371,7 @@ Impl::graph_t Impl::graph(
 
 			std::size_t operator()(const vertex_t &v) const noexcept {
 				std::size_t seed = 0;
-				combine(seed, v.relation());
+				combine(seed, v.strand());
 				combine(seed, v.entityType());
 				combine(seed, v.entityId());
 
@@ -384,28 +384,28 @@ Impl::graph_t Impl::graph(
 		// Copy constructor is _only_ used when keeping track of visited vertices. In order to
 		// _potentially_ save memory `_path` is ignored.
 		vertex_t(const vertex_t &v) noexcept :
-			_entityId(v._entityId), _entityType(v._entityType), _relation(v._relation){};
+			_entityId(v._entityId), _entityType(v._entityType), _strand(v._strand){};
 
 		vertex_t(db::Tuple &&t) :
-			_entityId(t.rEntityId()), _entityType(t.rEntityType()), _relation(t.relation()) {
-			_path.push(std::move(t));
+			_entityId(t.lEntityId()), _entityType(t.lEntityType()), _strand(t.strand()) {
+			_path.push_front(std::move(t));
 		}
 
 		vertex_t(const vertex_t &v, db::Tuple &&t) :
-			_entityId(t.rEntityId()), _entityType(t.rEntityType()), _path(v._path),
-			_relation(t.relation()) {
-			_path.push(std::move(t));
+			_entityId(t.lEntityId()), _entityType(t.lEntityType()), _path(v._path),
+			_strand(t.strand()) {
+			_path.push_front(std::move(t));
 		}
 
 		bool operator==(const vertex_t &rhs) const noexcept {
 			return (
 				_entityId == rhs._entityId && _entityType == rhs._entityType &&
-				_relation == rhs._relation);
+				_strand == rhs._strand);
 		}
 
 		const std::string &entityId() const noexcept { return _entityId; }
 		const std::string &entityType() const noexcept { return _entityType; }
-		const std::string &relation() const noexcept { return _relation; }
+		const std::string &strand() const noexcept { return _strand; }
 
 		path_t &path() noexcept { return _path; }
 
@@ -413,7 +413,7 @@ Impl::graph_t Impl::graph(
 		std::string _entityId;
 		std::string _entityType;
 		path_t      _path;
-		std::string _relation;
+		std::string _strand;
 	};
 
 	std::int32_t         cost = 0;
@@ -421,7 +421,7 @@ Impl::graph_t Impl::graph(
 
 	// Assume there's no direct relation between left and right entities to begin with
 	{
-		auto tuples = db::ListTuplesRight(spaceId, left, {}, {}, limit);
+		auto tuples = db::ListTuplesLeft(spaceId, right, relation, {}, limit);
 		for (auto &t : tuples) {
 			queue.emplace(std::move(t));
 		}
@@ -439,16 +439,14 @@ Impl::graph_t Impl::graph(
 		}
 
 		visited.insert(v);
-		for (auto &t :
-			 db::ListTuplesRight(spaceId, {v.entityType(), v.entityId()}, {}, {}, limit)) {
-			if (v.relation() != t.strand()) {
+		for (auto &t : db::ListTuplesLeft(spaceId, {v.entityType(), v.entityId()}, {}, {}, limit)) {
+			if (v.strand() != t.relation()) {
 				continue;
 			}
 
-			if (t.relation() == relation && t.rEntityId() == right.id() &&
-				t.rEntityType() == right.type()) {
+			if (t.lEntityId() == left.id() && t.lEntityType() == left.type()) {
 				// Found
-				v.path().push(std::move(t));
+				v.path().push_front(std::move(t));
 				return {cost, v.path()};
 			}
 

@@ -61,6 +61,9 @@ To derive the relation `[]user:jane/reader/doc:notes.txt` using a BFS[^bfs] grap
 (which has **O(v+e)** complexity), we will need to read 10,003 tuples. This can be really slow depending
 on DB load and number of concurrent requests.
 
+> 💡 This is only an illustrative example. In reality, Sentium traverse the relations graphs from right
+> to left which will result in only 3 reads in this instance.
+
 ![Relations Graph #02](./assets/rebac-relations-graph-02.svg)
 
 In order to maintain a consistent and a predictable throughput (QPS), Sentium offers different optimisation

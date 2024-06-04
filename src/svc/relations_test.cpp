@@ -309,8 +309,9 @@ TEST_F(svc_RelationsTest, Check) {
 		//  member | group:writers  | member   | group:readers
 		//  member | group:readers  | reader   | doc:notes.txt
 		//  member | group:readers  | member   | group:loop
-		//  member | group:loop     | member   | group:writers
+		//  member | group:loop     | reader   | doc:notes.txt
 		//  owner  | group:writers  | owner    | doc:notes.txt
+		//  owner  | group:writers  | reader   | doc:notes.txt
 		//
 		// Checks:
 		//   1. []user:jane/reader/doc:notes.txt - ✓
@@ -360,8 +361,8 @@ TEST_F(svc_RelationsTest, Check) {
 			{{
 				.lEntityId   = "group:loop",
 				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
-				.relation    = "member",
-				.rEntityId   = "group:writers",
+				.relation    = "reader",
+				.rEntityId   = "doc:notes.txt",
 				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
 				.strand      = "member",
 			}},
@@ -369,6 +370,14 @@ TEST_F(svc_RelationsTest, Check) {
 				.lEntityId   = "group:writers",
 				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
 				.relation    = "owner",
+				.rEntityId   = "doc:notes.txt",
+				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.strand      = "owner",
+			}},
+			{{
+				.lEntityId   = "group:writers",
+				.lEntityType = "svc_RelationsTest.Check-with_graph_strategy",
+				.relation    = "reader",
 				.rEntityId   = "doc:notes.txt",
 				.rEntityType = "svc_RelationsTest.Check-with_graph_strategy",
 				.strand      = "owner",
@@ -401,7 +410,7 @@ TEST_F(svc_RelationsTest, Check) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(true, result.response->found());
-			EXPECT_EQ(4, result.response->cost());
+			EXPECT_EQ(7, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
 			ASSERT_EQ(4, result.response->path().size());
 
@@ -429,7 +438,7 @@ TEST_F(svc_RelationsTest, Check) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(false, result.response->found());
-			EXPECT_EQ(7, result.response->cost());
+			EXPECT_EQ(1, result.response->cost());
 			EXPECT_FALSE(result.response->has_tuple());
 			EXPECT_TRUE(result.response->path().empty());
 		}
