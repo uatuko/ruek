@@ -9,12 +9,12 @@
 
 namespace db {
 Tuple::Tuple(const Tuple::Data &data) noexcept :
-	_data(data), _lHash(), _rHash(), _id(), _rev(0), _ridL(), _ridR() {
+	_data(data), _id(), _rev(0), _lHash(), _rHash(), _ridL(), _ridR() {
 	sanitise();
 }
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
-	_data(std::move(data)), _lHash(), _rHash(), _id(), _rev(0), _ridL(), _ridR() {
+	_data(std::move(data)), _id(), _rev(0), _lHash(), _rHash(), _ridL(), _ridR() {
 	sanitise();
 }
 
@@ -31,9 +31,9 @@ Tuple::Tuple(const pg::row_t &r) :
 		.spaceId      = r["space_id"].as<std::string>(),
 		.strand       = r["strand"].as<std::string>(),
 	}),
+	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()),
 	_lHash(r["_l_hash"].as<std::int64_t>()), _rHash(r["_r_hash"].as<std::int64_t>()),
-	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _ridL(r["_rid_l"].as<rid_t>()),
-	_ridR(r["_rid_r"].as<rid_t>()) {}
+	_ridL(r["_rid_l"].as<rid_t>()), _ridR(r["_rid_r"].as<rid_t>()) {}
 
 Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 	_data({
@@ -46,7 +46,7 @@ Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 		.rPrincipalId = right.rPrincipalId(),
 		.spaceId      = left.spaceId(),
 	}),
-	_lHash(left.lHash()), _rHash(right.rHash()), _id(), _rev(0), _ridL(left.id()),
+	_id(), _rev(0), _lHash(left.lHash()), _rHash(right.rHash()), _ridL(left.id()),
 	_ridR(right.id()) {}
 
 bool Tuple::discard(std::string_view id) {
