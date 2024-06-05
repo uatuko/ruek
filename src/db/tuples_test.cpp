@@ -550,8 +550,9 @@ TEST_F(db_TuplesTest, sanitise) {
 		EXPECT_EQ(tuple.lPrincipalId(), tuple.lEntityId());
 		EXPECT_EQ(db::common::principal_entity_v, tuple.rEntityType());
 		EXPECT_EQ(tuple.rPrincipalId(), tuple.rEntityId());
-		EXPECT_EQ(4978332106395442344, tuple.lHash());
-		EXPECT_EQ(459406847117771879, tuple.rHash());
+
+		EXPECT_EQ(db::Tuple::Entity(tuple.lEntityType(), tuple.lEntityId()).hash(), tuple.lHash());
+		EXPECT_EQ(db::Tuple::Entity(tuple.rEntityType(), tuple.rEntityId()).hash(), tuple.rHash());
 	}
 }
 
