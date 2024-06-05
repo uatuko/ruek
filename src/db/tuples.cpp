@@ -264,7 +264,7 @@ Tuples ListTuples(
 				attrs,
 				l_principal_id, r_principal_id,
 				_id, _rev,
-				_hash_l, _hash_r,
+				_l_hash, _r_hash,
 				_rid_l, _rid_r
 			from tuples
 			{}
