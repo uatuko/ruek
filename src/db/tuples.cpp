@@ -230,26 +230,28 @@ Tuples ListTuples(
 	std::string   where = "where space_id = $1::text";
 	std::string   sort;
 	if (left) {
-		entity  = *left;
-		where  += " and l_entity_type = $2::text and l_entity_id = $3::text";
-		sort    = "r_entity_id";
+		entity = *left;
+		where +=
+			" and _l_hash = $2::bigint and l_entity_type = $3::text and l_entity_id = $4::text";
+		sort = "r_entity_id";
 	} else if (right) {
-		entity  = *right;
-		where  += " and r_entity_type = $2::text and r_entity_id = $3::text";
-		sort    = "l_entity_id";
+		entity = *right;
+		where +=
+			" and _r_hash = $2::bigint and r_entity_type = $3::text and r_entity_id = $4::text";
+		sort = "l_entity_id";
 	} else {
 		throw err::DbTuplesInvalidListArgs();
 	}
 
 	if (relation) {
-		where += " and relation = $4::text";
+		where += " and relation = $5::text";
 	}
 
 	if (!lastId.empty()) {
 		if (relation) {
-			where += fmt::format(" and {} < $5::text", sort);
+			where += fmt::format(" and {} < $6::text", sort);
 		} else {
-			where += fmt::format(" and {} < $4::text", sort);
+			where += fmt::format(" and {} < $5::text", sort);
 		}
 	}
 
@@ -277,13 +279,13 @@ Tuples ListTuples(
 
 	db::pg::result_t res;
 	if (relation && !lastId.empty()) {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id(), relation, lastId);
+		res = pg::exec(qry, spaceId, entity.hash(), entity.type(), entity.id(), relation, lastId);
 	} else if (relation) {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id(), relation);
+		res = pg::exec(qry, spaceId, entity.hash(), entity.type(), entity.id(), relation);
 	} else if (!lastId.empty()) {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id(), lastId);
+		res = pg::exec(qry, spaceId, entity.hash(), entity.type(), entity.id(), lastId);
 	} else {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id());
+		res = pg::exec(qry, spaceId, entity.hash(), entity.type(), entity.id());
 	}
 
 	Tuples tuples;
