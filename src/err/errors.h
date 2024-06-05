@@ -22,7 +22,8 @@ using DbTupleNotFound      = basic_error<"sentium:1.4.3.404", "Tuple not found">
 using DbTuplesInvalidListArgs =
 	basic_error<"sentium:1.4.4.400", "Invalid arguments for listing tuples">;
 
-using DbTupletsInvalidListArgs = basic_error<"sentium:1.4.5.400", "Invalid arguments for listing tuplets">;
+using DbTupletsInvalidListArgs =
+	basic_error<"sentium:1.4.5.400", "Invalid arguments for listing tuplets">;
 
 using RpcPrincipalsAlreadyExists = basic_error<"sentium:2.1.1.409", "Principal already exists">;
 using RpcPrincipalsNotFound      = basic_error<"sentium:2.1.2.404", "Principal not found">;
