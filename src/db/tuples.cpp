@@ -9,12 +9,12 @@
 
 namespace db {
 Tuple::Tuple(const Tuple::Data &data) noexcept :
-	_data(data), _hashL(), _hashR(), _id(), _rev(0), _ridL(), _ridR() {
+	_data(data), _lHash(), _rHash(), _id(), _rev(0), _ridL(), _ridR() {
 	sanitise();
 }
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
-	_data(std::move(data)), _hashL(), _hashR(), _id(), _rev(0), _ridL(), _ridR() {
+	_data(std::move(data)), _lHash(), _rHash(), _id(), _rev(0), _ridL(), _ridR() {
 	sanitise();
 }
 
@@ -31,7 +31,7 @@ Tuple::Tuple(const pg::row_t &r) :
 		.spaceId      = r["space_id"].as<std::string>(),
 		.strand       = r["strand"].as<std::string>(),
 	}),
-	_hashL(r["_hash_l"].as<std::int64_t>()), _hashR(r["_hash_r"].as<std::int64_t>()),
+	_lHash(r["_l_hash"].as<std::int64_t>()), _rHash(r["_r_hash"].as<std::int64_t>()),
 	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _ridL(r["_rid_l"].as<rid_t>()),
 	_ridR(r["_rid_r"].as<rid_t>()) {}
 
@@ -46,7 +46,7 @@ Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 		.rPrincipalId = right.rPrincipalId(),
 		.spaceId      = left.spaceId(),
 	}),
-	_hashL(left.hashL()), _hashR(right.hashR()), _id(), _rev(0), _ridL(left.id()),
+	_lHash(left.lHash()), _rHash(right.rHash()), _id(), _rev(0), _ridL(left.id()),
 	_ridR(right.id()) {}
 
 bool Tuple::discard(std::string_view id) {
@@ -61,8 +61,8 @@ bool Tuple::discard(std::string_view id) {
 }
 
 void Tuple::hash() noexcept {
-	_hashL = Entity(_data.lEntityType, _data.lEntityId).hash();
-	_hashR = Entity(_data.rEntityType, _data.rEntityId).hash();
+	_lHash = Entity(_data.lEntityType, _data.lEntityId).hash();
+	_rHash = Entity(_data.rEntityType, _data.rEntityId).hash();
 }
 
 std::optional<Tuple> Tuple::lookup(
@@ -88,7 +88,7 @@ Tuple Tuple::retrieve(std::string_view id) {
 			attrs,
 			l_principal_id, r_principal_id,
 			_id, _rev,
-			_hash_l, _hash_r,
+			_l_hash, _r_hash,
 			_rid_l, _rid_r
 		from tuples
 		where _id = $1::text;
@@ -131,7 +131,7 @@ void Tuple::store() {
 			attrs,
 			l_principal_id, r_principal_id,
 			_id, _rev,
-			_hash_l, _hash_r,
+			_l_hash, _r_hash,
 			_rid_l, _rid_r
 		) values (
 			$1::text,
@@ -174,8 +174,8 @@ void Tuple::store() {
 			_data.rPrincipalId,
 			_id,
 			_rev,
-			_hashL,
-			_hashR,
+			_lHash,
+			_rHash,
 			_ridL,
 			_ridR);
 	} catch (pqxx::check_violation &) {
@@ -339,7 +339,7 @@ Tuples LookupTuples(
 				attrs,
 				l_principal_id, r_principal_id,
 				_id, _rev,
-				_hash_l, _hash_r,
+				_l_hash, _r_hash,
 				_rid_l, _rid_r
 			from tuples
 			{}

@@ -87,11 +87,13 @@ public:
 	void               strand(const std::string &strand) noexcept { _data.strand = strand; }
 
 	const std::string &id() const noexcept { return _id; }
-	const std::int64_t hashL() const noexcept { return _hashL; }
-	const std::int64_t hashR() const noexcept { return _hashR; }
 	const int         &rev() const noexcept { return _rev; }
-	const rid_t       &ridL() const noexcept { return _ridL; }
-	const rid_t       &ridR() const noexcept { return _ridR; }
+
+	const std::int64_t lHash() const noexcept { return _lHash; }
+	const std::int64_t rHash() const noexcept { return _rHash; }
+
+	const rid_t &ridL() const noexcept { return _ridL; }
+	const rid_t &ridR() const noexcept { return _ridR; }
 
 	void store();
 
@@ -109,9 +111,9 @@ private:
 	void sanitise() noexcept;
 
 	Data         _data;
-	std::int64_t _hashL, _hashR;
 	std::string  _id;
 	int          _rev;
+	std::int64_t _lHash, _rHash;
 	rid_t        _ridL, _ridR;
 };
 

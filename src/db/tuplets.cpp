@@ -23,14 +23,14 @@ Tuplets TupletsList(
 
 	if (left) {
 		hv      = left->hash();
-		hash    = "_hash_r";
+		hash    = "_r_hash";
 		strand  = "null";
-		where  += " and _hash_l = $2::bigint";
+		where  += " and _l_hash = $2::bigint";
 	} else if (right) {
 		hv      = right->hash();
-		hash    = "_hash_l";
+		hash    = "_l_hash";
 		strand  = "strand";
-		where  += " and _hash_r = $2::bigint";
+		where  += " and _r_hash = $2::bigint";
 	} else {
 		throw err::DbTupletsInvalidListArgs();
 	}

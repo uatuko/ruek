@@ -40,8 +40,8 @@ create table if not exists tuples (
 
 	-- Hash values of entities
 	--
-	_hash_l bigint,
-	_hash_r bigint,
+	_l_hash bigint,
+	_r_hash bigint,
 
 	-- Self references for computed tuples
 	--
@@ -77,5 +77,5 @@ create table if not exists tuples (
 	constraint "tuples.check-attrs" check (jsonb_typeof(attrs) = 'object')
 );
 
-create index "tuples.idx-ltr" on tuples using btree (space_id, _hash_l, relation, _hash_r, _id);
-create index "tuples.idx-rtl" on tuples using btree (space_id, _hash_r, relation, strand, _hash_l, _id);
+create index "tuples.idx-ltr" on tuples using btree (space_id, _l_hash, relation, _r_hash, _id);
+create index "tuples.idx-rtl" on tuples using btree (space_id, _r_hash, relation, strand, _l_hash, _id);

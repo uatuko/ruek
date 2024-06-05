@@ -54,7 +54,7 @@ TEST_F(db_TupletsTest, list) {
 		ASSERT_EQ(1, results.size());
 
 		const auto &actual = results.front();
-		EXPECT_EQ(tuple.hashR(), actual.hash());
+		EXPECT_EQ(tuple.rHash(), actual.hash());
 		EXPECT_EQ(tuple.id(), actual.id());
 		EXPECT_EQ(tuple.relation(), actual.relation());
 		EXPECT_FALSE(actual.strand());
@@ -80,7 +80,7 @@ TEST_F(db_TupletsTest, list) {
 		ASSERT_EQ(1, results.size());
 
 		const auto &actual = results.front();
-		EXPECT_EQ(tuple.hashL(), actual.hash());
+		EXPECT_EQ(tuple.lHash(), actual.hash());
 		EXPECT_EQ(tuple.id(), actual.id());
 		EXPECT_EQ(tuple.relation(), actual.relation());
 		EXPECT_EQ(tuple.strand(), actual.strand());
@@ -122,7 +122,7 @@ TEST_F(db_TupletsTest, list) {
 		ASSERT_EQ(1, results.size());
 
 		const auto &actual = results.front();
-		EXPECT_EQ(tuples[0].hashL(), actual.hash());
+		EXPECT_EQ(tuples[0].lHash(), actual.hash());
 		EXPECT_EQ(tuples[0].id(), actual.id());
 		EXPECT_EQ(tuples[0].relation(), actual.relation());
 		EXPECT_EQ(tuples[0].strand(), actual.strand());
