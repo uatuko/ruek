@@ -565,6 +565,10 @@ Impl::spot_t Impl::spot(
 				auto tl = db::Tuple::retrieve(i->id());
 				auto tr = db::Tuple::retrieve(j->id());
 
+				cost += 2;
+
+				// Compare text (unhashed) values to avoid any false positives due to hash
+				// collisions
 				if (tl.rEntityType() == tr.lEntityType() && tl.rEntityId() == tr.lEntityId()) {
 					return {cost, db::Tuple(tl, tr)};
 				}
