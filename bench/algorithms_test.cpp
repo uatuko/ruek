@@ -81,16 +81,16 @@ BENCHMARK([](benchmark::State &st) {
 		right.emplace_back(xid::next());
 	}
 
-	std::size_t ops = 0;
+	std::size_t ops  = 0;
+	std::size_t cost = 0;
 	for (auto _ : st) {
-		st.PauseTiming();
 		ops++;
-		st.ResumeTiming();
 
 		auto i = left.cbegin();
 		auto j = right.cbegin();
 
 		while (i != left.cend() && j != right.cend()) {
+			cost++;
 			auto r = i->compare(*j);
 
 			if (r == 0) {
@@ -107,14 +107,15 @@ BENCHMARK([](benchmark::State &st) {
 
 	st.counters.insert({
 		{"ops", benchmark::Counter(ops, benchmark::Counter::kIsRate)},
+		{"comparisons", benchmark::Counter(cost, benchmark::Counter::kIsRate)},
 	});
 })
 	->Name("bm_spot_intersection")
 	->Range(8, 8 << 10);
 
 BENCHMARK([](benchmark::State &st) {
-	std::vector<int> left;
-	std::vector<int> right;
+	std::vector<std::int64_t> left;
+	std::vector<std::int64_t> right;
 
 	left.reserve(st.range(0));
 	right.reserve(st.range(0));
@@ -152,5 +153,5 @@ BENCHMARK([](benchmark::State &st) {
 		{"comparisons", benchmark::Counter(cost, benchmark::Counter::kIsRate)},
 	});
 })
-	->Name("bm_spot_intersection_int")
+	->Name("bm_spot_intersection_int64")
 	->Range(8, 8 << 10);
