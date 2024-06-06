@@ -38,6 +38,11 @@ create table if not exists tuples (
 	_id   text    not null,
 	_rev  integer not null,
 
+	-- Hash values of entities
+	--
+	_l_hash bigint,
+	_r_hash bigint,
+
 	-- Self references for computed tuples
 	--
 	_rid_l  text,
@@ -71,3 +76,5 @@ create table if not exists tuples (
 	constraint "tuples.check-r_entity_id" check (r_entity_id <> ''),
 	constraint "tuples.check-attrs" check (jsonb_typeof(attrs) = 'object')
 );
+
+create index "tuples.idx-rtl" on tuples using btree (space_id, _r_hash, relation, _l_hash, strand, _id);

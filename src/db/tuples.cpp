@@ -8,12 +8,13 @@
 #include "common.h"
 
 namespace db {
-Tuple::Tuple(const Tuple::Data &data) noexcept : _data(data), _id(), _rev(0), _ridL(), _ridR() {
+Tuple::Tuple(const Tuple::Data &data) noexcept :
+	_data(data), _id(), _rev(0), _lHash(), _rHash(), _ridL(), _ridR() {
 	sanitise();
 }
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
-	_data(std::move(data)), _id(), _rev(0), _ridL(), _ridR() {
+	_data(std::move(data)), _id(), _rev(0), _lHash(), _rHash(), _ridL(), _ridR() {
 	sanitise();
 }
 
@@ -30,8 +31,9 @@ Tuple::Tuple(const pg::row_t &r) :
 		.spaceId      = r["space_id"].as<std::string>(),
 		.strand       = r["strand"].as<std::string>(),
 	}),
-	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()), _ridL(r["_rid_l"].as<rid_t>()),
-	_ridR(r["_rid_r"].as<rid_t>()) {}
+	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()),
+	_lHash(r["_l_hash"].as<std::int64_t>()), _rHash(r["_r_hash"].as<std::int64_t>()),
+	_ridL(r["_rid_l"].as<rid_t>()), _ridR(r["_rid_r"].as<rid_t>()) {}
 
 Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 	_data({
@@ -44,7 +46,8 @@ Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 		.rPrincipalId = right.rPrincipalId(),
 		.spaceId      = left.spaceId(),
 	}),
-	_id(), _rev(0), _ridL(left.id()), _ridR(right.id()) {}
+	_id(), _rev(0), _lHash(left.lHash()), _rHash(right.rHash()), _ridL(left.id()),
+	_ridR(right.id()) {}
 
 bool Tuple::discard(std::string_view id) {
 	std::string_view qry = R"(
@@ -55,6 +58,11 @@ bool Tuple::discard(std::string_view id) {
 
 	auto res = pg::exec(qry, id);
 	return (res.affected_rows() == 1);
+}
+
+void Tuple::hash() noexcept {
+	_lHash = Entity(_data.lEntityType, _data.lEntityId).hash();
+	_rHash = Entity(_data.rEntityType, _data.rEntityId).hash();
 }
 
 std::optional<Tuple> Tuple::lookup(
@@ -80,6 +88,7 @@ Tuple Tuple::retrieve(std::string_view id) {
 			attrs,
 			l_principal_id, r_principal_id,
 			_id, _rev,
+			_l_hash, _r_hash,
 			_rid_l, _rid_r
 		from tuples
 		where _id = $1::text;
@@ -103,6 +112,8 @@ void Tuple::sanitise() noexcept {
 		_data.rEntityId   = *_data.rPrincipalId;
 		_data.rEntityType = common::principal_entity_v;
 	}
+
+	hash();
 }
 
 void Tuple::store() {
@@ -120,6 +131,7 @@ void Tuple::store() {
 			attrs,
 			l_principal_id, r_principal_id,
 			_id, _rev,
+			_l_hash, _r_hash,
 			_rid_l, _rid_r
 		) values (
 			$1::text,
@@ -130,7 +142,8 @@ void Tuple::store() {
 			$8::jsonb,
 			$9::text, $10::text,
 			$11::text, $12::integer,
-			$13::text, $14::text
+			$13::bigint, $14::bigint,
+			$15::text, $16::text
 		)
 		on conflict (_id)
 		do update
@@ -161,6 +174,8 @@ void Tuple::store() {
 			_data.rPrincipalId,
 			_id,
 			_rev,
+			_lHash,
+			_rHash,
 			_ridL,
 			_ridR);
 	} catch (pqxx::check_violation &) {
@@ -183,6 +198,26 @@ Tuple::Entity::Entity(std::string_view pid) noexcept :
 
 Tuple::Entity::Entity(std::string_view type, std::string_view id) noexcept : _id(id), _type(type) {}
 
+std::int64_t Tuple::Entity::hash() const noexcept {
+	// Jon Maiga's bit mixer from mx3
+	// Ref: https://github.com/jonmaiga/mx3/blob/48924ee743d724aea2cafd2b4249ef8df57fa8b9/mx3.h#L17
+	auto mix = [](std::int64_t x) -> std::int64_t {
+		constexpr std::int64_t m = 0xbea225f9eb34556d;
+
+		x ^= x >> 32;
+		x *= m;
+		x ^= x >> 29;
+		x *= m;
+		x ^= x >> 32;
+		x *= m;
+		x ^= x >> 29;
+		return x;
+	};
+
+	std::int64_t seed = std::hash<std::string_view>()(type());
+	return mix(seed + 0x517cc1b727220a95 + std::hash<std::string_view>()(id()));
+}
+
 Tuples ListTuples(
 	std::string_view spaceId, std::optional<Tuple::Entity> left, std::optional<Tuple::Entity> right,
 	std::optional<std::string_view> relation, std::string_view lastId, std::uint16_t count) {
@@ -192,29 +227,32 @@ Tuples ListTuples(
 	}
 
 	Tuple::Entity entity;
+	std::int64_t  hash  = 0;
 	std::string   where = "where space_id = $1::text";
 	std::string   sort;
 	if (left) {
 		entity  = *left;
-		where  += " and l_entity_type = $2::text and l_entity_id = $3::text";
 		sort    = "r_entity_id";
+		where  += " and 0 = $2::bigint and l_entity_type = $3::text and l_entity_id = $4::text";
 	} else if (right) {
-		entity  = *right;
-		where  += " and r_entity_type = $2::text and r_entity_id = $3::text";
-		sort    = "l_entity_id";
+		entity = *right;
+		hash   = entity.hash();
+		sort   = "l_entity_id";
+		where +=
+			" and _r_hash = $2::bigint and r_entity_type = $3::text and r_entity_id = $4::text";
 	} else {
 		throw err::DbTuplesInvalidListArgs();
 	}
 
 	if (relation) {
-		where += " and relation = $4::text";
+		where += " and relation = $5::text";
 	}
 
 	if (!lastId.empty()) {
 		if (relation) {
-			where += fmt::format(" and {} < $5::text", sort);
+			where += fmt::format(" and {} < $6::text", sort);
 		} else {
-			where += fmt::format(" and {} < $4::text", sort);
+			where += fmt::format(" and {} < $5::text", sort);
 		}
 	}
 
@@ -229,6 +267,7 @@ Tuples ListTuples(
 				attrs,
 				l_principal_id, r_principal_id,
 				_id, _rev,
+				_l_hash, _r_hash,
 				_rid_l, _rid_r
 			from tuples
 			{}
@@ -241,13 +280,13 @@ Tuples ListTuples(
 
 	db::pg::result_t res;
 	if (relation && !lastId.empty()) {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id(), relation, lastId);
+		res = pg::exec(qry, spaceId, hash, entity.type(), entity.id(), relation, lastId);
 	} else if (relation) {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id(), relation);
+		res = pg::exec(qry, spaceId, hash, entity.type(), entity.id(), relation);
 	} else if (!lastId.empty()) {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id(), lastId);
+		res = pg::exec(qry, spaceId, hash, entity.type(), entity.id(), lastId);
 	} else {
-		res = pg::exec(qry, spaceId, entity.type(), entity.id());
+		res = pg::exec(qry, spaceId, hash, entity.type(), entity.id());
 	}
 
 	Tuples tuples;
@@ -303,6 +342,7 @@ Tuples LookupTuples(
 				attrs,
 				l_principal_id, r_principal_id,
 				_id, _rev,
+				_l_hash, _r_hash,
 				_rid_l, _rid_r
 			from tuples
 			{}

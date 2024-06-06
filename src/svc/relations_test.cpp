@@ -233,7 +233,7 @@ TEST_F(svc_RelationsTest, Check) {
 			EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 			ASSERT_TRUE(result.response);
 			EXPECT_EQ(true, result.response->found());
-			EXPECT_EQ(2, result.response->cost());
+			EXPECT_EQ(5, result.response->cost());
 			ASSERT_TRUE(result.response->has_tuple());
 
 			auto &actual = result.response->tuple();

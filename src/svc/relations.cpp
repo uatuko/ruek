@@ -6,6 +6,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
+#include "db/tuplets.h"
 #include "encoding/b32.h"
 #include "err/errors.h"
 #include "sentium/detail/pagination.pb.h"
@@ -551,24 +552,38 @@ Impl::spot_t Impl::spot(
 
 	std::int32_t cost = 0;
 
-	auto t1 = db::ListTuplesRight(spaceId, left, {}, {}, limit);
-	auto t2 = db::ListTuplesLeft(spaceId, right, relation, {}, limit);
+	auto t1 = db::TupletsList(spaceId, left, {}, {}, limit);
+	auto t2 = db::TupletsList(spaceId, {}, right, relation, limit);
 
 	auto i = t1.cbegin();
 	auto j = t2.cbegin();
 	while (i != t1.cend() && j != t2.cend()) {
 		cost++;
-		auto r = i->rEntityId().compare(j->lEntityId());
 
-		if (r == 0) {
-			if (i->relation() == j->strand() && i->rEntityType() == j->lEntityType()) {
-				return {cost, db::Tuple(*i, *j)};
+		if (i->hash() == j->hash()) {
+			if (i->relation() == j->strand()) {
+				auto tl = db::Tuple::retrieve(i->id());
+				auto tr = db::Tuple::retrieve(j->id());
+
+				cost += 2;
+
+				// Compare text (unhashed) values to avoid any false positives due to hash
+				// collisions
+				if (tl.rEntityType() == tr.lEntityType() && tl.rEntityId() == tr.lEntityId()) {
+					return {cost, db::Tuple(tl, tr)};
+				}
+			}
+
+			if (j != t2.cend() - 1) {
+				j++;
 			} else {
 				i++;
 			}
+
+			continue;
 		}
 
-		if (r > 0) {
+		if (i->hash() > j->hash()) {
 			i++;
 		} else {
 			j++;
