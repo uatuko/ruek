@@ -125,6 +125,9 @@ BENCHMARK([](benchmark::State &st) {
 		right.emplace_back(std::rand());
 	}
 
+	std::sort(left.begin(), left.end());
+	std::sort(right.begin(), right.end());
+
 	std::size_t ops  = 0;
 	std::size_t cost = 0;
 	for (auto _ : st) {
