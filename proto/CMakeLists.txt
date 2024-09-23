@@ -1,22 +1,22 @@
-cmake_path(SET authz_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/authz.proto)
-cmake_path(SET authz_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/authz.grpcxx.pb.h)
-cmake_path(SET authz_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/authz.pb.h)
-cmake_path(SET authz_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/authz.pb.cc)
+cmake_path(SET authz_proto  ${CMAKE_CURRENT_SOURCE_DIR}/ruek/api/v1/authz.proto)
+cmake_path(SET authz_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/authz.grpcxx.pb.h)
+cmake_path(SET authz_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/authz.pb.h)
+cmake_path(SET authz_source ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/authz.pb.cc)
 
-cmake_path(SET principals_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/principals.proto)
-cmake_path(SET principals_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/principals.grpcxx.pb.h)
-cmake_path(SET principals_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/principals.pb.h)
-cmake_path(SET principals_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/principals.pb.cc)
+cmake_path(SET principals_proto  ${CMAKE_CURRENT_SOURCE_DIR}/ruek/api/v1/principals.proto)
+cmake_path(SET principals_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/principals.grpcxx.pb.h)
+cmake_path(SET principals_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/principals.pb.h)
+cmake_path(SET principals_source ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/principals.pb.cc)
 
-cmake_path(SET relations_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/relations.proto)
-cmake_path(SET relations_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/relations.grpcxx.pb.h)
-cmake_path(SET relations_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/relations.pb.h)
-cmake_path(SET relations_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/relations.pb.cc)
+cmake_path(SET relations_proto  ${CMAKE_CURRENT_SOURCE_DIR}/ruek/api/v1/relations.proto)
+cmake_path(SET relations_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/relations.grpcxx.pb.h)
+cmake_path(SET relations_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/relations.pb.h)
+cmake_path(SET relations_source ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/relations.pb.cc)
 
-cmake_path(SET entities_proto  ${CMAKE_CURRENT_SOURCE_DIR}/sentium/api/v1/entities.proto)
-cmake_path(SET entities_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/entities.grpcxx.pb.h)
-cmake_path(SET entities_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/entities.pb.h)
-cmake_path(SET entities_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/api/v1/entities.pb.cc)
+cmake_path(SET entities_proto  ${CMAKE_CURRENT_SOURCE_DIR}/ruek/api/v1/entities.proto)
+cmake_path(SET entities_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/entities.grpcxx.pb.h)
+cmake_path(SET entities_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/entities.pb.h)
+cmake_path(SET entities_source ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/entities.pb.cc)
 
 set(protos
 	${authz_proto}
@@ -54,9 +54,9 @@ add_custom_command(
 )
 
 
-cmake_path(SET detail_pagination_proto ${CMAKE_CURRENT_SOURCE_DIR}/sentium/detail/pagination.proto)
-cmake_path(SET detail_pagination_header ${CMAKE_CURRENT_BINARY_DIR}/sentium/detail/pagination.pb.h)
-cmake_path(SET detail_pagination_source ${CMAKE_CURRENT_BINARY_DIR}/sentium/detail/pagination.pb.cc)
+cmake_path(SET detail_pagination_proto ${CMAKE_CURRENT_SOURCE_DIR}/ruek/detail/pagination.proto)
+cmake_path(SET detail_pagination_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/detail/pagination.pb.h)
+cmake_path(SET detail_pagination_source ${CMAKE_CURRENT_BINARY_DIR}/ruek/detail/pagination.pb.cc)
 
 set(detail_protos
 	${detail_pagination_proto}

@@ -3,11 +3,11 @@
 #include <google/rpc/status.pb.h>
 
 #include "db/principals.h"
-#include "sentium/api/v1/principals.grpcxx.pb.h"
+#include "ruek/api/v1/principals.grpcxx.pb.h"
 
 namespace svc {
 namespace principals {
-using namespace sentium::api::v1::Principals;
+using namespace ruek::api::v1::Principals;
 
 class Impl {
 public:

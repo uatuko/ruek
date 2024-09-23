@@ -2,11 +2,11 @@
 #include <google/rpc/status.pb.h>
 
 #include "db/tuples.h"
-#include "sentium/api/v1/authz.grpcxx.pb.h"
+#include "ruek/api/v1/authz.grpcxx.pb.h"
 
 namespace svc {
 namespace authz {
-using namespace sentium::api::v1::Authz;
+using namespace ruek::api::v1::Authz;
 
 class Impl {
 public:

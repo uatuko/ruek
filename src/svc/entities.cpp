@@ -4,7 +4,7 @@
 #include <google/rpc/code.pb.h>
 
 #include "encoding/b32.h"
-#include "sentium/detail/pagination.pb.h"
+#include "ruek/detail/pagination.pb.h"
 
 #include "common.h"
 
@@ -14,7 +14,7 @@ template <>
 rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::request_type &req) {
 	std::string lastId;
 	if (req.has_pagination_token()) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
 			lastId = pbToken.last_id();
 		}
@@ -52,7 +52,7 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 
 	auto response = map<rpcList::response_type>(results);
 	if (results.size() == limit) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		pbToken.set_last_id(results.back().rEntityId());
 
 		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());
@@ -67,7 +67,7 @@ rpcListPrincipals::result_type Impl::call<rpcListPrincipals>(
 	grpcxx::context &ctx, const rpcListPrincipals::request_type &req) {
 	std::string lastId;
 	if (req.has_pagination_token()) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
 			lastId = pbToken.last_id();
 		}
@@ -106,7 +106,7 @@ rpcListPrincipals::result_type Impl::call<rpcListPrincipals>(
 	auto response = map<rpcListPrincipals::response_type>(results);
 
 	if (results.size() == limit) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		pbToken.set_last_id(*results.back().lPrincipalId());
 
 		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());
@@ -129,7 +129,7 @@ template <> rpcList::response_type Impl::map(const db::Tuples &from) const noexc
 	auto *arr = to.mutable_entities();
 	arr->Reserve(from.size());
 	for (const auto &t : from) {
-		arr->Add(map<sentium::api::v1::EntitiesEntity>(t));
+		arr->Add(map<ruek::api::v1::EntitiesEntity>(t));
 	}
 
 	return to;
@@ -141,14 +141,14 @@ template <> rpcListPrincipals::response_type Impl::map(const db::Tuples &from) c
 	auto *arr = to.mutable_principals();
 	arr->Reserve(from.size());
 	for (const auto &t : from) {
-		arr->Add(map<sentium::api::v1::EntitiesPrincipal>(t));
+		arr->Add(map<ruek::api::v1::EntitiesPrincipal>(t));
 	}
 
 	return to;
 }
 
-template <> sentium::api::v1::EntitiesEntity Impl::map(const db::Tuple &from) const noexcept {
-	sentium::api::v1::EntitiesEntity to;
+template <> ruek::api::v1::EntitiesEntity Impl::map(const db::Tuple &from) const noexcept {
+	ruek::api::v1::EntitiesEntity to;
 	to.set_id(from.rEntityId());
 	to.set_type(from.rEntityType());
 
@@ -159,8 +159,8 @@ template <> sentium::api::v1::EntitiesEntity Impl::map(const db::Tuple &from) co
 	return to;
 }
 
-template <> sentium::api::v1::EntitiesPrincipal Impl::map(const db::Tuple &from) const noexcept {
-	sentium::api::v1::EntitiesPrincipal to;
+template <> ruek::api::v1::EntitiesPrincipal Impl::map(const db::Tuple &from) const noexcept {
+	ruek::api::v1::EntitiesPrincipal to;
 	to.set_id(*from.lPrincipalId());
 
 	if (from.attrs()) {

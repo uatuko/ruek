@@ -7,7 +7,7 @@
 #include "common.h"
 #include "svc.h"
 
-using namespace sentium::api::v1::Relations;
+using namespace ruek::api::v1::Relations;
 
 class svc_RelationsTest : public testing::Test {
 protected:

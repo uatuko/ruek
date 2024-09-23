@@ -6,11 +6,11 @@
 #include <google/rpc/status.pb.h>
 
 #include "db/tuples.h"
-#include "sentium/api/v1/relations.grpcxx.pb.h"
+#include "ruek/api/v1/relations.grpcxx.pb.h"
 
 namespace svc {
 namespace relations {
-using namespace sentium::api::v1::Relations;
+using namespace ruek::api::v1::Relations;
 
 class Impl {
 public:
@@ -57,10 +57,9 @@ private:
 
 	rpcCreate::response_type map(const db::Tuple &from) const noexcept;
 
-	void map(const db::Tuple &from, sentium::api::v1::Tuple *to) const noexcept;
-	void map(
-		const db::Tuples                                            &from,
-		google::protobuf::RepeatedPtrField<sentium::api::v1::Tuple> *to) const noexcept;
+	void map(const db::Tuple &from, ruek::api::v1::Tuple *to) const noexcept;
+	void map(const db::Tuples &from, google::protobuf::RepeatedPtrField<ruek::api::v1::Tuple> *to)
+		const noexcept;
 
 	// Check for a relation between left and right entities using the `graph` algorithm.
 	graph_t graph(

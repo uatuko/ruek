@@ -5,7 +5,7 @@
 
 #include "encoding/b32.h"
 #include "err/errors.h"
-#include "sentium/detail/pagination.pb.h"
+#include "ruek/detail/pagination.pb.h"
 
 #include "common.h"
 
@@ -49,7 +49,7 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 
 	std::string lastId;
 	if (req.has_pagination_token()) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
 			lastId = pbToken.last_id();
 		}
@@ -64,7 +64,7 @@ rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::re
 	auto response = map(results);
 
 	if (results.size() == limit) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		pbToken.set_last_id(results.back().id());
 
 		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());

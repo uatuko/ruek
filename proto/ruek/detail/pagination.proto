@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package sentium.detail;
+package ruek.detail;
 
 message PaginationToken {
 	string last_id = 1;

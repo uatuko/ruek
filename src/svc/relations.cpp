@@ -9,7 +9,7 @@
 #include "db/tuplets.h"
 #include "encoding/b32.h"
 #include "err/errors.h"
-#include "sentium/detail/pagination.pb.h"
+#include "ruek/detail/pagination.pb.h"
 
 #include "common.h"
 
@@ -262,7 +262,7 @@ rpcListLeft::result_type Impl::call<rpcListLeft>(
 
 	std::string lastId;
 	if (req.has_pagination_token()) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
 			lastId = pbToken.last_id();
 		}
@@ -279,7 +279,7 @@ rpcListLeft::result_type Impl::call<rpcListLeft>(
 	map(results, response.mutable_tuples());
 
 	if (results.size() == limit) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		pbToken.set_last_id(results.back().lEntityId());
 
 		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());
@@ -307,7 +307,7 @@ rpcListRight::result_type Impl::call<rpcListRight>(
 
 	std::string lastId;
 	if (req.has_pagination_token()) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		if (pbToken.ParseFromString(encoding::b32::decode(req.pagination_token()))) {
 			lastId = pbToken.last_id();
 		}
@@ -324,7 +324,7 @@ rpcListRight::result_type Impl::call<rpcListRight>(
 	map(results, response.mutable_tuples());
 
 	if (results.size() == limit) {
-		sentium::detail::PaginationToken pbToken;
+		ruek::detail::PaginationToken pbToken;
 		pbToken.set_last_id(results.back().rEntityId());
 
 		auto strToken = encoding::b32::encode(pbToken.SerializeAsString());
@@ -497,7 +497,7 @@ rpcCreate::response_type Impl::map(const db::Tuple &from) const noexcept {
 	return to;
 }
 
-void Impl::map(const db::Tuple &from, sentium::api::v1::Tuple *to) const noexcept {
+void Impl::map(const db::Tuple &from, ruek::api::v1::Tuple *to) const noexcept {
 	to->set_id(from.id());
 	to->set_space_id(from.spaceId());
 
@@ -536,9 +536,8 @@ void Impl::map(const db::Tuple &from, sentium::api::v1::Tuple *to) const noexcep
 	}
 }
 
-void Impl::map(
-	const db::Tuples                                            &from,
-	google::protobuf::RepeatedPtrField<sentium::api::v1::Tuple> *to) const noexcept {
+void Impl::map(const db::Tuples &from, google::protobuf::RepeatedPtrField<ruek::api::v1::Tuple> *to)
+	const noexcept {
 
 	to->Reserve(from.size());
 	for (const auto &t : from) {
