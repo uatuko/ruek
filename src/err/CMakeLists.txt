@@ -8,7 +8,7 @@ target_sources(err
 )
 
 # tests
-if (SENTIUM_BUILD_TESTING)
+if (RUEK_BUILD_TESTING)
 	add_executable(err_tests)
 	target_sources(err_tests
 		PRIVATE
@@ -21,7 +21,7 @@ if (SENTIUM_BUILD_TESTING)
 			gtest_main
 	)
 
-	if (SENTIUM_ENABLE_COVERAGE)
+	if (RUEK_ENABLE_COVERAGE)
 		target_compile_options(err_tests
 			PRIVATE -fprofile-instr-generate -fcoverage-mapping
 		)

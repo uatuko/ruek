@@ -28,7 +28,7 @@ target_link_libraries(db
 		pqxx
 )
 
-if (SENTIUM_ENABLE_COVERAGE)
+if (RUEK_ENABLE_COVERAGE)
 	target_compile_options(db
 		PRIVATE -fprofile-instr-generate -fcoverage-mapping
 	)
@@ -39,7 +39,7 @@ if (SENTIUM_ENABLE_COVERAGE)
 endif()
 
 # tests
-if (SENTIUM_BUILD_TESTING)
+if (RUEK_BUILD_TESTING)
 	target_sources(db
 		PUBLIC
 			FILE_SET headers TYPE HEADERS
@@ -63,7 +63,7 @@ if (SENTIUM_BUILD_TESTING)
 			${PROJECT_NAME}::err
 	)
 
-	if (SENTIUM_ENABLE_COVERAGE)
+	if (RUEK_ENABLE_COVERAGE)
 		target_compile_options(db_tests
 			PRIVATE -fprofile-instr-generate -fcoverage-mapping
 		)
