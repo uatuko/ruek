@@ -1,21 +1,21 @@
-# 🔐 Sentium
+# 🔐 Ruek
 
-[![license](https://img.shields.io/github/license/uatuko/sentium)](https://raw.githubusercontent.com/uatuko/sentium/main/LICENSE)
-[![codecov](https://codecov.io/gh/uatuko/sentium/graph/badge.svg?token=KR9MkDkk8s)](https://codecov.io/gh/uatuko/sentium)
-[![discussions](https://img.shields.io/github/discussions/uatuko/sentium)](https://github.com/uatuko/sentium/discussions)
-[![release](https://img.shields.io/github/v/release/uatuko/sentium)](https://github.com/uatuko/sentium/releases)
+[![license](https://img.shields.io/github/license/uatuko/ruek)](https://raw.githubusercontent.com/uatuko/ruek/main/LICENSE)
+[![codecov](https://codecov.io/gh/uatuko/ruek/graph/badge.svg?token=KR9MkDkk8s)](https://codecov.io/gh/uatuko/ruek)
+[![discussions](https://img.shields.io/github/discussions/uatuko/ruek)](https://github.com/uatuko/ruek/discussions)
+[![release](https://img.shields.io/github/v/release/uatuko/ruek)](https://github.com/uatuko/ruek/releases)
 
 Lightning fast, global scale authorization service without the overhead of yet another DSL[^1].
 
-## What is Sentium?
+## What is Ruek?
 
-Sentium is an authorization service for securing your applications and services using zero trust[^2]
+Ruek is an authorization service for securing your applications and services using zero trust[^2]
 fine-grained authorization (FGA).
 
-We designed Sentium to be as powerful and scalable as [Zanzibar — Google’s Consistent, Global Authorization System](https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/)
+We designed Ruek to be as powerful and scalable as [Zanzibar — Google’s Consistent, Global Authorization System](https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/)
 yet simple enough to start using without the overhead of having to learn a new DSL to define authorization models or policies.
 
-### Why Sentium?
+### Why Ruek?
 
 There are other open-source (and commercial) authorization services, some are inspired by Google Zanzibar
 while others tend to offer policy-as-code solutions. But almost all of these solutions require learning
@@ -24,7 +24,7 @@ a new DSL to create authorization models or define policies, which adds unnecess
 Using an authorization service shouldn't come with a requirement to be an expert in building and maintaining
 authorization models or policies. It should be as easy as using an API.
 
-Sentium lean on well known API design principals to provide an authorization service that's easy to
+Ruek lean on well known API design principals to provide an authorization service that's easy to
 integrate, quick to master and flexible enough to handle complex requirements.
 
 
@@ -62,11 +62,11 @@ You can find a bit more detailed documentation in [docs/](docs/README.md).
 ❯ cmake -B .build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DPostgreSQL_ADDITIONAL_VERSIONS=16 \
-  -DSENTIUM_ENABLE_COVERAGE=OFF
+  -Druek_ENABLE_COVERAGE=OFF
 ```
 
 ```
-❯ cmake --build .build --target sentium
+❯ cmake --build .build --target ruek
 ```
 
 ### Setting-up
@@ -76,20 +76,20 @@ You can find a bit more detailed documentation in [docs/](docs/README.md).
 psql (16.1)
 Type "help" for help.
 
-postgres=# create user sentium;
+postgres=# create user ruek;
 CREATE ROLE
-postgres=# create database sentium owner sentium;
+postgres=# create database ruek owner ruek;
 CREATE DATABASE
 ```
 
 ```
-❯ psql --username=sentium --dbname=sentium < db/schema.sql
+❯ psql --username=ruek --dbname=ruek < db/schema.sql
 ```
 
 ### Running
 
 ```
-❯ PGDATABASE=sentium PGUSER=sentium ./.build/bin/sentium
+❯ PGDATABASE=ruek PGUSER=ruek ./.build/bin/ruek
 Listening on [127.0.0.1:8080] ...
 ```
 
@@ -102,9 +102,9 @@ Listening on [127.0.0.1:8080] ...
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/principals.proto \
+  -proto proto/ruek/api/v1/principals.proto \
   -plaintext \
-  localhost:8080 sentium.api.v1.Principals/Create
+  localhost:8080 ruek.api.v1.Principals/Create
 
 {
   "id": "cn7qtdu56a1cqrj8kur0"
@@ -117,14 +117,14 @@ Listening on [127.0.0.1:8080] ...
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/authz.proto \
+  -proto proto/ruek/api/v1/authz.proto \
   -plaintext \
   -d '{
     "principal_id": "cn7qtdu56a1cqrj8kur0",
     "entity_type": "documents",
     "entity_id": "65bd28aaa076ee8c8463cff8"
   }' \
-  localhost:8080 sentium.api.v1.Authz/Grant
+  localhost:8080 ruek.api.v1.Authz/Grant
 
 {}
 ```
@@ -135,14 +135,14 @@ Listening on [127.0.0.1:8080] ...
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/authz.proto \
+  -proto proto/ruek/api/v1/authz.proto \
   -plaintext \
   -d '{
     "principal_id": "cn7qtdu56a1cqrj8kur0",
     "entity_type": "documents",
     "entity_id": "65bd28aaa076ee8c8463cff8"
   }' \
-  localhost:8080 sentium.api.v1.Authz/Check
+  localhost:8080 ruek.api.v1.Authz/Check
 
 {
   "ok": true
@@ -155,9 +155,9 @@ Listening on [127.0.0.1:8080] ...
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/principals.proto \
+  -proto proto/ruek/api/v1/principals.proto \
   -plaintext \
-  localhost:8080 sentium.api.v1.Principals/List
+  localhost:8080 ruek.api.v1.Principals/List
 
 {
   "principals": [
@@ -177,13 +177,13 @@ Listening on [127.0.0.1:8080] ...
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/entities.proto \
+  -proto proto/ruek/api/v1/entities.proto \
   -plaintext \
   -d '{
     "principal_id": "cn7qtdu56a1cqrj8kur0",
     "entity_type": "documents"
   }' \
-  localhost:8080 sentium.api.v1.Entities/List
+  localhost:8080 ruek.api.v1.Entities/List
 
 {
   "entities": [
@@ -201,13 +201,13 @@ Listening on [127.0.0.1:8080] ...
 ❯ grpcurl \
   -import-path proto \
   -import-path ./.build/_deps/googleapis-src \
-  -proto proto/sentium/api/v1/entities.proto \
+  -proto proto/ruek/api/v1/entities.proto \
   -plaintext \
   -d '{
     "entity_type": "documents",
     "entity_id": "65bd28aaa076ee8c8463cff8"
   }' \
-  localhost:8080 sentium.api.v1.Entities/ListPrincipals
+  localhost:8080 ruek.api.v1.Entities/ListPrincipals
 
 {
   "principals": [
