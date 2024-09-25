@@ -7,7 +7,7 @@
 #include "common.h"
 #include "svc.h"
 
-using namespace sentium::api::v1::Authz;
+using namespace ruek::api::v1::Authz;
 
 class svc_AuthzTest : public testing::Test {
 protected:

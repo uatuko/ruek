@@ -7,7 +7,7 @@
 #include "common.h"
 #include "svc.h"
 
-using namespace sentium::api::v1::Relations;
+using namespace ruek::api::v1::Relations;
 
 class svc_RelationsTest : public testing::Test {
 protected:
@@ -479,7 +479,7 @@ TEST_F(svc_RelationsTest, Check) {
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
 		EXPECT_EQ(
-			"CAMSLltzZW50aXVtOjIuMi4xLjQwMF0gSW52YWxpZCByZWxhdGlvbnMgc3RyYXRlZ3k=",
+			"CAMSK1tydWVrOjIuMi4xLjQwMF0gSW52YWxpZCByZWxhdGlvbnMgc3RyYXRlZ3k=",
 			result.status.details());
 
 		EXPECT_FALSE(result.response);
@@ -1060,7 +1060,7 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
 		EXPECT_EQ(
-			"CAMSLltzZW50aXVtOjIuMi4xLjQwMF0gSW52YWxpZCByZWxhdGlvbnMgc3RyYXRlZ3k=",
+			"CAMSK1tydWVrOjIuMi4xLjQwMF0gSW52YWxpZCByZWxhdGlvbnMgc3RyYXRlZ3k=",
 			result.status.details());
 
 		EXPECT_FALSE(result.response);

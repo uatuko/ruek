@@ -7,7 +7,7 @@
 #include "common.h"
 #include "svc.h"
 
-using namespace sentium::api::v1::Principals;
+using namespace ruek::api::v1::Principals;
 
 class svc_PrincipalsTest : public testing::Test {
 protected:

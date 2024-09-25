@@ -1,6 +1,6 @@
 builddir  = .build
 bindir    = $(builddir)/bin
-binary    = $(bindir)/sentium
+binary    = $(bindir)/ruek
 benchbin  = $(binary)_bench
 buildfile = $(builddir)/build.ninja
 

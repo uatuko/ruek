@@ -16,9 +16,9 @@ jobs:
     services:
       postgres:
         env:
-          POSTGRES_DB: test-sentium
-          POSTGRES_PASSWORD: sentium
-          POSTGRES_USER: sentium
+          POSTGRES_DB: test-ruek
+          POSTGRES_PASSWORD: ruek
+          POSTGRES_USER: ruek
         image: postgres:15
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
@@ -41,19 +41,19 @@ jobs:
       - name: Setup Postgres
         run: psql < db/schema.sql
         env:
-          PGDATABASE: test-sentium
+          PGDATABASE: test-ruek
           PGHOST: postgres
-          PGPASSWORD: sentium
-          PGUSER: sentium
+          PGPASSWORD: ruek
+          PGUSER: ruek
       - name: Build
         run: make
       - name: Generate code coverage reports
         run: make coverage:lcov
         env:
-          PGDATABASE: test-sentium
+          PGDATABASE: test-ruek
           PGHOST: postgres
-          PGPASSWORD: sentium
-          PGUSER: sentium
+          PGPASSWORD: ruek
+          PGUSER: ruek
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:

@@ -6,7 +6,7 @@
 #include "svc/common.h"
 #include "svc/svc.h"
 
-using namespace sentium::api::v1::Relations;
+using namespace ruek::api::v1::Relations;
 
 class bm_relations : public benchmark::Fixture {
 public:

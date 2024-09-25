@@ -27,7 +27,7 @@ target_link_libraries(svc
 		${PROJECT_NAME}::libproto
 )
 
-if (SENTIUM_ENABLE_COVERAGE)
+if (RUEK_ENABLE_COVERAGE)
 	target_compile_options(svc
 		PRIVATE -fprofile-instr-generate -fcoverage-mapping
 	)
@@ -38,7 +38,7 @@ if (SENTIUM_ENABLE_COVERAGE)
 endif()
 
 # tests
-if (SENTIUM_BUILD_TESTING)
+if (RUEK_BUILD_TESTING)
 	add_executable(svc_tests)
 	target_sources(svc_tests
 		PRIVATE
@@ -54,7 +54,7 @@ if (SENTIUM_BUILD_TESTING)
 			gtest_main
 	)
 
-	if (SENTIUM_ENABLE_COVERAGE)
+	if (RUEK_ENABLE_COVERAGE)
 		target_compile_options(svc_tests
 			PRIVATE -fprofile-instr-generate -fcoverage-mapping
 		)

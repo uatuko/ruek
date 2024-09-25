@@ -13,7 +13,7 @@ WORKDIR /tmp
 
 RUN cmake -B build -G Ninja -S source/ \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DSENTIUM_BUILD_TESTING=OFF
+	-DRUEK_BUILD_TESTING=OFF
 
 RUN cmake --build build/ --config Release
 
@@ -26,8 +26,8 @@ RUN apt-get update \
 		libpq5 \
 		libprotobuf32
 
-COPY --from=builder /tmp/build/bin/sentium /opt/sentium/bin/
+COPY --from=builder /tmp/build/bin/ruek /opt/ruek/bin/
 
-WORKDIR /opt/sentium
-ENTRYPOINT [ "bin/sentium" ]
+WORKDIR /opt/ruek
+ENTRYPOINT [ "bin/ruek" ]
 EXPOSE 8080

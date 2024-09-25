@@ -7,7 +7,7 @@ target_sources(encoding
 )
 
 # tests
-if (SENTIUM_BUILD_TESTING)
+if (RUEK_BUILD_TESTING)
 	add_executable(encoding_tests)
 	target_sources(encoding_tests
 		PRIVATE
@@ -21,7 +21,7 @@ if (SENTIUM_BUILD_TESTING)
 			gtest_main
 	)
 
-	if (SENTIUM_ENABLE_COVERAGE)
+	if (RUEK_ENABLE_COVERAGE)
 		target_compile_options(encoding_tests
 			PRIVATE -fprofile-instr-generate -fcoverage-mapping
 		)

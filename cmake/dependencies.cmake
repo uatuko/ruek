@@ -41,7 +41,7 @@ FetchContent_Declare(libxid
 FetchContent_MakeAvailable(libxid)
 
 
-if (SENTIUM_BUILD_BENCHMARKS)
+if (RUEK_BUILD_BENCHMARKS)
 	# google benchmark
 	FetchContent_Declare(benchmark
 		URL      https://github.com/google/benchmark/archive/refs/tags/v1.8.3.tar.gz
@@ -53,7 +53,7 @@ if (SENTIUM_BUILD_BENCHMARKS)
 	FetchContent_MakeAvailable(benchmark)
 endif()
 
-if (SENTIUM_BUILD_TESTING)
+if (RUEK_BUILD_TESTING)
 	# googletest
 	FetchContent_Declare(googletest
 		URL      https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
