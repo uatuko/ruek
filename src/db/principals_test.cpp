@@ -242,10 +242,10 @@ TEST_F(db_PrincipalsTest, rev) {
 		});
 
 		ASSERT_NO_THROW(principal.store());
-		EXPECT_EQ(0, principal.rev());
 
+		auto expected = principal.rev() + 1;
 		ASSERT_NO_THROW(principal.store());
-		EXPECT_EQ(1, principal.rev());
+		EXPECT_EQ(expected, principal.rev());
 	}
 
 	// Error: revision mismatch

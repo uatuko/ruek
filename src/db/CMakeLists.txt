@@ -3,6 +3,7 @@ target_sources(db
 	PRIVATE
 		pg.cpp
 		principals.cpp
+		rng.cpp
 		tuples.cpp
 		tuplets.cpp
 	PUBLIC
@@ -11,6 +12,7 @@ target_sources(db
 			config.h
 			pg.h
 			principals.h
+			rng.h
 			tuples.h
 			tuplets.h
 	PRIVATE

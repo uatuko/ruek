@@ -505,10 +505,10 @@ TEST_F(db_TuplesTest, rev) {
 		});
 
 		ASSERT_NO_THROW(tuple.store());
-		EXPECT_EQ(0, tuple.rev());
 
+		auto expected = tuple.rev() + 1;
 		ASSERT_NO_THROW(tuple.store());
-		EXPECT_EQ(1, tuple.rev());
+		EXPECT_EQ(expected, tuple.rev());
 	}
 
 	// Error: revision mismatch

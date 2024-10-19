@@ -5,14 +5,18 @@
 
 #include "err/errors.h"
 
+#include "rng.h"
+
+static db::detail::rng rng;
+
 namespace db {
-Principal::Principal(const Principal::Data &data) noexcept : _data(data), _rev(0) {
+Principal::Principal(const Principal::Data &data) noexcept : _data(data), _rev(rng()) {
 	if (_data.id.empty()) {
 		_data.id = xid::next();
 	}
 }
 
-Principal::Principal(Data &&data) noexcept : _data(std::move(data)), _rev(0) {
+Principal::Principal(Data &&data) noexcept : _data(std::move(data)), _rev(rng()) {
 	if (_data.id.empty()) {
 		_data.id = xid::next();
 	}
