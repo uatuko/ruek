@@ -4,7 +4,7 @@
 
 namespace db {
 namespace detail {
-int rng() {
+int rand() {
 	static std::random_device rd;
 	static std::mt19937       g(rd());
 

@@ -2,6 +2,6 @@
 
 namespace db {
 namespace detail {
-int rng();
+int rand();
 } // namespace detail
 } // namespace db
