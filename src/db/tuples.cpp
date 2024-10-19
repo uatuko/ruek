@@ -6,18 +6,16 @@
 #include "err/errors.h"
 
 #include "common.h"
-#include "rng.h"
-
-static db::detail::rng rng;
+#include "detail.h"
 
 namespace db {
 Tuple::Tuple(const Tuple::Data &data) noexcept :
-	_data(data), _id(), _rev(rng()), _lHash(), _rHash(), _ridL(), _ridR() {
+	_data(data), _id(), _rev(detail::rng()), _lHash(), _rHash(), _ridL(), _ridR() {
 	sanitise();
 }
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
-	_data(std::move(data)), _id(), _rev(rng()), _lHash(), _rHash(), _ridL(), _ridR() {
+	_data(std::move(data)), _id(), _rev(detail::rng()), _lHash(), _rHash(), _ridL(), _ridR() {
 	sanitise();
 }
 
