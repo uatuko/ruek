@@ -1,6 +1,7 @@
 add_library(db)
 target_sources(db
 	PRIVATE
+		detail.cpp
 		pg.cpp
 		principals.cpp
 		tuples.cpp
@@ -9,6 +10,7 @@ target_sources(db
 		FILE_SET headers TYPE HEADERS
 		FILES
 			config.h
+			db.h
 			pg.h
 			principals.h
 			tuples.h
@@ -16,6 +18,7 @@ target_sources(db
 	PRIVATE
 		FILE_SET private_headers TYPE HEADERS
 		FILES
+			detail.h
 			common.h
 )
 

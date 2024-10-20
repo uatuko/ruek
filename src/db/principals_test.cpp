@@ -235,6 +235,18 @@ TEST_F(db_PrincipalsTest, retrieve) {
 }
 
 TEST_F(db_PrincipalsTest, rev) {
+	// Success: revision
+	{
+		const db::Principal::Data data{
+			.id = "id:db_PrincipalsTest.rev",
+		};
+
+		db::Principal pl(data), pr(data);
+		EXPECT_FALSE(pl == pr);
+		EXPECT_FALSE(pl.rev() == pr.rev());
+		EXPECT_EQ(pl.id(), pr.id());
+	}
+
 	// Success: revision increment
 	{
 		db::Principal principal({
@@ -242,10 +254,10 @@ TEST_F(db_PrincipalsTest, rev) {
 		});
 
 		ASSERT_NO_THROW(principal.store());
-		EXPECT_EQ(0, principal.rev());
 
+		auto expected = principal.rev() + 1;
 		ASSERT_NO_THROW(principal.store());
-		EXPECT_EQ(1, principal.rev());
+		EXPECT_EQ(expected, principal.rev());
 	}
 
 	// Error: revision mismatch

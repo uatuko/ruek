@@ -494,6 +494,20 @@ TEST_F(db_TuplesTest, retrieve) {
 }
 
 TEST_F(db_TuplesTest, rev) {
+	// Success: revision
+	{
+		const db::Tuple::Data data{
+			.lEntityId   = "left",
+			.lEntityType = "db_TuplesTest.rev",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "db_TuplesTest.rev",
+		};
+
+		db::Tuple tl(data), tr(data);
+		EXPECT_FALSE(tl.rev() == tr.rev());
+	}
+
 	// Success: revision increment
 	{
 		db::Tuple tuple({
@@ -505,10 +519,10 @@ TEST_F(db_TuplesTest, rev) {
 		});
 
 		ASSERT_NO_THROW(tuple.store());
-		EXPECT_EQ(0, tuple.rev());
 
+		auto expected = tuple.rev() + 1;
 		ASSERT_NO_THROW(tuple.store());
-		EXPECT_EQ(1, tuple.rev());
+		EXPECT_EQ(expected, tuple.rev());
 	}
 
 	// Error: revision mismatch
