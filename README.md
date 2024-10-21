@@ -5,7 +5,7 @@
 [![discussions](https://img.shields.io/github/discussions/uatuko/ruek)](https://github.com/uatuko/ruek/discussions)
 [![release](https://img.shields.io/github/v/release/uatuko/ruek)](https://github.com/uatuko/ruek/releases)
 
-Lightning fast, global scale authorization service without the overhead of yet another DSL[^1].
+Lightning fast, global scale authorization service without the overhead of a yet another DSL[^1].
 
 ## What is Ruek?
 
@@ -229,11 +229,6 @@ Listening on [127.0.0.1:8080] ...
 * [libpqxx](https://github.com/jtv/libpqxx) - For PostgreSQL connections.
 * [libxid](https://github.com/uatuko/libxid) - For globally unique IDs.
 
-
-## Acknowledgments
-
-* Thanks to [@kw510](https://github.com/kw510), [@neculalaura](https://github.com/neculalaura) and [@td0m](https://github.com/td0m)
-for their contributions on the `gatekeeper` branch.
 
 [^1]: [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language)
 [^2]: [Zero trust architecture (ZTA)](https://en.wikipedia.org/wiki/Zero_trust_security_model)
