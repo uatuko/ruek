@@ -23,11 +23,9 @@ rpc Create(PrincipalsCreateRequest) returns (Principal) {
 
 [`PrincipalsCreateRequest`](#PrincipalsCreateRequest)
 
-
 ### Response message
 
 [`Principal`](#Principal)
-
 
 ### Example
 
