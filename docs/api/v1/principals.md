@@ -21,11 +21,11 @@ rpc Create(PrincipalsCreateRequest) returns (Principal) {
 
 ### Request message
 
-[`PrincipalsCreateRequest`](#PrincipalsCreateRequest)
+[`PrincipalsCreateRequest`](#principalscreaterequest)
 
 ### Response message
 
-[`Principal`](#Principal)
+[`Principal`](#principal)
 
 ### Example
 
@@ -58,11 +58,11 @@ rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse) {
 
 ### Request message
 
-[`PrincipalsDeleteRequest`](#PrincipalsDeleteRequest)
+[`PrincipalsDeleteRequest`](#principalsdeleterequest)
 
 ### Response message
 
-[`PrincipalsDeleteResponse`](#PrincipalsDeleteResponse)
+[`PrincipalsDeleteResponse`](#principalsdeleteresponse)
 
 
 ## [RPC] List (`ruek.api.v1.Principals.List`)
@@ -79,11 +79,33 @@ rpc List(PrincipalsListRequest) returns (PrincipalsListResponse) {
 
 ### Request message
 
-[`PrincipalsListRequest`](#PrincipalsListRequest)
+[`PrincipalsListRequest`](#principalslistrequest)
 
 ### Response message
 
-[`PrincipalsListResponse`](#PrincipalsListResponse)
+[`PrincipalsListResponse`](#principalslistresponse)
+
+### Example
+
+```
+❯ grpcurl \
+  -import-path proto \
+  -import-path ./.build/_deps/googleapis-src \
+  -proto proto/ruek/api/v1/principals.proto \
+  -plaintext \
+  localhost:8080 ruek.api.v1.Principals/List
+
+{
+  "principals": [
+    {
+      "id": "cn7qtim56a1cqrj8kurg"
+    },
+    {
+      "id": "cn7qtdu56a1cqrj8kur0"
+    }
+  ]
+}
+```
 
 
 ## [RPC] Retrieve (`ruek.api.v1.Principals.Retrieve`)
@@ -100,11 +122,11 @@ rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
 
 ### Request message
 
-[`PrincipalsRetrieveRequest`](#PrincipalsRetrieveRequest)
+[`PrincipalsRetrieveRequest`](#principalsretrieverequest)
 
 ### Response message
 
-[`Principal`](#Principal)
+[`Principal`](#principal)
 
 
 ## [RPC] Update (`ruek.api.v1.Principals.Update`)
@@ -122,11 +144,11 @@ Update a principal.
 
 ### Request message
 
-[`PrincipalsUpdateRequest`](#PrincipalsUpdateRequest)
+[`PrincipalsUpdateRequest`](#principalsupdaterequest)
 
 ### Response message
 
-[`Principal`](#Principal)
+[`Principal`](#principal)
 
 
 ## Messages
@@ -136,7 +158,7 @@ Update a principal.
 | Field   | Type                | Description |
 | ------- | ------------------- | ----------- |
 | id      | `string`            | |
-| attrs   | (optional) [google.protobuf.Struct](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
+| attrs   | (optional) [`google.protobuf.Struct`](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
 | segment | (optional) `string` | |
 
 ### PrincipalsCreateRequest
@@ -144,7 +166,7 @@ Update a principal.
 | Field   | Type                | Description |
 | ------- | ------------------- | ----------- |
 | id      | (optional) `string` | |
-| attrs   | (optional) [google.protobuf.Struct](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
+| attrs   | (optional) [`google.protobuf.Struct`](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
 | segment | (optional) `string` | |
 
 ### PrincipalsDeleteRequest
@@ -168,10 +190,10 @@ Update a principal.
 
 ### PrincipalsListResponse
 
-| Field            | Type                | Description |
-| ---------------- | ------------------- | ----------- |
-| principals       | `[]Principal`       | |
-| pagination_token | (optional) `string` | |
+| Field            | Type                          | Description |
+| ---------------- | ----------------------------- | ----------- |
+| principals       | `[]`[`Principal`](#principal) | |
+| pagination_token | (optional) `string`           | |
 
 ### PrincipalsRetrieveRequest
 
@@ -184,5 +206,5 @@ Update a principal.
 | Field   | Type                | Description |
 | ------- | ------------------- | ----------- |
 | id      | `string`            | |
-| attrs   | (optional) [google.protobuf.Struct](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
+| attrs   | (optional) [`google.protobuf.Struct`](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
 | segment | (optional) `string` | |
