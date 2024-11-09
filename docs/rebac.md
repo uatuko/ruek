@@ -130,29 +130,4 @@ look for all the groups `user:jane` is a member of and compare that list with al
 a `reader` relation to `doc:notes.txt` using the _spot_ algorithm.
 
 
-## Appendix A1: Protobuf Message Types
-
-### A1.1 Entity
-
-| Field  | Type       | Description |
-| -------| ---------- | ----------- |
-| `id`   | **string** | Entity ID   |
-| `type` | **string** | Entity Type |
-
-### A1.2 Tuple
-
-| Field                | Type                    | Description |
-| -------------------- | ----------------------- | ----------- |
-| `space_id`           | **string**              | |
-| `id`                 | **string**              | |
-| `left_entity`        | _(optional)_ [Entity](#a11-entity) | |
-| `left_principal_id`  | _(optional)_ **string** | |
-| `relation`           | **string**              | |
-| `right_entity`       | _(optional)_ [Entity](#a11-entity) | |
-| `right_principal_id` | _(optional)_ **string** | |
-| `strand`             | _(optional)_ **string** | |
-| `attrs`              | [google.protobuf.Struct](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
-| `ref_id_left`        | _(optional)_ **string** | |
-| `ref_id_right`       | _(optional)_ **string** | |
-
 [^bfs]: [Breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search)

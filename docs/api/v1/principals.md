@@ -1,3 +1,4 @@
+<!-- omit in toc -->
 # Principals (`ruek.api.v1.Principals`)
 
 ```proto
@@ -6,7 +7,35 @@ package ruek.api.v1;
 service Principals {}
 ```
 
-## [RPC] Create (`ruek.api.v1.Principals.Create`)
+- [(rpc) Create (`ruek.api.v1.Principals.Create`)](#rpc-create-ruekapiv1principalscreate)
+  - [Request message](#request-message)
+  - [Response message](#response-message)
+  - [Example](#example)
+- [(rpc) Delete (`ruek.api.v1.Principals.Delete`)](#rpc-delete-ruekapiv1principalsdelete)
+  - [Request message](#request-message-1)
+  - [Response message](#response-message-1)
+- [(rpc) List (`ruek.api.v1.Principals.List`)](#rpc-list-ruekapiv1principalslist)
+  - [Request message](#request-message-2)
+  - [Response message](#response-message-2)
+  - [Example](#example-1)
+- [(rpc) Retrieve (`ruek.api.v1.Principals.Retrieve`)](#rpc-retrieve-ruekapiv1principalsretrieve)
+  - [Request message](#request-message-3)
+  - [Response message](#response-message-3)
+- [(rpc) Update (`ruek.api.v1.Principals.Update`)](#rpc-update-ruekapiv1principalsupdate)
+  - [Request message](#request-message-4)
+  - [Response message](#response-message-4)
+- [Messages](#messages)
+  - [Principal](#principal)
+  - [PrincipalsCreateRequest](#principalscreaterequest)
+  - [PrincipalsDeleteRequest](#principalsdeleterequest)
+  - [PrincipalsDeleteResponse](#principalsdeleteresponse)
+  - [PrincipalsListRequest](#principalslistrequest)
+  - [PrincipalsListResponse](#principalslistresponse)
+  - [PrincipalsRetrieveRequest](#principalsretrieverequest)
+  - [PrincipalsUpdateRequest](#principalsupdaterequest)
+
+
+## (rpc) Create (`ruek.api.v1.Principals.Create`)
 
 Create a new principal.
 
@@ -43,7 +72,7 @@ rpc Create(PrincipalsCreateRequest) returns (Principal) {
 ```
 
 
-## [RPC] Delete (`ruek.api.v1.Principals.Delete`)
+## (rpc) Delete (`ruek.api.v1.Principals.Delete`)
 
 Delete an existing principal.
 
@@ -65,7 +94,7 @@ rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse) {
 [`PrincipalsDeleteResponse`](#principalsdeleteresponse)
 
 
-## [RPC] List (`ruek.api.v1.Principals.List`)
+## (rpc) List (`ruek.api.v1.Principals.List`)
 
 List principals.
 
@@ -108,7 +137,7 @@ rpc List(PrincipalsListRequest) returns (PrincipalsListResponse) {
 ```
 
 
-## [RPC] Retrieve (`ruek.api.v1.Principals.Retrieve`)
+## (rpc) Retrieve (`ruek.api.v1.Principals.Retrieve`)
 
 Retrieve a principal.
 
@@ -129,7 +158,7 @@ rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
 [`Principal`](#principal)
 
 
-## [RPC] Update (`ruek.api.v1.Principals.Update`)
+## (rpc) Update (`ruek.api.v1.Principals.Update`)
 
 Update a principal.
 
@@ -190,10 +219,10 @@ Update a principal.
 
 ### PrincipalsListResponse
 
-| Field            | Type                          | Description |
-| ---------------- | ----------------------------- | ----------- |
-| principals       | `[]`[`Principal`](#principal) | |
-| pagination_token | (optional) `string`           | |
+| Field            | Type                        | Description |
+| ---------------- | --------------------------- | ----------- |
+| principals       | [`[]Principal`](#principal) | |
+| pagination_token | (optional) `string`         | |
 
 ### PrincipalsRetrieveRequest
 

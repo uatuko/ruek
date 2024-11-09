@@ -1,3 +1,4 @@
+<!-- omit in toc -->
 # Relations (`ruek.api.v1.Relations`)
 
 ```proto
@@ -6,7 +7,40 @@ package ruek.api.v1;
 service Relations {}
 ```
 
-## [RPC] Check (`ruek.api.v1.Relations.Check`)
+- [(rpc) Check (`ruek.api.v1.Relations.Check`)](#rpc-check-ruekapiv1relationscheck)
+  - [Request message](#request-message)
+  - [Response message](#response-message)
+- [(rpc) Create (`ruek.api.v1.Relations.Create`)](#rpc-create-ruekapiv1relationscreate)
+  - [Request message](#request-message-1)
+  - [Response message](#response-message-1)
+- [(rpc) Delete (`ruek.api.v1.Relations.Delete`)](#rpc-delete-ruekapiv1relationsdelete)
+  - [Request message](#request-message-2)
+  - [Response message](#response-message-2)
+- [(rpc) ListLeft (`ruek.api.v1.Relations.ListLeft`)](#rpc-listleft-ruekapiv1relationslistleft)
+  - [Request message](#request-message-3)
+  - [Response message](#response-message-3)
+- [(rpc) ListRight (`ruek.api.v1.Relations.ListRight`)](#rpc-listright-ruekapiv1relationslistright)
+  - [Request message](#request-message-4)
+  - [Response message](#response-message-4)
+- [Messages](#messages)
+  - [Entity](#entity)
+  - [Tuple](#tuple)
+  - [RelationsCheckRequest](#relationscheckrequest)
+  - [RelationsCheckResponse](#relationscheckresponse)
+  - [RelationsCreateRequest](#relationscreaterequest)
+  - [RelationsCreateResponse](#relationscreateresponse)
+  - [RelationsDeleteRequest](#relationsdeleterequest)
+  - [RelationsDeleteResponse](#relationsdeleteresponse)
+  - [RelationsListLeftRequest](#relationslistleftrequest)
+  - [RelationsListLeftResponse](#relationslistleftresponse)
+  - [RelationsListRightRequest](#relationslistrightrequest)
+  - [RelationsListRightResponse](#relationslistrightresponse)
+- [Appendix A. Strategies](#appendix-a-strategies)
+  - [A.1. Lookup strategies](#a1-lookup-strategies)
+  - [A.2. Optimization strategies](#a2-optimization-strategies)
+
+
+## (rpc) Check (`ruek.api.v1.Relations.Check`)
 
 Check if a relation exists.
 
@@ -28,7 +62,7 @@ rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse) {
 [`RelationsCheckResponse`](#relationscreateresponse)
 
 
-## [RPC] Create (`ruek.api.v1.Relations.Create`)
+## (rpc) Create (`ruek.api.v1.Relations.Create`)
 
 Create a new relation.
 
@@ -50,7 +84,7 @@ rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse) {
 [`RelationsCreateResponse`](#relationscreateresponse)
 
 
-## [RPC] Delete (`ruek.api.v1.Relations.Delete`)
+## (rpc) Delete (`ruek.api.v1.Relations.Delete`)
 
 Delete an existing relation.
 
@@ -72,7 +106,7 @@ rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse) {
 [`RelationsDeleteResponse`](#relationsdeleteresponse)
 
 
-## [RPC] ListLeft (`ruek.api.v1.Relations.ListLeft`)
+## (rpc) ListLeft (`ruek.api.v1.Relations.ListLeft`)
 
 List relations to the left of a relation.
 
@@ -93,7 +127,7 @@ rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse) {
 [`RelationsListLeftResponse`](#relationslistleftresponse)
 
 
-## [RPC] ListRight (`ruek.api.v1.Relations.ListRight`)
+## (rpc) ListRight (`ruek.api.v1.Relations.ListRight`)
 
 List relations to the right of a relation.
 
@@ -152,17 +186,17 @@ rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
 | `right`                        | (oneof)              | |
 | [ `right` ] right_entity       |  [`Entity`](#entity) | |
 | [ `right` ] right_principal_id |  `string`            | |
-| strategy                       | (optional) `uint32`  | |
-| cost_limit                     | (optional) `uint32`  | |
+| strategy                       | (optional) `uint32`  | Lookup strategy to use (default `2`). See [lookup strategies](#a1---lookup-strategies). |
+| cost_limit                     | (optional) `uint32`  | A value between `1` and `65535` to limit the lookup cost (default `1000`). |
 
 ### RelationsCheckResponse
 
 | Field  | Type                         | Description |
 | ------ | ---------------------------- | ----------- |
-| found  | `bool`                       | |
-| cost   | `int32`                      | |
-| tuple  | (optional) [`Tuple`](#tuple) | |
-| path   | `[]`[`Tuple`](#tuple)        | |
+| found  | `bool`                       | Flag to indicate if a relation exists or could be derived using the lookup strategy. |
+| cost   | `int32`                      | Lookup cost. A negative cost indicates the lookup cost exceeded the limit and the lookup _may_ have been abandoned without computing all possible derivations. |
+| tuple  | (optional) [`Tuple`](#tuple) | Tuple containing relation data that matched the query. An empty tuple `id` indicates a computed tuple which isn't stored. |
+| path   | [`[]Tuple`](#tuple)          | Path that derived the relation between entities when using the _graph_ (`4`) lookup strategy. |
 
 ### RelationsCreateRequest
 
@@ -177,16 +211,16 @@ rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
 | [ `right` ] right_principal_id |  `string`            | |
 | strand                         | (optional) `string`  | |
 | attrs      | (optional) [`google.protobuf.Struct`](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
-| optimize   | (optional) `uint32` | |
-| cost_limit | (optional) `uint32` | |
+| optimize   | (optional) `uint32` | Optimization strategy to use (default `4`). See [optimization strategies](#a2-optimization-strategies). |
+| cost_limit | (optional) `uint32` | A value between `1` and `65535` to limit the cost of creating a new relation (default `1000`). |
 
 ### RelationsCreateResponse
 
-| Field           | Type                  | Description |
-| --------------- | --------------------- | ----------- |
-| tuple           | [`Tuple`](#tuple)     | |
-| cost            | `int32`               | |
-| computed_tuples | `[]`[`Tuple`](#tuple) | |
+| Field           | Type                | Description |
+| --------------- | ------------------- | ----------- |
+| tuple           | [`Tuple`](#tuple)   | Tuple containing the relation data. |
+| cost            | `int32`             | Cost of creating the relation. A negative cost indicates only the relation was created but computing and storing derived relations was aborted. |
+| computed_tuples | [`[]Tuple`](#tuple) | Computed and _maybe_ stored derived relation tuples. If the `cost` returned is negative, this _may_ contain a partial list. Any tuple with an empty id indicates it's only computed but not stored (i.e. dirty). |
 
 ### RelationsDeleteRequest
 
@@ -219,10 +253,10 @@ rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
 
 ### RelationsListLeftResponse
 
-| Field            | Type                  | Description |
-| ---------------- | --------------------  | ----------- |
-| tuples           | `[]`[`Tuple`](#tuple) | |
-| pagination_token | (optional) `string`   | |
+| Field            | Type                | Description |
+| ---------------- | ------------------- | ----------- |
+| tuples           | [`[]Tuple`](#tuple) | |
+| pagination_token | (optional) `string` | |
 
 ### RelationsListRightRequest
 
@@ -237,7 +271,30 @@ rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
 
 ### RelationsListRightResponse
 
-| Field            | Type                  | Description |
-| ---------------- | --------------------- | ----------- |
-| tuples           | `[]`[`Tuple`](#tuple) | |
-| pagination_token | (optional) `string`   | |
+| Field            | Type                | Description |
+| ---------------- | ------------------- | ----------- |
+| tuples           | [`[]Tuple`](#tuple) | |
+| pagination_token | (optional) `string` | |
+
+
+## Appendix A. Strategies
+
+Refer to [ReBAC strategies](../../rebac.md#strategies) documentation for more information.
+
+### A.1. Lookup strategies
+
+Lookup strategies are used when checking
+
+| Strategy     | Description |
+| ------------ | ----------- |
+| `2` (direct) | Only check if there's a direct relation exists between the entities. |
+| `4` (graph)  | If a direct relation cannot be found between the entities, use a graph traversal algorithm to derive a relation. |
+| `8` (set)    | Check if there's a direct relation exists between the entities and if not, use a set intersection algorithm to derive a relation between the entities. |
+
+### A.2. Optimization strategies
+
+| Strategy     | Description |
+| ------------ | ----------- |
+| `2` (direct) | Optimize for direct lookups. Best for lookup speeds but can produce large numbers of computed relations resulting in expensive write operations. |
+| `4` (graph)  | Don't optimize. Lookups will need to use a graph traversal algorithm to derive relations. |
+| `8` (set)    | Optimize by computing derived relations between principals, which the lookups can utilise in a set intersection algorithm. |
