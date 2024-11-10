@@ -17,16 +17,6 @@ public:
 		return {grpcxx::status::code_t::unimplemented, std::nullopt};
 	}
 
-	template <>
-	rpcCheck::result_type call<rpcCheck>(grpcxx::context &ctx, const rpcCheck::request_type &req);
-
-	template <>
-	rpcGrant::result_type call<rpcGrant>(grpcxx::context &ctx, const rpcGrant::request_type &req);
-
-	template <>
-	rpcRevoke::result_type call<rpcRevoke>(
-		grpcxx::context &ctx, const rpcRevoke::request_type &req);
-
 	google::rpc::Status exception() noexcept;
 
 private:
@@ -35,5 +25,15 @@ private:
 	db::Tuple map(const grpcxx::context &ctx, const rpcGrant::request_type &from) const noexcept;
 	rpcGrant::response_type map(const db::Tuple &from) const noexcept;
 };
+
+template <>
+rpcCheck::result_type Impl::call<rpcCheck>(grpcxx::context &ctx, const rpcCheck::request_type &req);
+
+template <>
+rpcGrant::result_type Impl::call<rpcGrant>(grpcxx::context &ctx, const rpcGrant::request_type &req);
+
+template <>
+rpcRevoke::result_type Impl::call<rpcRevoke>(
+	grpcxx::context &ctx, const rpcRevoke::request_type &req);
 } // namespace authz
 } // namespace svc

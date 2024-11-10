@@ -21,25 +21,6 @@ public:
 		return {grpcxx::status::code_t::unimplemented, std::nullopt};
 	}
 
-	template <>
-	rpcCheck::result_type call<rpcCheck>(grpcxx::context &ctx, const rpcCheck::request_type &req);
-
-	template <>
-	rpcCreate::result_type call<rpcCreate>(
-		grpcxx::context &ctx, const rpcCreate::request_type &req);
-
-	template <>
-	rpcDelete::result_type call<rpcDelete>(
-		grpcxx::context &ctx, const rpcDelete::request_type &req);
-
-	template <>
-	rpcListLeft::result_type call<rpcListLeft>(
-		grpcxx::context &ctx, const rpcListLeft::request_type &req);
-
-	template <>
-	rpcListRight::result_type call<rpcListRight>(
-		grpcxx::context &ctx, const rpcListRight::request_type &req);
-
 	google::rpc::Status exception() noexcept;
 
 private:
@@ -71,5 +52,24 @@ private:
 		std::string_view spaceId, db::Tuple::Entity left, std::string_view relation,
 		db::Tuple::Entity right, std::uint16_t limit) const;
 };
+
+template <>
+rpcCheck::result_type Impl::call<rpcCheck>(grpcxx::context &ctx, const rpcCheck::request_type &req);
+
+template <>
+rpcCreate::result_type Impl::call<rpcCreate>(
+	grpcxx::context &ctx, const rpcCreate::request_type &req);
+
+template <>
+rpcDelete::result_type Impl::call<rpcDelete>(
+	grpcxx::context &ctx, const rpcDelete::request_type &req);
+
+template <>
+rpcListLeft::result_type Impl::call<rpcListLeft>(
+	grpcxx::context &ctx, const rpcListLeft::request_type &req);
+
+template <>
+rpcListRight::result_type Impl::call<rpcListRight>(
+	grpcxx::context &ctx, const rpcListRight::request_type &req);
 } // namespace relations
 } // namespace svc

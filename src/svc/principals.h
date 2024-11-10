@@ -18,25 +18,6 @@ public:
 		return {grpcxx::status::code_t::unimplemented, std::nullopt};
 	}
 
-	template <>
-	rpcCreate::result_type call<rpcCreate>(
-		grpcxx::context &ctx, const rpcCreate::request_type &req);
-
-	template <>
-	rpcDelete::result_type call<rpcDelete>(
-		grpcxx::context &ctx, const rpcDelete::request_type &req);
-
-	template <>
-	rpcList::result_type call<rpcList>(grpcxx::context &ctx, const rpcList::request_type &req);
-
-	template <>
-	rpcRetrieve::result_type call<rpcRetrieve>(
-		grpcxx::context &ctx, const rpcRetrieve::request_type &req);
-
-	template <>
-	rpcUpdate::result_type call<rpcUpdate>(
-		grpcxx::context &ctx, const rpcUpdate::request_type &req);
-
 	google::rpc::Status exception() noexcept;
 
 private:
@@ -46,5 +27,24 @@ private:
 	rpcCreate::response_type map(const db::Principal &from) const noexcept;
 	rpcList::response_type   map(const db::Principals &from) const noexcept;
 };
+
+template <>
+rpcCreate::result_type Impl::call<rpcCreate>(
+	grpcxx::context &ctx, const rpcCreate::request_type &req);
+
+template <>
+rpcDelete::result_type Impl::call<rpcDelete>(
+	grpcxx::context &ctx, const rpcDelete::request_type &req);
+
+template <>
+rpcList::result_type Impl::call<rpcList>(grpcxx::context &ctx, const rpcList::request_type &req);
+
+template <>
+rpcRetrieve::result_type Impl::call<rpcRetrieve>(
+	grpcxx::context &ctx, const rpcRetrieve::request_type &req);
+
+template <>
+rpcUpdate::result_type Impl::call<rpcUpdate>(
+	grpcxx::context &ctx, const rpcUpdate::request_type &req);
 } // namespace principals
 } // namespace svc
