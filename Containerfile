@@ -1,19 +1,28 @@
-FROM debian:12-slim as builder
+FROM --platform=$BUILDPLATFORM debian:12-slim AS builder
 
-RUN apt-get update \
-	&& \
-	apt-get install -y --no-install-recommends \
-		cmake ninja-build \
-		clang libclang-rt-dev \
-		protobuf-compiler libprotobuf-dev libprotoc-dev \
-		libpq-dev
+ARG TARGETARCH
 
 COPY . /tmp/source
 WORKDIR /tmp
 
-RUN cmake -B build -G Ninja -S source/ \
-	-DCMAKE_BUILD_TYPE=Release \
-	-DRUEK_BUILD_TESTING=OFF
+RUN apt-get update \
+	&& \
+	ruek_march=$(./source/bin/march.sh) \
+	&& \
+	if [ "$ruek_march" = "x86_64" ]; then ruek_march=x86-64; fi \
+	&& \
+	apt-get install -y --no-install-recommends \
+		cmake ninja-build \
+		binutils-${ruek_march}-linux-gnu g++ \
+		protobuf-compiler libprotobuf-dev libprotoc-dev \
+		libpq-dev
+
+RUN ruek_march=$(./source/bin/march.sh) \
+	&& \
+	cmake -B build -G Ninja -S source/ \
+		-DCMAKE_CXX_COMPILER_TARGET=${ruek_march}-linux-gnu \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DRUEK_BUILD_TESTING=OFF
 
 RUN cmake --build build/ --config Release
 
