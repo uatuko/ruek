@@ -186,7 +186,7 @@ rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
 | `right`                        | (oneof)              | |
 | [ `right` ] right_entity       |  [`Entity`](#entity) | |
 | [ `right` ] right_principal_id |  `string`            | |
-| strategy                       | (optional) `uint32`  | Lookup strategy to use (default `2`). See [lookup strategies](#a1---lookup-strategies). |
+| strategy                       | (optional) `uint32`  | Lookup strategy to use (default `2`). See [lookup strategies](#a1-lookup-strategies). |
 | cost_limit                     | (optional) `uint32`  | A value between `1` and `65535` to limit the lookup cost (default `1000`). |
 
 ### RelationsCheckResponse
