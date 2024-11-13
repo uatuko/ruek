@@ -1,3 +1,4 @@
+# ruek/api/v1/**/*.proto
 cmake_path(SET authz_proto  ${CMAKE_CURRENT_SOURCE_DIR}/ruek/api/v1/authz.proto)
 cmake_path(SET authz_grpcxx_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/authz.grpcxx.pb.h)
 cmake_path(SET authz_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/api/v1/authz.pb.h)
@@ -45,7 +46,6 @@ add_custom_command(
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE}
 	ARGS
 		--proto_path=${CMAKE_CURRENT_SOURCE_DIR}
-		--proto_path=${googleapis_SOURCE_DIR}
 		--proto_path=${Protobuf_INCLUDE_DIR}
 		--cpp_out=${CMAKE_CURRENT_BINARY_DIR}
 		--grpcxx_out=${CMAKE_CURRENT_BINARY_DIR}
@@ -54,6 +54,7 @@ add_custom_command(
 )
 
 
+# ruek/detail/**/*.proto
 cmake_path(SET detail_pagination_proto ${CMAKE_CURRENT_SOURCE_DIR}/ruek/detail/pagination.proto)
 cmake_path(SET detail_pagination_header ${CMAKE_CURRENT_BINARY_DIR}/ruek/detail/pagination.pb.h)
 cmake_path(SET detail_pagination_source ${CMAKE_CURRENT_BINARY_DIR}/ruek/detail/pagination.pb.cc)
@@ -82,9 +83,46 @@ add_custom_command(
 )
 
 
+# google/rpc/**/*.proto
+cmake_path(SET google_rpc_code_proto  ${CMAKE_CURRENT_SOURCE_DIR}/google/rpc/code.proto)
+cmake_path(SET google_rpc_code_header ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/code.pb.h)
+cmake_path(SET google_rpc_code_source ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/code.pb.cc)
+
+cmake_path(SET google_rpc_status_proto  ${CMAKE_CURRENT_SOURCE_DIR}/google/rpc/status.proto)
+cmake_path(SET google_rpc_status_header ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/status.pb.h)
+cmake_path(SET google_rpc_status_source ${CMAKE_CURRENT_BINARY_DIR}/google/rpc/status.pb.cc)
+
+set(google_protos
+	${google_rpc_code_proto}
+	${google_rpc_status_proto}
+)
+
+set(google_headers
+	${google_rpc_code_header}
+	${google_rpc_status_header}
+)
+
+set(google_sources
+	${google_rpc_code_source}
+	${google_rpc_status_source}
+)
+
+add_custom_command(
+	OUTPUT  ${google_headers} ${google_sources}
+	DEPENDS ${google_protos}
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE}
+	ARGS
+		--proto_path=${CMAKE_CURRENT_SOURCE_DIR}
+		--proto_path=${Protobuf_INCLUDE_DIR}
+		--cpp_out=${CMAKE_CURRENT_BINARY_DIR}
+		${google_protos}
+)
+
+
 add_library(proto
 	${sources}
 	${detail_sources}
+	${google_sources}
 )
 
 target_include_directories(proto
@@ -92,7 +130,6 @@ target_include_directories(proto
 )
 
 target_link_libraries(proto
-	googleapis
 	libgrpcxx::grpcxx
 	protobuf::libprotobuf
 )
