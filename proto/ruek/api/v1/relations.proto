@@ -3,41 +3,13 @@ syntax = "proto3";
 package ruek.api.v1;
 
 import "google/protobuf/struct.proto";
-import "google/api/annotations.proto";
 
 service Relations {
-	rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse) {
-		option (google.api.http) = {
-			post : "/v1/relations:check"
-			body : "*"
-		};
-	}
-
-	rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse) {
-		option (google.api.http) = {
-			post : "/v1/relations"
-			body : "*"
-		};
-	}
-
-	rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse) {
-		option (google.api.http) = {
-			post : "/v1/relations:delete"
-			body : "*"
-		};
-	}
-
-	rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse) {
-		option (google.api.http) = {
-			get : "/v1/relations:left?_limit={pagination_limit}&_start={pagination_token}"
-		};
-	}
-
-	rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
-		option (google.api.http) = {
-			get : "/v1/relations:right?_limit={pagination_limit}&_start={pagination_token}"
-		};
-	}
+	rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse);
+	rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse);
+	rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse);
+	rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse);
+	rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse);
 }
 
 message Entity {

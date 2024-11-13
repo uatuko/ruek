@@ -2,21 +2,11 @@ syntax = "proto3";
 
 package ruek.api.v1;
 
-import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Entities {
-	rpc List(EntitiesListRequest) returns (EntitiesListResponse) {
-		option (google.api.http) = {
-			get : "/v1/entities"
-		};
-	}
-
-	rpc ListPrincipals(EntitiesListPrincipalsRequest) returns (EntitiesListPrincipalsResponse) {
-		option (google.api.http) = {
-			get : "/v1/entities:principals"
-		};
-	}
+	rpc List(EntitiesListRequest) returns (EntitiesListResponse);
+	rpc ListPrincipals(EntitiesListPrincipalsRequest) returns (EntitiesListPrincipalsResponse);
 }
 
 message EntitiesEntity {
