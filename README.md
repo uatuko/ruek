@@ -5,7 +5,7 @@
 [![discussions](https://img.shields.io/github/discussions/uatuko/ruek)](https://github.com/uatuko/ruek/discussions)
 [![release](https://img.shields.io/github/v/release/uatuko/ruek)](https://github.com/uatuko/ruek/releases)
 
-Lightning fast, global scale authorization service without the overhead of yet another DSL[^1].
+Lightning fast, global scale authorization service without the overhead of a yet another DSL[^1].
 
 ## What is Ruek?
 
@@ -28,7 +28,7 @@ Ruek lean on well known API design principals to provide an authorization servic
 integrate, quick to master and flexible enough to handle complex requirements.
 
 
-## Features
+## 🔥 Features
 
 * ABAC, RBAC & ReBAC
 * Schema-less fine-grained authorization (FGA)
@@ -42,180 +42,34 @@ integrate, quick to master and flexible enough to handle complex requirements.
 * Built using the fastest gRPC server implementation[^5]
 
 
-## Documentation
+## 📜 Documentation
 
 You can find a bit more detailed documentation in [docs/](docs/README.md).
 
 
-## Getting started
+## 🚀 Quickstart (with `docker`)
 
-### Prerequisites
-
-* [CMake](https://cmake.org) (>= 3.23)
-* [Protobuf](https://protobuf.dev) (>= 3.15)
-* [libpq](https://www.postgresql.org/docs/current/libpq.html)
-* [PostgreSQL](https://www.postgresql.org) (or [PostgreSQL protocol](https://www.postgresql.org/docs/current/protocol.html) compatible server)
-
-### Compiling
-
-```
-❯ cmake -B .build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DPostgreSQL_ADDITIONAL_VERSIONS=16 \
-  -Druek_ENABLE_COVERAGE=OFF
+### Create a docker network
+```sh
+docker network create ruek-net
 ```
 
-```
-❯ cmake --build .build --target ruek
-```
-
-### Setting-up
-
-```
-❯ psql --dbname=postgres
-psql (16.1)
-Type "help" for help.
-
-postgres=# create user ruek;
-CREATE ROLE
-postgres=# create database ruek owner ruek;
-CREATE DATABASE
+### Run PostgreSQL
+```sh
+docker run --net=ruek-net --name=pg -e POSTGRES_PASSWORD=postgres -d postgres:16-alpine
 ```
 
+### Setup PostgreSQL user and database for Ruek
+```sh
+echo "create user ruek with password 'ruek'; create database ruek owner ruek;" | docker run --rm -i --network=ruek-net -e PGPASSWORD=postgres postgres:16-alpine psql --host=pg --username=postgres
 ```
-❯ psql --username=ruek --dbname=ruek < db/schema.sql
-```
-
-### Running
-
-```
-❯ PGDATABASE=ruek PGUSER=ruek ./.build/bin/ruek
-Listening on [127.0.0.1:8080] ...
+```sh
+curl -sL https://raw.githubusercontent.com/uatuko/ruek/refs/heads/main/db/schema.sql | docker run --rm -i --network=ruek-net -e PGPASSWORD=ruek postgres:16-alpine psql --host=pg --username=ruek --dbname=ruek
 ```
 
-
-## Usage
-
-### Creating a user
-
-```
-❯ grpcurl \
-  -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
-  -proto proto/ruek/api/v1/principals.proto \
-  -plaintext \
-  localhost:8080 ruek.api.v1.Principals/Create
-
-{
-  "id": "cn7qtdu56a1cqrj8kur0"
-}
-```
-
-### Granting access
-
-```
-❯ grpcurl \
-  -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
-  -proto proto/ruek/api/v1/authz.proto \
-  -plaintext \
-  -d '{
-    "principal_id": "cn7qtdu56a1cqrj8kur0",
-    "entity_type": "documents",
-    "entity_id": "65bd28aaa076ee8c8463cff8"
-  }' \
-  localhost:8080 ruek.api.v1.Authz/Grant
-
-{}
-```
-
-### Checking access
-
-```
-❯ grpcurl \
-  -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
-  -proto proto/ruek/api/v1/authz.proto \
-  -plaintext \
-  -d '{
-    "principal_id": "cn7qtdu56a1cqrj8kur0",
-    "entity_type": "documents",
-    "entity_id": "65bd28aaa076ee8c8463cff8"
-  }' \
-  localhost:8080 ruek.api.v1.Authz/Check
-
-{
-  "ok": true
-}
-```
-
-### Listing users
-
-```
-❯ grpcurl \
-  -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
-  -proto proto/ruek/api/v1/principals.proto \
-  -plaintext \
-  localhost:8080 ruek.api.v1.Principals/List
-
-{
-  "principals": [
-    {
-      "id": "cn7qtim56a1cqrj8kurg"
-    },
-    {
-      "id": "cn7qtdu56a1cqrj8kur0"
-    }
-  ]
-}
-```
-
-### Listing entities a user can access
-
-```
-❯ grpcurl \
-  -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
-  -proto proto/ruek/api/v1/entities.proto \
-  -plaintext \
-  -d '{
-    "principal_id": "cn7qtdu56a1cqrj8kur0",
-    "entity_type": "documents"
-  }' \
-  localhost:8080 ruek.api.v1.Entities/List
-
-{
-  "entities": [
-    {
-      "id": "65bd28aaa076ee8c8463cff8",
-      "type": "documents"
-    }
-  ]
-}
-```
-
-### Listing users that has access to an entity
-
-```
-❯ grpcurl \
-  -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
-  -proto proto/ruek/api/v1/entities.proto \
-  -plaintext \
-  -d '{
-    "entity_type": "documents",
-    "entity_id": "65bd28aaa076ee8c8463cff8"
-  }' \
-  localhost:8080 ruek.api.v1.Entities/ListPrincipals
-
-{
-  "principals": [
-    {
-      "id": "cn7qtdu56a1cqrj8kur0"
-    }
-  ]
-}
+### Run Ruek
+```sh
+docker run --network=ruek-net --name=ruek -e PGHOST=pg -e PGUSER=ruek -e PGPASSWORD=ruek -p 8080:8080 -d uatuko/ruek:latest
 ```
 
 
@@ -229,11 +83,6 @@ Listening on [127.0.0.1:8080] ...
 * [libpqxx](https://github.com/jtv/libpqxx) - For PostgreSQL connections.
 * [libxid](https://github.com/uatuko/libxid) - For globally unique IDs.
 
-
-## Acknowledgments
-
-* Thanks to [@kw510](https://github.com/kw510), [@neculalaura](https://github.com/neculalaura) and [@td0m](https://github.com/td0m)
-for their contributions on the `gatekeeper` branch.
 
 [^1]: [Domain-Specific Language](https://en.wikipedia.org/wiki/Domain-specific_language)
 [^2]: [Zero trust architecture (ZTA)](https://en.wikipedia.org/wiki/Zero_trust_security_model)

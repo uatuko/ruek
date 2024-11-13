@@ -61,7 +61,8 @@ To derive the relation `[]user:jane/reader/doc:notes.txt` using a BFS[^bfs] grap
 (which has **O(v+e)** complexity), we will need to read 10,003 tuples. This can be really slow depending
 on DB load and number of concurrent requests.
 
-> 💡 This is only an illustrative example. In reality, Ruek traverse the relations graphs from right
+> [!TIP]
+> This is only an illustrative example. In reality, Ruek traverse the relations graphs from right
 > to left which will result in only 3 reads in this instance.
 
 ![Relations Graph #02](./assets/rebac-relations-graph-02.svg)
@@ -71,7 +72,8 @@ strategies to suite different shapes of relations graphs.
 
 ### Direct
 
-> 💡 Best for reads (**O(1)**), _can be_ worst for writes (**O(1+l+r)**).
+> [!TIP]
+> Best for reads (**O(1)**), _can be_ worst for writes (**O(1+l+r)**).
 
 _Direct_ strategy optimise for **O(1)** relations checks at the expense of computing and storing derived
 relations during creation.
@@ -88,7 +90,8 @@ the relations graph and compute and store the derived tuple `t2-1`. This ensures
 
 ### Graph
 
-> 💡 Best for writes (**O(1)**), _can be_ worst for reads (**O(1+v+e)**).
+> [!TIP]
+> Best for writes (**O(1)**), _can be_ worst for reads (**O(1+v+e)**).
 
 _Graph_ strategy does not perform any additional computations when creating relations resulting in **O(1)**
 writes. When checking relations, if a direct relation does not exists Ruek will use a graph traversal
@@ -97,7 +100,8 @@ of the relations graph.
 
 ### Set
 
-> 💡 A balance between reads and writes (**O(1+n+m)**), best for large datasets.
+> [!TIP]
+> A balance between reads and writes (**O(1+n+m)**), best for large datasets.
 
 _Set_ strategy require relations to be defined between principals (e.g. users, groups) and entities.
 When creating relations, Ruek will analyse the relations graph and compute and store derived relations
@@ -129,30 +133,5 @@ When checking if `user:jane -> reader -> doc:notes.txt` relation exists using se
 look for all the groups `user:jane` is a member of and compare that list with all the groups that has
 a `reader` relation to `doc:notes.txt` using the _spot_ algorithm.
 
-
-## Appendix A1: Protobuf Message Types
-
-### A1.1 Entity
-
-| Field  | Type       | Description |
-| -------| ---------- | ----------- |
-| `id`   | **string** | Entity ID   |
-| `type` | **string** | Entity Type |
-
-### A1.2 Tuple
-
-| Field                | Type                    | Description |
-| -------------------- | ----------------------- | ----------- |
-| `space_id`           | **string**              | |
-| `id`                 | **string**              | |
-| `left_entity`        | _(optional)_ [Entity](#a11-entity) | |
-| `left_principal_id`  | _(optional)_ **string** | |
-| `relation`           | **string**              | |
-| `right_entity`       | _(optional)_ [Entity](#a11-entity) | |
-| `right_principal_id` | _(optional)_ **string** | |
-| `strand`             | _(optional)_ **string** | |
-| `attrs`              | [google.protobuf.Struct](https://protobuf.dev/reference/protobuf/google.protobuf/#struct) | |
-| `ref_id_left`        | _(optional)_ **string** | |
-| `ref_id_right`       | _(optional)_ **string** | |
 
 [^bfs]: [Breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search)
