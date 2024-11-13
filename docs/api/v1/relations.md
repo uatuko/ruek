@@ -45,12 +45,7 @@ service Relations {}
 Check if a relation exists.
 
 ```proto
-rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse) {
-  option (google.api.http) = {
-    post : "/v1/relations:check"
-    body : "*"
-  };
-}
+rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse);
 ```
 
 ### Request message
@@ -67,12 +62,7 @@ rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse) {
 Create a new relation.
 
 ```proto
-rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse) {
-  option (google.api.http) = {
-    post : "/v1/relations"
-    body : "*"
-  };
-}
+rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse);
 ```
 
 ### Request message
@@ -89,12 +79,7 @@ rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse) {
 Delete an existing relation.
 
 ```proto
-rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse) {
-  option (google.api.http) = {
-    post : "/v1/relations:delete"
-    body : "*"
-  };
-}
+rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse);
 ```
 
 ### Request message
@@ -111,11 +96,7 @@ rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse) {
 List relations to the left of a relation.
 
 ```proto
-rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse) {
-  option (google.api.http) = {
-    get : "/v1/relations:left?_limit={pagination_limit}&_start={pagination_token}"
-  };
-}
+rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse);
 ```
 
 ### Request message
@@ -132,11 +113,7 @@ rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse) {
 List relations to the right of a relation.
 
 ```proto
-rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse) {
-  option (google.api.http) = {
-    get : "/v1/relations:right?_limit={pagination_limit}&_start={pagination_token}"
-  };
-}
+rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse);
 ```
 
 ### Request message

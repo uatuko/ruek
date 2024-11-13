@@ -40,12 +40,7 @@ service Principals {}
 Create a new principal.
 
 ```proto
-rpc Create(PrincipalsCreateRequest) returns (Principal) {
-  option (google.api.http) = {
-    post : "/v1/principals"
-    body : "*"
-  };
-}
+rpc Create(PrincipalsCreateRequest) returns (Principal);
 ```
 
 ### Request message
@@ -61,7 +56,6 @@ rpc Create(PrincipalsCreateRequest) returns (Principal) {
 ```
 ❯ grpcurl \
   -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
   -proto proto/ruek/api/v1/principals.proto \
   -plaintext \
   localhost:8080 ruek.api.v1.Principals/Create
@@ -77,12 +71,7 @@ rpc Create(PrincipalsCreateRequest) returns (Principal) {
 Delete an existing principal.
 
 ```proto
-rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse) {
-  option (google.api.http) = {
-    delete : "/v1/principals/{id}"
-    body : "*"
-  };
-}
+rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse);
 ```
 
 ### Request message
@@ -99,11 +88,7 @@ rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse) {
 List principals.
 
 ```proto
-rpc List(PrincipalsListRequest) returns (PrincipalsListResponse) {
-  option (google.api.http) = {
-    get : "/v1/principals?segment={segment}&_limit={pagination_limit}&_start={pagination_token}"
-  };
-}
+rpc List(PrincipalsListRequest) returns (PrincipalsListResponse);
 ```
 
 ### Request message
@@ -119,7 +104,6 @@ rpc List(PrincipalsListRequest) returns (PrincipalsListResponse) {
 ```
 ❯ grpcurl \
   -import-path proto \
-  -import-path ./.build/_deps/googleapis-src \
   -proto proto/ruek/api/v1/principals.proto \
   -plaintext \
   localhost:8080 ruek.api.v1.Principals/List
@@ -142,11 +126,7 @@ rpc List(PrincipalsListRequest) returns (PrincipalsListResponse) {
 Retrieve a principal.
 
 ```proto
-rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
-  option (google.api.http) = {
-    get : "/v1/principals/{id}"
-  };
-}
+rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal);
 ```
 
 ### Request message
@@ -163,12 +143,7 @@ rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
 Update a principal.
 
 ```proto
-  rpc Update(PrincipalsUpdateRequest) returns (Principal) {
-    option (google.api.http) = {
-      put : "/v1/principals/{id}"
-      body : "*"
-    };
-  }
+rpc Update(PrincipalsUpdateRequest) returns (Principal);
 ```
 
 ### Request message
