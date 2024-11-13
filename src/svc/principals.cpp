@@ -27,7 +27,7 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 	auto p = map(ctx, req);
 	p.store();
 
-	return {grpcxx::status::code_t::ok, map(p)};
+	return {grpcxx::status::code_t::ok, map<rpcCreate::response_type>(p)};
 }
 
 template <>
@@ -78,7 +78,7 @@ template <>
 rpcRetrieve::result_type Impl::call<rpcRetrieve>(
 	grpcxx::context &ctx, const rpcRetrieve::request_type &req) {
 	auto p = db::Principal::retrieve(ctx.meta(common::space_id_v), req.id());
-	return {grpcxx::status::code_t::ok, map(p)};
+	return {grpcxx::status::code_t::ok, map<rpcRetrieve::response_type>(p)};
 }
 
 template <>
@@ -87,7 +87,7 @@ rpcUpdate::result_type Impl::call<rpcUpdate>(
 	auto p = db::Principal::retrieve(ctx.meta(common::space_id_v), req.id());
 	if (!req.has_attrs() && !req.has_segment()) {
 		// Nothing to update
-		return {grpcxx::status::code_t::ok, map(p)};
+		return {grpcxx::status::code_t::ok, map<rpcUpdate::response_type>(p)};
 	}
 
 	if (req.has_attrs()) {
@@ -102,7 +102,7 @@ rpcUpdate::result_type Impl::call<rpcUpdate>(
 	}
 
 	p.store();
-	return {grpcxx::status::code_t::ok, map(p)};
+	return {grpcxx::status::code_t::ok, map<rpcUpdate::response_type>(p)};
 }
 
 google::rpc::Status Impl::exception() noexcept {
@@ -155,8 +155,20 @@ db::Principal Impl::map(
 	return to;
 }
 
-rpcCreate::response_type Impl::map(const db::Principal &from) const noexcept {
-	rpcCreate::response_type to;
+rpcList::response_type Impl::map(const db::Principals &from) const noexcept {
+	rpcList::response_type to;
+
+	auto *arr = to.mutable_principals();
+	arr->Reserve(from.size());
+	for (const auto &p : from) {
+		arr->Add(map(p));
+	}
+
+	return to;
+}
+
+ruek::api::v1::Principal Impl::map(const db::Principal &from) const noexcept {
+	ruek::api::v1::Principal to;
 	to.set_id(from.id());
 
 	if (from.attrs()) {
@@ -170,14 +182,9 @@ rpcCreate::response_type Impl::map(const db::Principal &from) const noexcept {
 	return to;
 }
 
-rpcList::response_type Impl::map(const db::Principals &from) const noexcept {
-	rpcList::response_type to;
-
-	auto *arr = to.mutable_principals();
-	arr->Reserve(from.size());
-	for (const auto &p : from) {
-		arr->Add(map(p));
-	}
+template <concepts::has_mutable_principal T> T Impl::map(const db::Principal &from) const noexcept {
+	T to;
+	*to.mutable_principal() = map(from);
 
 	return to;
 }

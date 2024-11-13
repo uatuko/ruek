@@ -5,11 +5,11 @@ package ruek.api.v1;
 import "google/protobuf/struct.proto";
 
 service Principals {
-	rpc Create(PrincipalsCreateRequest) returns (Principal);
+	rpc Create(PrincipalsCreateRequest) returns (PrincipalsCreateResponse);
 	rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse);
 	rpc List(PrincipalsListRequest) returns (PrincipalsListResponse);
-	rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal);
-	rpc Update(PrincipalsUpdateRequest) returns (Principal);
+	rpc Retrieve(PrincipalsRetrieveRequest) returns (PrincipalsRetrieveResponse);
+	rpc Update(PrincipalsUpdateRequest) returns (PrincipalsUpdateResponse);
 }
 
 message Principal {
@@ -24,6 +24,10 @@ message PrincipalsCreateRequest {
 
 	optional google.protobuf.Struct attrs   = 2;
 	optional string                 segment = 3;
+}
+
+message PrincipalsCreateResponse {
+	Principal principal = 1;
 }
 
 message PrincipalsDeleteRequest {
@@ -49,9 +53,17 @@ message PrincipalsRetrieveRequest {
 	string id = 1;
 }
 
+message PrincipalsRetrieveResponse {
+	Principal principal = 1;
+}
+
 message PrincipalsUpdateRequest {
 	string id = 1;
 
 	optional google.protobuf.Struct attrs   = 2;
 	optional string                 segment = 3;
+}
+
+message PrincipalsUpdateResponse {
+	Principal principal = 1;
 }
