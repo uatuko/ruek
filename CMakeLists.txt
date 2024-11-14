@@ -33,7 +33,6 @@ if (RUEK_ENABLE_COVERAGE)
 endif()
 
 include(cmake/dependencies.cmake)
-include(cmake/googleapis.cmake)
 
 if (RUEK_BUILD_TESTING)
 	enable_testing()

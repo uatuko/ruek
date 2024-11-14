@@ -7,6 +7,13 @@
 
 namespace svc {
 namespace principals {
+namespace concepts {
+template <typename T>
+concept has_mutable_principal = requires(T t) {
+	{ t.mutable_principal() } -> std::same_as<ruek::api::v1::Principal *>;
+};
+}
+
 using namespace ruek::api::v1::Principals;
 
 class Impl {
@@ -24,8 +31,10 @@ private:
 	db::Principal map(
 		const grpcxx::context &ctx, const rpcCreate::request_type &from) const noexcept;
 
-	rpcCreate::response_type map(const db::Principal &from) const noexcept;
 	rpcList::response_type   map(const db::Principals &from) const noexcept;
+	ruek::api::v1::Principal map(const db::Principal &from) const noexcept;
+
+	template <concepts::has_mutable_principal T> T map(const db::Principal &from) const noexcept;
 };
 
 template <>

@@ -34,7 +34,8 @@ TEST_F(svc_PrincipalsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
-		EXPECT_FALSE(result.response->id().empty());
+		ASSERT_TRUE(result.response->has_principal());
+		EXPECT_FALSE(result.response->principal().id().empty());
 	}
 
 	// Success: create principal with `id`
@@ -47,7 +48,8 @@ TEST_F(svc_PrincipalsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
-		EXPECT_EQ(request.id(), result.response->id());
+		ASSERT_TRUE(result.response->has_principal());
+		EXPECT_EQ(request.id(), result.response->principal().id());
 	}
 
 	// Success: create principal with `attrs`
@@ -62,9 +64,11 @@ TEST_F(svc_PrincipalsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
+		ASSERT_TRUE(result.response->has_principal());
 
 		std::string responseAttrs;
-		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
+		google::protobuf::util::MessageToJsonString(
+			result.response->principal().attrs(), &responseAttrs);
 		EXPECT_EQ(attrs, responseAttrs);
 	}
 
@@ -78,7 +82,10 @@ TEST_F(svc_PrincipalsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
-		EXPECT_EQ("segment:svc_PrincipalsTest.Create-with_segment", result.response->segment());
+		ASSERT_TRUE(result.response->has_principal());
+		EXPECT_EQ(
+			"segment:svc_PrincipalsTest.Create-with_segment",
+			result.response->principal().segment());
 	}
 
 	// Success: create principal with space-id
@@ -96,9 +103,10 @@ TEST_F(svc_PrincipalsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
+		ASSERT_TRUE(result.response->has_principal());
 
 		ASSERT_NO_THROW(db::Principal::retrieve(
-			"space_id:svc_PrincipalsTest.Create-with_space_id", result.response->id()));
+			"space_id:svc_PrincipalsTest.Create-with_space_id", result.response->principal().id()));
 	}
 
 	// Error: invalid `segment`
@@ -363,8 +371,9 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
+		ASSERT_TRUE(result.response->has_principal());
 
-		auto &actual = result.response.value();
+		auto &actual = result.response->principal();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_FALSE(actual.has_attrs());
 		EXPECT_FALSE(actual.has_segment());
@@ -390,8 +399,9 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
+		ASSERT_TRUE(result.response->has_principal());
 
-		auto &actual = result.response.value();
+		auto &actual = result.response->principal();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_FALSE(actual.has_attrs());
 		EXPECT_FALSE(actual.has_segment());
@@ -412,14 +422,15 @@ TEST_F(svc_PrincipalsTest, Retrieve) {
 		EXPECT_NO_THROW(result = svc.call<rpcRetrieve>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		ASSERT_TRUE(result.response);
+		ASSERT_TRUE(result.response->has_principal());
 
-		auto &actual = result.response.value();
+		auto &actual = result.response->principal();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_TRUE(actual.has_attrs());
 		EXPECT_FALSE(actual.has_segment());
 
 		std::string responseAttrs;
-		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
+		google::protobuf::util::MessageToJsonString(actual.attrs(), &responseAttrs);
 		EXPECT_EQ(principal.attrs(), responseAttrs);
 	}
 
@@ -456,15 +467,15 @@ TEST_F(svc_PrincipalsTest, Update) {
 		rpcUpdate::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcUpdate>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		ASSERT_TRUE(result.response);
+		ASSERT_TRUE(result.response->has_principal());
 
-		auto &actual = result.response.value();
+		auto &actual = result.response->principal();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_EQ("segment:svc_PrincipalsTest.Update", actual.segment());
 		EXPECT_TRUE(actual.has_attrs());
 
 		std::string responseAttrs;
-		google::protobuf::util::MessageToJsonString(result.response->attrs(), &responseAttrs);
+		google::protobuf::util::MessageToJsonString(actual.attrs(), &responseAttrs);
 		EXPECT_EQ(attrs, responseAttrs);
 	}
 
@@ -481,9 +492,9 @@ TEST_F(svc_PrincipalsTest, Update) {
 		rpcUpdate::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcUpdate>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		ASSERT_TRUE(result.response);
+		ASSERT_TRUE(result.response->has_principal());
 
-		auto &actual = result.response.value();
+		auto &actual = result.response->principal();
 		EXPECT_EQ(principal.id(), actual.id());
 		EXPECT_FALSE(actual.has_segment());
 		EXPECT_FALSE(actual.has_attrs());

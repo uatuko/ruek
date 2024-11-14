@@ -3,29 +3,11 @@ syntax = "proto3";
 package ruek.api.v1;
 
 import "google/protobuf/struct.proto";
-import "google/api/annotations.proto";
 
 service Authz {
-	rpc Check(AuthzCheckRequest) returns (AuthzCheckResponse) {
-		option (google.api.http) = {
-			post : "/v1/authz:check"
-			body : "*"
-		};
-	}
-
-	rpc Grant(AuthzGrantRequest) returns (AuthzGrantResponse) {
-		option (google.api.http) = {
-			put : "/v1/authz:grant"
-			body : "*"
-		};
-	}
-
-	rpc Revoke(AuthzRevokeRequest) returns (AuthzRevokeResponse) {
-		option (google.api.http) = {
-			put : "/v1/authz:revoke"
-			body : "*"
-		};
-	}
+	rpc Check(AuthzCheckRequest) returns (AuthzCheckResponse);
+	rpc Grant(AuthzGrantRequest) returns (AuthzGrantResponse);
+	rpc Revoke(AuthzRevokeRequest) returns (AuthzRevokeResponse);
 }
 
 message AuthzCheckRequest {

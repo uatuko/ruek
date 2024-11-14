@@ -2,42 +2,14 @@ syntax = "proto3";
 
 package ruek.api.v1;
 
-import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
 service Principals {
-	rpc Create(PrincipalsCreateRequest) returns (Principal) {
-		option (google.api.http) = {
-			post : "/v1/principals"
-			body : "*"
-		};
-	}
-
-	rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse) {
-		option (google.api.http) = {
-			delete : "/v1/principals/{id}"
-			body : "*"
-		};
-	}
-
-	rpc List(PrincipalsListRequest) returns (PrincipalsListResponse) {
-		option (google.api.http) = {
-			get : "/v1/principals?segment={segment}&_limit={pagination_limit}&_start={pagination_token}"
-		};
-	}
-
-	rpc Retrieve(PrincipalsRetrieveRequest) returns (Principal) {
-		option (google.api.http) = {
-			get : "/v1/principals/{id}"
-		};
-	}
-
-	rpc Update(PrincipalsUpdateRequest) returns (Principal) {
-		option (google.api.http) = {
-			put : "/v1/principals/{id}"
-			body : "*"
-		};
-	}
+	rpc Create(PrincipalsCreateRequest) returns (PrincipalsCreateResponse);
+	rpc Delete(PrincipalsDeleteRequest) returns (PrincipalsDeleteResponse);
+	rpc List(PrincipalsListRequest) returns (PrincipalsListResponse);
+	rpc Retrieve(PrincipalsRetrieveRequest) returns (PrincipalsRetrieveResponse);
+	rpc Update(PrincipalsUpdateRequest) returns (PrincipalsUpdateResponse);
 }
 
 message Principal {
@@ -52,6 +24,10 @@ message PrincipalsCreateRequest {
 
 	optional google.protobuf.Struct attrs   = 2;
 	optional string                 segment = 3;
+}
+
+message PrincipalsCreateResponse {
+	Principal principal = 1;
 }
 
 message PrincipalsDeleteRequest {
@@ -77,9 +53,17 @@ message PrincipalsRetrieveRequest {
 	string id = 1;
 }
 
+message PrincipalsRetrieveResponse {
+	Principal principal = 1;
+}
+
 message PrincipalsUpdateRequest {
 	string id = 1;
 
 	optional google.protobuf.Struct attrs   = 2;
 	optional string                 segment = 3;
+}
+
+message PrincipalsUpdateResponse {
+	Principal principal = 1;
 }

@@ -76,7 +76,6 @@ docker run --network=ruek-net --name=ruek -e PGHOST=pg -e PGUSER=ruek -e PGPASSW
 ## Built with
 
 * [fmt](https://github.com/fmtlib/fmt) - For string formatting.
-* [googleapis](https://github.com/googleapis/googleapis) - For annotations to help with gRPC/JSON transcoding.
 * [googletest](https://github.com/google/googletest) - For tests.
 * [benchmark](https://github.com/google/benchmark) - For benchmarks.
 * [grpcxx](https://github.com/uatuko/grpcxx) - For the gRPC server.
