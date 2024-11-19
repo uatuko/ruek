@@ -5,8 +5,15 @@
 namespace db {
 namespace detail {
 int rand() {
-	static std::random_device rd;
-	static std::mt19937       g(rd());
+	static std::mt19937 g;
+	static bool         seeded = false;
+
+	if (!seeded) {
+		std::random_device rd;
+		g.seed(rd());
+
+		seeded = true;
+	}
 
 	return g();
 }
