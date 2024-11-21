@@ -54,7 +54,7 @@ jobs:
           PGPASSWORD: ruek
           PGUSER: ruek
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v3
         with:
           directory: ${{ github.workspace }}/.build
           fail_ci_if_error: true
