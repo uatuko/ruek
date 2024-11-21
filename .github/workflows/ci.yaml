@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow_ref }}-${{ github.job }}
-    # Can't use 23.10 due to lcov-2.0-1 issue (ref: https://bugs.launchpad.net/ubuntu/+source/lcov/+bug/2029924)
-    container: ubuntu:23.04
+    container: ubuntu:24.04
     services:
       postgres:
         env:
@@ -33,8 +32,8 @@ jobs:
             libprotobuf-dev libprotoc-dev protobuf-compiler \
             libpq-dev postgresql-client \
             lcov llvm
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: .build
           key: ${{ runner.arch }}_${{ github.job }}-${{ hashFiles('cmake/dependencies.cmake') }}
@@ -55,7 +54,7 @@ jobs:
           PGPASSWORD: ruek
           PGUSER: ruek
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           directory: ${{ github.workspace }}/.build
           fail_ci_if_error: true
@@ -65,7 +64,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    container: ubuntu:23.10
+    container: ubuntu:24.04
 
     steps:
       - name: Install dependencies
@@ -74,5 +73,5 @@ jobs:
           apt-get install -y --no-install-recommends \
             clang-format make
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: make lint:ci
