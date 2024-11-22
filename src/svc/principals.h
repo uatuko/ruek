@@ -12,7 +12,7 @@ template <typename T>
 concept has_mutable_principal = requires(T t) {
 	{ t.mutable_principal() } -> std::same_as<ruek::api::v1::Principal *>;
 };
-}
+} // namespace concepts
 
 using namespace ruek::api::v1::Principals;
 
