@@ -45,12 +45,6 @@ int main(int argc, char *argv[]) {
 
 	grpcxx::server server;
 
-	svc::Authz a;
-	server.add(a.service());
-
-	svc::Entities e;
-	server.add(e.service());
-
 	svc::Principals p;
 	server.add(p.service());
 
