@@ -1,15 +1,11 @@
 add_library(svc)
 target_sources(svc
 	PRIVATE
-		authz.cpp
-		entities.cpp
 		principals.cpp
 		relations.cpp
 	PUBLIC
 		FILE_SET headers TYPE HEADERS
 		FILES
-			authz.h
-			entities.h
 			principals.h
 			relations.h
 			svc.h
@@ -42,8 +38,6 @@ if (RUEK_BUILD_TESTING)
 	add_executable(svc_tests)
 	target_sources(svc_tests
 		PRIVATE
-			authz_test.cpp
-			entities_test.cpp
 			principals_test.cpp
 			relations_test.cpp
 	)
