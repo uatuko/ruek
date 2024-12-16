@@ -1065,6 +1065,39 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_FALSE(result.response);
 	}
+
+	// Error: duplicate relation
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.Create-duplicate",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.Create-duplicate",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcCreate::request_type request;
+
+		auto *left = request.mutable_left_entity();
+		left->set_id(tuple.lEntityId());
+		left->set_type(tuple.lEntityType());
+
+		request.set_relation(tuple.relation());
+
+		auto *right = request.mutable_right_entity();
+		right->set_id(tuple.rEntityId());
+		right->set_type(tuple.rEntityType());
+
+		rpcCreate::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
+
+		EXPECT_EQ(grpcxx::status::code_t::already_exists, result.status.code());
+		EXPECT_EQ(
+			"CAYSJVtydWVrOjEuNC40LjQwOV0gVHVwbGUgYWxyZWFkeSBleGlzdHM=", result.status.details());
+
+		EXPECT_FALSE(result.response);
+	}
 }
 
 TEST_F(svc_RelationsTest, Delete) {

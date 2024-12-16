@@ -340,6 +340,9 @@ google::rpc::Status Impl::exception() noexcept {
 
 	try {
 		std::rethrow_exception(std::current_exception());
+	} catch (const err::DbTupleAlreadyExists &e) {
+		status.set_code(google::rpc::ALREADY_EXISTS);
+		status.set_message(std::string(e.str()));
 	} catch (const err::DbTupleInvalidData &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
