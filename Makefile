@@ -77,7 +77,7 @@ lint\:fix:
 	clang-format --style=file -i $(sources)
 
 run: $(binary)
-	$(binary) -4 127.0.0.1
+	$(binary) -4 127.0.0.1 $(filter-out $@,$(MAKECMDGOALS))
 
 test: $(binary)
 	ctest --test-dir $(builddir) --output-on-failure $(filter-out $@,$(MAKECMDGOALS))
