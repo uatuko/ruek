@@ -19,8 +19,8 @@ FetchContent_MakeAvailable(grpcxx)
 
 # libpqxx
 FetchContent_Declare(libpqxx
-	URL      https://github.com/jtv/libpqxx/archive/refs/tags/7.7.5.tar.gz
-	URL_HASH SHA256=c7dc3e8fa2eee656f2b6a8179d72f15db10e97a80dc4f173f806e615ea990973
+	URL      https://github.com/jtv/libpqxx/archive/refs/tags/7.10.0.tar.gz
+	URL_HASH SHA256=d588bca36357eda8bcafd5bc1f95df1afe613fdc70c80e426fc89eecb828fc3e
 )
 
 set(SKIP_BUILD_TEST ON) # Not defined as `option()`, no need to set as a cache entry (Ref: CMP0077)
