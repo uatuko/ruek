@@ -14,13 +14,13 @@ option(RUEK_BUILD_BENCHMARKS
 
 include(CMakeDependentOption)
 cmake_dependent_option(RUEK_BUILD_TESTING
-	"Build tests when this is the root project" ON
-	"CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
+	"Build tests when BUILD_TESTING flag is set or this is the root project" ON
+	"BUILD_TESTING OR CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
 )
 
 cmake_dependent_option(RUEK_ENABLE_COVERAGE
 	"Enable code coverage when RUEK_BUILD_TESTING is enabled and this is the root project" ON
-	"RUEK_BUILD_TESTING;CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
+	"RUEK_BUILD_TESTING; CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
 )
 
 if (RUEK_ENABLE_COVERAGE)
