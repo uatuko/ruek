@@ -37,8 +37,8 @@ FetchContent_MakeAvailable(libxid)
 if (RUEK_BUILD_BENCHMARKS)
 	# google benchmark
 	FetchContent_Declare(benchmark
-		URL      https://github.com/google/benchmark/archive/refs/tags/v1.8.3.tar.gz
-		URL_HASH SHA256=6bc180a57d23d4d9515519f92b0c83d61b05b5bab188961f36ac7b06b0d9e9ce
+		URL      https://github.com/google/benchmark/archive/refs/tags/v1.9.1.tar.gz
+		URL_HASH SHA256=32131c08ee31eeff2c8968d7e874f3cb648034377dfc32a4c377fa8796d84981
 	)
 
 	set(BENCHMARK_ENABLE_TESTING     OFF CACHE BOOL "Disable tests for google benchmark")
