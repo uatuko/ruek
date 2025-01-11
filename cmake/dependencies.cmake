@@ -12,8 +12,8 @@ FetchContent_MakeAvailable(fmt)
 
 # grpcxx
 FetchContent_Declare(grpcxx
-	URL      https://github.com/uatuko/grpcxx/archive/refs/tags/v0.2.0.tar.gz
-	URL_HASH SHA256=ed0e0c6ccd44aabb9447de9030b9be092bfb97cb654d69c970cbefd7b7bb44da
+	URL      https://github.com/uatuko/grpcxx/archive/refs/tags/v0.6.1.tar.gz
+	URL_HASH SHA256=70d65da48bd19f8b8262515fcea8483c7b3405ed108242f5cf326877c52372d7
 )
 FetchContent_MakeAvailable(grpcxx)
 
