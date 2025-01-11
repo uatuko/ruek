@@ -8,9 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
-option(RUEK_BUILD_BENCHMARKS
-	"Build benchmarks" OFF
-)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+option(RUEK_BUILD_BENCHMARKS "Build benchmarks" OFF)
 
 include(CMakeDependentOption)
 cmake_dependent_option(RUEK_BUILD_TESTING
@@ -20,7 +19,7 @@ cmake_dependent_option(RUEK_BUILD_TESTING
 
 cmake_dependent_option(RUEK_ENABLE_COVERAGE
 	"Enable code coverage when RUEK_BUILD_TESTING is enabled and this is the root project" ON
-	"RUEK_BUILD_TESTING; CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
+	"NOT BUILD_SHARED_LIBS; RUEK_BUILD_TESTING; CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF
 )
 
 if (RUEK_ENABLE_COVERAGE)
