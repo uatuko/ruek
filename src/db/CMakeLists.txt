@@ -62,7 +62,7 @@ if (RUEK_BUILD_TESTING)
 	target_link_libraries(db_tests
 		PRIVATE
 			db
-			gtest_main
+			GTest::gtest_main
 			${PROJECT_NAME}::err
 	)
 

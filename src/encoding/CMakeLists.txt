@@ -18,7 +18,7 @@ if (RUEK_BUILD_TESTING)
 	target_link_libraries(encoding_tests
 		PRIVATE
 			encoding
-			gtest_main
+			GTest::gtest_main
 	)
 
 	if (RUEK_ENABLE_COVERAGE)

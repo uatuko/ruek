@@ -40,7 +40,7 @@ $(binary): $(buildfile)
 	cmake --build $(builddir)
 
 $(buildfile):
-	cmake -B $(builddir) -G Ninja
+	cmake -B $(builddir) -G Ninja -DBUILD_TESTING=OFF
 
 bench: $(binary)
 	$(benchbin) $(filter-out $@,$(MAKECMDGOALS)) $(MAKEFLAGS)

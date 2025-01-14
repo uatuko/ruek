@@ -5,22 +5,22 @@ find_package(Protobuf REQUIRED)
 
 # fmt
 FetchContent_Declare(fmt
-	URL      https://github.com/fmtlib/fmt/archive/refs/tags/10.1.1.tar.gz
-	URL_HASH SHA256=78b8c0a72b1c35e4443a7e308df52498252d1cefc2b08c9a97bc9ee6cfe61f8b
+	URL      https://github.com/fmtlib/fmt/archive/refs/tags/11.1.1.tar.gz
+	URL_HASH SHA256=482eed9efbc98388dbaee5cb5f368be5eca4893456bb358c18b7ff71f835ae43
 )
 FetchContent_MakeAvailable(fmt)
 
 # grpcxx
 FetchContent_Declare(grpcxx
-	URL      https://github.com/uatuko/grpcxx/archive/refs/tags/v0.2.0.tar.gz
-	URL_HASH SHA256=ed0e0c6ccd44aabb9447de9030b9be092bfb97cb654d69c970cbefd7b7bb44da
+	URL      https://github.com/uatuko/grpcxx/archive/refs/tags/v0.6.1.tar.gz
+	URL_HASH SHA256=70d65da48bd19f8b8262515fcea8483c7b3405ed108242f5cf326877c52372d7
 )
 FetchContent_MakeAvailable(grpcxx)
 
 # libpqxx
 FetchContent_Declare(libpqxx
-	URL      https://github.com/jtv/libpqxx/archive/refs/tags/7.7.5.tar.gz
-	URL_HASH SHA256=c7dc3e8fa2eee656f2b6a8179d72f15db10e97a80dc4f173f806e615ea990973
+	URL      https://github.com/jtv/libpqxx/archive/refs/tags/7.10.0.tar.gz
+	URL_HASH SHA256=d588bca36357eda8bcafd5bc1f95df1afe613fdc70c80e426fc89eecb828fc3e
 )
 
 set(SKIP_BUILD_TEST ON) # Not defined as `option()`, no need to set as a cache entry (Ref: CMP0077)
@@ -37,8 +37,8 @@ FetchContent_MakeAvailable(libxid)
 if (RUEK_BUILD_BENCHMARKS)
 	# google benchmark
 	FetchContent_Declare(benchmark
-		URL      https://github.com/google/benchmark/archive/refs/tags/v1.8.3.tar.gz
-		URL_HASH SHA256=6bc180a57d23d4d9515519f92b0c83d61b05b5bab188961f36ac7b06b0d9e9ce
+		URL      https://github.com/google/benchmark/archive/refs/tags/v1.9.1.tar.gz
+		URL_HASH SHA256=32131c08ee31eeff2c8968d7e874f3cb648034377dfc32a4c377fa8796d84981
 	)
 
 	set(BENCHMARK_ENABLE_TESTING     OFF CACHE BOOL "Disable tests for google benchmark")
@@ -49,9 +49,9 @@ endif()
 if (RUEK_BUILD_TESTING)
 	# googletest
 	FetchContent_Declare(googletest
-		URL      https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
-		URL_HASH SHA256=8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7
-		FIND_PACKAGE_ARGS NAMES GTest
+		URL      https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+		URL_HASH SHA256=7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926
+		FIND_PACKAGE_ARGS 1.15.2 NAMES GTest
 	)
 	FetchContent_MakeAvailable(googletest)
 endif()

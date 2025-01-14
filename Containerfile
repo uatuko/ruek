@@ -22,6 +22,7 @@ RUN ruek_march=$(./source/bin/march.sh) \
 	cmake -B build -G Ninja -S source/ \
 		-DCMAKE_CXX_COMPILER_TARGET=${ruek_march}-linux-gnu \
 		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_TESTING=OFF \
 		-DRUEK_BUILD_TESTING=OFF
 
 RUN cmake --build build/ --config Release
