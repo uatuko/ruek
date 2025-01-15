@@ -28,7 +28,7 @@ RUN ruek_march=$(./source/bin/march.sh) \
 RUN cmake --build build/ --config Release
 
 
-FROM debian:ubuntu:24.04
+FROM ubuntu:24.04
 
 RUN apt-get update \
 	&& \
