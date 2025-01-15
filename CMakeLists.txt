@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.27)
 project(ruek VERSION 0.3.1 LANGUAGES CXX)
 
 cmake_policy(SET CMP0135 NEW)
