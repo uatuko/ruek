@@ -4,10 +4,14 @@ binary    = $(bindir)/ruek
 benchbin  = $(binary)_bench
 buildfile = $(builddir)/build.ninja
 
-benchdir = bench
-protodir = proto
-srcdir   = src
+benchdir    = bench
+protodir    = proto
+protogendir = $(protodir)/.gen
+srcdir      = src
 
+githubrepo = github.com/uatuko/ruek
+
+protos  := $(shell find $(protodir)/ruek/api -type f -name '*.proto')
 sources := $(shell find $(protodir) -type f -name '*.proto')
 sources += $(shell find $(srcdir) -type f -name '*.h' -o -name '*.cpp')
 sources += $(shell find $(benchdir) -type f -name '*.h' -o -name '*.cpp')
@@ -75,6 +79,22 @@ lint\:ci:
 
 lint\:fix:
 	clang-format --style=file -i $(sources)
+
+protoc-gen-go:
+ifeq (, $(shell which protoc-gen-go))
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+endif
+
+protoc-gen-go-grpc:
+ifeq (, $(shell which protoc-gen-go-grpc))
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+endif
+
+protoc: $(protos) protoc-gen-go protoc-gen-go-grpc
+	protoc \
+		--go_out=$(protogendir)/go --go_opt=module=$(githubrepo)/$(protogendir)/go \
+		--go-grpc_out=$(protogendir)/go --go-grpc_opt=module=$(githubrepo)/$(protogendir)/go \
+		$(protos)
 
 run: $(binary)
 	$(binary) -4 127.0.0.1 $(filter-out $@,$(MAKECMDGOALS))

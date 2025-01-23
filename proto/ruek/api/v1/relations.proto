@@ -4,6 +4,8 @@ package ruek.api.v1;
 
 import "google/protobuf/struct.proto";
 
+option go_package = "github.com/uatuko/ruek/proto/.gen/go/ruekpb;ruekpb";
+
 service Relations {
 	rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse);
 	rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse);
