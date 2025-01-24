@@ -41,7 +41,7 @@ create table if not exists tuples (
 	-- Self references for computed tuples
 	--
 	_rid_l  text,
-	_rid_r  text, 
+	_rid_r  text,
 
 	constraint "tuples.pkey" primary key (_id),
 	constraint "tuples.unique" unique (
