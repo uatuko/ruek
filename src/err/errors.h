@@ -14,8 +14,8 @@ using DbPrincipalNotFound    = basic_error<"ruek:1.2.2.404", "Principal not foun
 using DbRecordInvalidData        = basic_error<"ruek:1.3.1.400", "Invalid principal data">;
 using DbRecordInvalidPrincipalId = basic_error<"ruek:1.3.2.400", "Invalid principal for record">;
 
-using DbTupleAlreadyExists = basic_error<"ruek:1.4.4.409", "Tuple already exists">;
-using DbTupleInvalidData   = basic_error<"ruek:1.4.1.400", "Invalid tuple data">;
+using DbTupleAlreadyExists = basic_error<"ruek:1.4.1.409", "Tuple already exists">;
+using DbTupleInvalidData   = basic_error<"ruek:1.4.2.400", "Invalid tuple data">;
 using DbTupleNotFound      = basic_error<"ruek:1.4.3.404", "Tuple not found">;
 
 using DbTuplesInvalidListArgs =
