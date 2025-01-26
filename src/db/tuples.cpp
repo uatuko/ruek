@@ -5,32 +5,29 @@
 
 #include "err/errors.h"
 
-#include "common.h"
 #include "detail.h"
 
 namespace db {
 Tuple::Tuple(const Tuple::Data &data) noexcept :
 	_data(data), _id(), _rev(detail::rand()), _lHash(), _rHash(), _ridL(), _ridR() {
-	sanitise();
+	hash();
 }
 
 Tuple::Tuple(Tuple::Data &&data) noexcept :
 	_data(std::move(data)), _id(), _rev(detail::rand()), _lHash(), _rHash(), _ridL(), _ridR() {
-	sanitise();
+	hash();
 }
 
 Tuple::Tuple(const pg::row_t &r) :
 	_data({
-		.attrs        = r["attrs"].as<Data::attrs_t>(),
-		.lEntityId    = r["l_entity_id"].as<std::string>(),
-		.lEntityType  = r["l_entity_type"].as<std::string>(),
-		.lPrincipalId = r["l_principal_id"].as<Data::pid_t>(),
-		.relation     = r["relation"].as<std::string>(),
-		.rEntityId    = r["r_entity_id"].as<std::string>(),
-		.rEntityType  = r["r_entity_type"].as<std::string>(),
-		.rPrincipalId = r["r_principal_id"].as<Data::pid_t>(),
-		.spaceId      = r["space_id"].as<std::string>(),
-		.strand       = r["strand"].as<std::string>(),
+		.attrs       = r["attrs"].as<Data::attrs_t>(),
+		.lEntityId   = r["l_entity_id"].as<std::string>(),
+		.lEntityType = r["l_entity_type"].as<std::string>(),
+		.relation    = r["relation"].as<std::string>(),
+		.rEntityId   = r["r_entity_id"].as<std::string>(),
+		.rEntityType = r["r_entity_type"].as<std::string>(),
+		.spaceId     = r["space_id"].as<std::string>(),
+		.strand      = r["strand"].as<std::string>(),
 	}),
 	_id(r["_id"].as<std::string>()), _rev(r["_rev"].as<int>()),
 	_lHash(r["_l_hash"].as<std::int64_t>()), _rHash(r["_r_hash"].as<std::int64_t>()),
@@ -38,14 +35,12 @@ Tuple::Tuple(const pg::row_t &r) :
 
 Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 	_data({
-		.lEntityId    = left.lEntityId(),
-		.lEntityType  = left.lEntityType(),
-		.lPrincipalId = left.lPrincipalId(),
-		.relation     = right.relation(),
-		.rEntityId    = right.rEntityId(),
-		.rEntityType  = right.rEntityType(),
-		.rPrincipalId = right.rPrincipalId(),
-		.spaceId      = left.spaceId(),
+		.lEntityId   = left.lEntityId(),
+		.lEntityType = left.lEntityType(),
+		.relation    = right.relation(),
+		.rEntityId   = right.rEntityId(),
+		.rEntityType = right.rEntityType(),
+		.spaceId     = left.spaceId(),
 	}),
 	_id(), _rev(0), _lHash(left.lHash()), _rHash(right.rHash()), _ridL(left.id()),
 	_ridR(right.id()) {}
@@ -87,7 +82,6 @@ Tuple Tuple::retrieve(std::string_view id) {
 			relation,
 			r_entity_type, r_entity_id,
 			attrs,
-			l_principal_id, r_principal_id,
 			_id, _rev,
 			_l_hash, _r_hash,
 			_rid_l, _rid_r
@@ -103,20 +97,6 @@ Tuple Tuple::retrieve(std::string_view id) {
 	return Tuple(res[0]);
 }
 
-void Tuple::sanitise() noexcept {
-	if (_data.lPrincipalId) {
-		_data.lEntityId   = *_data.lPrincipalId;
-		_data.lEntityType = common::principal_entity_v;
-	}
-
-	if (_data.rPrincipalId) {
-		_data.rEntityId   = *_data.rPrincipalId;
-		_data.rEntityType = common::principal_entity_v;
-	}
-
-	hash();
-}
-
 void Tuple::store() {
 	if (_id.empty()) {
 		_id = xid::next();
@@ -130,7 +110,6 @@ void Tuple::store() {
 			relation,
 			r_entity_type, r_entity_id,
 			attrs,
-			l_principal_id, r_principal_id,
 			_id, _rev,
 			_l_hash, _r_hash,
 			_rid_l, _rid_r
@@ -141,10 +120,9 @@ void Tuple::store() {
 			$5::text,
 			$6::text, $7::text,
 			$8::jsonb,
-			$9::text, $10::text,
-			$11::text, $12::integer,
-			$13::bigint, $14::bigint,
-			$15::text, $16::text
+			$9::text, $10::integer,
+			$11::bigint, $12::bigint,
+			$13::text, $14::text
 		)
 		on conflict (_id)
 		do update
@@ -155,7 +133,7 @@ void Tuple::store() {
 				$8::jsonb,
 				excluded._rev + 1
 			)
-			where t._rev = $12::integer
+			where t._rev = $10::integer
 		returning _rev;
 	)";
 
@@ -171,8 +149,6 @@ void Tuple::store() {
 			_data.rEntityType,
 			_data.rEntityId,
 			_data.attrs,
-			_data.lPrincipalId,
-			_data.rPrincipalId,
 			_id,
 			_rev,
 			_lHash,
@@ -181,8 +157,6 @@ void Tuple::store() {
 			_ridR);
 	} catch (pqxx::check_violation &) {
 		throw err::DbTupleInvalidData();
-	} catch (pg::fkey_violation_t &) {
-		throw err::DbTupleInvalidKey();
 	} catch (pqxx::unique_violation &e) {
 		throw err::DbTupleAlreadyExists();
 	}
@@ -266,7 +240,6 @@ Tuples ListTuples(
 				relation,
 				r_entity_type, r_entity_id,
 				attrs,
-				l_principal_id, r_principal_id,
 				_id, _rev,
 				_l_hash, _r_hash,
 				_rid_l, _rid_r
@@ -341,7 +314,6 @@ Tuples LookupTuples(
 				relation,
 				r_entity_type, r_entity_id,
 				attrs,
-				l_principal_id, r_principal_id,
 				_id, _rev,
 				_l_hash, _r_hash,
 				_rid_l, _rid_r

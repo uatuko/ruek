@@ -30,11 +30,6 @@ create table if not exists tuples (
 
 	attrs  jsonb,
 
-	-- Duplicate columns for foreign key constraints if either left/right entity refer to a principal
-	--
-	l_principal_id  text,
-	r_principal_id  text,
-
 	_id   text    not null,
 	_rev  integer not null,
 
@@ -46,7 +41,7 @@ create table if not exists tuples (
 	-- Self references for computed tuples
 	--
 	_rid_l  text,
-	_rid_r  text, 
+	_rid_r  text,
 
 	constraint "tuples.pkey" primary key (_id),
 	constraint "tuples.unique" unique (
@@ -62,14 +57,6 @@ create table if not exists tuples (
 
 	constraint "tuples.fkey-_rid_r" foreign key (_rid_r)
 		references tuples(_id)
-		on delete cascade,
-
-	constraint "tuples.fkey-space_id+l_principal_id" foreign key (space_id, l_principal_id)
-		references principals(space_id, id)
-		on delete cascade,
-
-	constraint "tuples.fkey-space_id+r_principal_id" foreign key (space_id, r_principal_id)
-		references principals(space_id, id)
 		on delete cascade,
 
 	constraint "tuples.check-l_entity_id" check (l_entity_id <> ''),

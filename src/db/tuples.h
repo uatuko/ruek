@@ -4,28 +4,27 @@
 #include <string>
 #include <vector>
 
+#include "common.h"
 #include "pg.h"
 
 namespace db {
 class Tuple {
 public:
+	using pid_t = std::optional<std::string>;
 	using rid_t = std::optional<std::string>;
 
 	struct Data {
 		using attrs_t = std::optional<std::string>;
-		using pid_t   = std::optional<std::string>;
 
 		attrs_t attrs;
 
 		std::string lEntityId;
 		std::string lEntityType;
-		pid_t       lPrincipalId;
 
 		std::string relation;
 
 		std::string rEntityId;
 		std::string rEntityType;
-		pid_t       rPrincipalId;
 
 		std::string spaceId;
 		std::string strand;
@@ -63,22 +62,40 @@ public:
 
 	const std::string &lEntityId() const noexcept { return _data.lEntityId; }
 	const std::string &lEntityType() const noexcept { return _data.lEntityType; }
-	const Data::pid_t &lPrincipalId() const noexcept { return _data.lPrincipalId; }
+
+	const pid_t lPrincipalId() const noexcept {
+		if (_data.lEntityType == common::principal_entity_v) {
+			return _data.lEntityId;
+		}
+
+		return {};
+	}
 
 	void lPrincipalId(const std::string &pid) noexcept {
-		_data.lPrincipalId = pid;
-		sanitise();
+		_data.lEntityId   = pid;
+		_data.lEntityType = common::principal_entity_v;
+
+		hash();
 	}
 
 	const std::string &relation() const noexcept { return _data.relation; }
 
 	const std::string &rEntityId() const noexcept { return _data.rEntityId; }
 	const std::string &rEntityType() const noexcept { return _data.rEntityType; }
-	const Data::pid_t &rPrincipalId() const noexcept { return _data.rPrincipalId; }
+
+	const pid_t rPrincipalId() const noexcept {
+		if (_data.rEntityType == common::principal_entity_v) {
+			return _data.rEntityId;
+		}
+
+		return {};
+	}
 
 	void rPrincipalId(const std::string &pid) noexcept {
-		_data.rPrincipalId = pid;
-		sanitise();
+		_data.rEntityId   = pid;
+		_data.rEntityType = common::principal_entity_v;
+
+		hash();
 	}
 
 	const std::string &spaceId() const noexcept { return _data.spaceId; }
@@ -107,8 +124,6 @@ public:
 
 private:
 	void hash() noexcept;
-
-	void sanitise() noexcept;
 
 	Data         _data;
 	std::string  _id;

@@ -85,10 +85,10 @@ TEST_F(svc_RelationsTest, Check) {
 		ASSERT_NO_THROW(right.store());
 
 		db::Tuple tuple({
-			.lPrincipalId = left.id(),
-			.relation     = "relation",
-			.rPrincipalId = right.id(),
+			.relation = "relation",
 		});
+		tuple.lPrincipalId(left.id());
+		tuple.rPrincipalId(right.id());
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcCheck::request_type request;
@@ -899,10 +899,10 @@ TEST_F(svc_RelationsTest, Create) {
 		}
 
 		db::Tuple tuple({
-			.lPrincipalId = principals[0].id(),
-			.relation     = "member",
-			.rPrincipalId = principals[1].id(),
+			.relation = "member",
 		});
+		tuple.lPrincipalId(principals[0].id());
+		tuple.rPrincipalId(principals[1].id());
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcCreate::request_type request;
@@ -1027,7 +1027,9 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
-		ASSERT_FALSE(result.response);
+		EXPECT_EQ("CAMSI1tydWVrOjEuNC4yLjQwMF0gSW52YWxpZCB0dXBsZSBkYXRh", result.status.details());
+
+		EXPECT_FALSE(result.response);
 	}
 
 	// Error: invalid principal
@@ -1047,7 +1049,10 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
-		ASSERT_FALSE(result.response);
+		EXPECT_EQ(
+			"CAMSJFtydWVrOjEuMi4yLjQwNF0gUHJpbmNpcGFsIG5vdCBmb3VuZA==", result.status.details());
+
+		EXPECT_FALSE(result.response);
 	}
 
 	// Error: invalid optmization strategy
@@ -1094,7 +1099,7 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::already_exists, result.status.code());
 		EXPECT_EQ(
-			"CAYSJVtydWVrOjEuNC40LjQwOV0gVHVwbGUgYWxyZWFkeSBleGlzdHM=", result.status.details());
+			"CAYSJVtydWVrOjEuNC4xLjQwOV0gVHVwbGUgYWxyZWFkeSBleGlzdHM=", result.status.details());
 
 		EXPECT_FALSE(result.response);
 	}
@@ -1152,12 +1157,12 @@ TEST_F(svc_RelationsTest, Delete) {
 		ASSERT_NO_THROW(right.store());
 
 		db::Tuple tuple({
-			.lPrincipalId = left.id(),
-			.relation     = "relation",
-			.rPrincipalId = right.id(),
-			.spaceId      = std::string(spaceId),
-			.strand       = "strand",
+			.relation = "relation",
+			.spaceId  = std::string(spaceId),
+			.strand   = "strand",
 		});
+		tuple.lPrincipalId(left.id());
+		tuple.rPrincipalId(right.id());
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcDelete::request_type request;
@@ -1222,11 +1227,11 @@ TEST_F(svc_RelationsTest, ListLeft) {
 		ASSERT_NO_THROW(principal.store());
 
 		db::Tuple tuple({
-			.lEntityId    = "left",
-			.lEntityType  = "svc_RelationsTest.list",
-			.relation     = "relation",
-			.rPrincipalId = principal.id(),
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.list",
+			.relation    = "relation",
 		});
+		tuple.rPrincipalId(principal.id());
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcListLeft::request_type request;
@@ -1448,11 +1453,11 @@ TEST_F(svc_RelationsTest, ListRight) {
 		ASSERT_NO_THROW(principal.store());
 
 		db::Tuple tuple({
-			.lPrincipalId = principal.id(),
-			.relation     = "relation",
-			.rEntityId    = "right",
-			.rEntityType  = "svc_RelationsTest.list",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.list",
 		});
+		tuple.lPrincipalId(principal.id());
 		ASSERT_NO_THROW(tuple.store());
 
 		rpcListRight::request_type request;

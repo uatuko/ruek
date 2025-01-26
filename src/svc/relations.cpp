@@ -6,6 +6,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
+#include "db/principals.h"
 #include "db/tuplets.h"
 #include "encoding/b32.h"
 #include "err/errors.h"
@@ -139,6 +140,14 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 		default:
 			throw err::RpcRelationsInvalidStrategy();
 		}
+	}
+
+	if (req.has_left_principal_id()) {
+		db::Principal::retrieve(ctx.meta(common::space_id_v), req.left_principal_id());
+	}
+
+	if (req.has_right_principal_id()) {
+		db::Principal::retrieve(ctx.meta(common::space_id_v), req.right_principal_id());
 	}
 
 	auto tuple = map(ctx, req);
@@ -340,13 +349,13 @@ google::rpc::Status Impl::exception() noexcept {
 
 	try {
 		std::rethrow_exception(std::current_exception());
+	} catch (const err::DbPrincipalNotFound &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
 	} catch (const err::DbTupleAlreadyExists &e) {
 		status.set_code(google::rpc::ALREADY_EXISTS);
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbTupleInvalidData &e) {
-		status.set_code(google::rpc::INVALID_ARGUMENT);
-		status.set_message(std::string(e.str()));
-	} catch (const err::DbTupleInvalidKey &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
 	} catch (const err::RpcRelationsInvalidStrategy &e) {

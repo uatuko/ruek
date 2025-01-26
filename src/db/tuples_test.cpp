@@ -101,6 +101,21 @@ TEST_F(db_TuplesTest, discard) {
 	EXPECT_FALSE(result);
 }
 
+TEST_F(db_TuplesTest, hash) {
+	// Success: hash data
+	{
+		db::Tuple tuple({
+			.lEntityId   = "lid:dummy",
+			.lEntityType = "ltype:dummy",
+			.rEntityId   = "rid:dummy",
+			.rEntityType = "rtype:dummy",
+		});
+
+		EXPECT_EQ(db::Tuple::Entity(tuple.lEntityType(), tuple.lEntityId()).hash(), tuple.lHash());
+		EXPECT_EQ(db::Tuple::Entity(tuple.rEntityType(), tuple.rEntityId()).hash(), tuple.rHash());
+	}
+}
+
 TEST_F(db_TuplesTest, list) {
 	// Seed tuple to check other tests are only returning expected results
 	db::Tuple tuple({
@@ -548,28 +563,6 @@ TEST_F(db_TuplesTest, rev) {
 	}
 }
 
-TEST_F(db_TuplesTest, sanitise) {
-	// Success: sanitise data
-	{
-		db::Tuple tuple({
-			.lEntityId    = "lid:dummy",
-			.lEntityType  = "ltype:dummy",
-			.lPrincipalId = "left:db_TuplesTest.sanitise",
-			.rEntityId    = "rid:dummy",
-			.rEntityType  = "rtype:dummy",
-			.rPrincipalId = "right:db_TuplesTest.sanitise",
-		});
-
-		EXPECT_EQ(db::common::principal_entity_v, tuple.lEntityType());
-		EXPECT_EQ(tuple.lPrincipalId(), tuple.lEntityId());
-		EXPECT_EQ(db::common::principal_entity_v, tuple.rEntityType());
-		EXPECT_EQ(tuple.rPrincipalId(), tuple.rEntityId());
-
-		EXPECT_EQ(db::Tuple::Entity(tuple.lEntityType(), tuple.lEntityId()).hash(), tuple.lHash());
-		EXPECT_EQ(db::Tuple::Entity(tuple.rEntityType(), tuple.rEntityId()).hash(), tuple.rHash());
-	}
-}
-
 TEST_F(db_TuplesTest, store) {
 	// Success: persist data
 	{
@@ -590,7 +583,6 @@ TEST_F(db_TuplesTest, store) {
 				relation,
 				r_entity_type, r_entity_id,
 				attrs,
-				l_principal_id, r_principal_id,
 				_id, _rev,
 				_l_hash, _r_hash,
 				_rid_l, _rid_r
@@ -610,8 +602,6 @@ TEST_F(db_TuplesTest, store) {
 			 rEntityType,
 			 rEntityId,
 			 attrs,
-			 lPrincipalId,
-			 rPrincipalId,
 			 _id,
 			 _rev,
 			 _lHash,
@@ -627,8 +617,6 @@ TEST_F(db_TuplesTest, store) {
 						std::string,
 						std::string,
 						db::Tuple::Data::attrs_t,
-						db::Tuple::Data::pid_t,
-						db::Tuple::Data::pid_t,
 						std::string,
 						int,
 						std::int64_t,
@@ -644,8 +632,6 @@ TEST_F(db_TuplesTest, store) {
 		EXPECT_EQ(tuple.rEntityType(), rEntityType);
 		EXPECT_EQ(tuple.rEntityId(), rEntityId);
 		EXPECT_EQ(tuple.attrs(), attrs);
-		EXPECT_EQ(tuple.lPrincipalId(), lPrincipalId);
-		EXPECT_EQ(tuple.rPrincipalId(), rPrincipalId);
 		EXPECT_EQ(tuple.id(), _id);
 		EXPECT_EQ(tuple.rev(), _rev);
 		EXPECT_EQ(tuple.lHash(), _lHash);
@@ -666,17 +652,5 @@ TEST_F(db_TuplesTest, store) {
 		});
 
 		EXPECT_THROW(tuple.store(), err::DbTupleInvalidData);
-	}
-
-	// Error: invalid `l_principal_id`
-	{
-		db::Tuple tuple({
-			.lPrincipalId = "dummy",
-			.relation     = "relation",
-			.rEntityId    = "right",
-			.rEntityType  = "db_TuplesTest.store-invalid_l_principal_id",
-		});
-
-		EXPECT_THROW(tuple.store(), err::DbTupleInvalidKey);
 	}
 }
