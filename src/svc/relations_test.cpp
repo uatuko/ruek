@@ -1027,7 +1027,9 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
-		ASSERT_FALSE(result.response);
+		EXPECT_EQ("CAMSI1tydWVrOjEuNC4yLjQwMF0gSW52YWxpZCB0dXBsZSBkYXRh", result.status.details());
+
+		EXPECT_FALSE(result.response);
 	}
 
 	// Error: invalid principal
@@ -1047,7 +1049,10 @@ TEST_F(svc_RelationsTest, Create) {
 		EXPECT_NO_THROW(result = svc.call<rpcCreate>(ctx, request));
 
 		EXPECT_EQ(grpcxx::status::code_t::invalid_argument, result.status.code());
-		ASSERT_FALSE(result.response);
+		EXPECT_EQ(
+			"CAMSJFtydWVrOjEuMi4yLjQwNF0gUHJpbmNpcGFsIG5vdCBmb3VuZA==", result.status.details());
+
+		EXPECT_FALSE(result.response);
 	}
 
 	// Error: invalid optmization strategy
@@ -1094,7 +1099,7 @@ TEST_F(svc_RelationsTest, Create) {
 
 		EXPECT_EQ(grpcxx::status::code_t::already_exists, result.status.code());
 		EXPECT_EQ(
-			"CAYSJVtydWVrOjEuNC40LjQwOV0gVHVwbGUgYWxyZWFkeSBleGlzdHM=", result.status.details());
+			"CAYSJVtydWVrOjEuNC4xLjQwOV0gVHVwbGUgYWxyZWFkeSBleGlzdHM=", result.status.details());
 
 		EXPECT_FALSE(result.response);
 	}
