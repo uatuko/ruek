@@ -247,7 +247,7 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 	if (auto r = db::Tuple::lookup(
 			ctx.meta(common::space_id_v), left, right, req.relation(), req.strand());
 		r) {
-		db::Tuple::discard(r->id());
+		db::Tuple::discard(ctx.meta(common::space_id_v), r->id());
 	}
 
 	return {grpcxx::status::code_t::ok, rpcDelete::response_type()};

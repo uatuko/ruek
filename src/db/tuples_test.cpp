@@ -79,7 +79,7 @@ TEST_F(db_TuplesTest, discard) {
 	ASSERT_NO_THROW(tuple.store());
 
 	bool result = false;
-	ASSERT_NO_THROW(result = db::Tuple::discard(tuple.id()));
+	ASSERT_NO_THROW(result = db::Tuple::discard({}, tuple.id()));
 	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(
@@ -97,7 +97,7 @@ TEST_F(db_TuplesTest, discard) {
 	EXPECT_EQ(0, count);
 
 	// Idempotency
-	ASSERT_NO_THROW(result = db::Tuple::discard(tuple.id()));
+	ASSERT_NO_THROW(result = db::Tuple::discard({}, tuple.id()));
 	EXPECT_FALSE(result);
 }
 

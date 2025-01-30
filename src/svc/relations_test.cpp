@@ -1137,7 +1137,7 @@ TEST_F(svc_RelationsTest, Delete) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		EXPECT_TRUE(result.response);
 
-		EXPECT_FALSE(db::Tuple::discard(tuple.id()));
+		EXPECT_FALSE(db::Tuple::discard({}, tuple.id()));
 	}
 
 	// Success: delete with principals
@@ -1181,7 +1181,7 @@ TEST_F(svc_RelationsTest, Delete) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		EXPECT_TRUE(result.response);
 
-		EXPECT_FALSE(db::Tuple::discard(tuple.id()));
+		EXPECT_FALSE(db::Tuple::discard(spaceId, tuple.id()));
 	}
 
 	// Success: not found (strand mismatch)
@@ -1213,7 +1213,7 @@ TEST_F(svc_RelationsTest, Delete) {
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
 		EXPECT_TRUE(result.response);
 
-		EXPECT_TRUE(db::Tuple::discard(tuple.id()));
+		EXPECT_TRUE(db::Tuple::discard({}, tuple.id()));
 	}
 }
 

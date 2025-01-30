@@ -45,14 +45,15 @@ Tuple::Tuple(const Tuple &left, const Tuple &right) noexcept :
 	_id(), _rev(0), _lHash(left.lHash()), _rHash(right.rHash()), _ridL(left.id()),
 	_ridR(right.id()) {}
 
-bool Tuple::discard(std::string_view id) {
+bool Tuple::discard(std::string_view spaceId, std::string_view id) {
 	std::string_view qry = R"(
 		delete from tuples
 		where
-			_id = $1::text;
+			space_id = $1::text
+			and _id = $2::text;
 	)";
 
-	auto res = pg::exec(qry, id);
+	auto res = pg::exec(qry, spaceId, id);
 	return (res.affected_rows() == 1);
 }
 

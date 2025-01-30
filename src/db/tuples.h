@@ -114,7 +114,7 @@ public:
 
 	void store();
 
-	static bool discard(std::string_view id);
+	static bool discard(std::string_view spaceId, std::string_view id);
 
 	static std::optional<Tuple> lookup(
 		std::string_view spaceId, Entity left, Entity right, std::string_view relation = "",

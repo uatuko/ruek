@@ -64,9 +64,10 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 		}
 
 		auto r = response.mutable_failed_tuple_ids();
+		auto spaceId = ctx.meta(common::space_id_v);
 		for (const auto &t : tuples) {
 			try {
-				db::Tuple::discard(t.id());
+				db::Tuple::discard(spaceId, t.id());
 			} catch (...) {
 				*r->Add() = t.id();
 			}
