@@ -32,9 +32,20 @@ message PrincipalsCreateResponse {
 
 message PrincipalsDeleteRequest {
 	string id = 1;
+
+	// Limits the delete cost. The value must be within `1` and `65535`. Defaults to `1000`.
+	optional uint32 cost_limit = 7;
 }
 
-message PrincipalsDeleteResponse {}
+message PrincipalsDeleteResponse {
+	// Cost of delete. A negative cost indicates the delete cost exceeded the limit and the delete
+	// action was aborted.
+	int32 cost = 1;
+
+	// List of relation tuple ids that were referencing the deleted principal but failed to delete.
+	// The caller must delete these tuples to ensure data consistency.
+	repeated string failed_tuple_ids = 2;
+}
 
 message PrincipalsListRequest {
 	optional string segment = 1;

@@ -3,6 +3,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
+#include "db/tuples.h"
 #include "encoding/b32.h"
 #include "err/errors.h"
 #include "ruek/detail/pagination.pb.h"
@@ -33,11 +34,49 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 template <>
 rpcDelete::result_type Impl::call<rpcDelete>(
 	grpcxx::context &ctx, const rpcDelete::request_type &req) {
-	if (auto r = db::Principal::discard(ctx.meta(common::space_id_v), req.id()); r == false) {
-		throw err::RpcPrincipalsNotFound();
+
+	std::int32_t  cost  = 1;
+	std::uint16_t limit = common::cost_limit_v;
+
+	if (req.cost_limit() > 0 && req.cost_limit() <= std::numeric_limits<std::uint16_t>::max()) {
+		limit = req.cost_limit();
 	}
 
-	return {grpcxx::status::code_t::ok, rpcDelete::response_type()};
+	db::Tuple::Entity entity(req.id());
+	db::Tuples        tuples;
+
+	if (cost < limit) {
+		tuples  = db::ListTuplesRight(ctx.meta(common::space_id_v), entity, {}, "", limit - cost);
+		cost   += tuples.size();
+	}
+
+	if (cost < limit) {
+		auto results =
+			db::ListTuplesLeft(ctx.meta(common::space_id_v), entity, {}, "", limit - cost);
+		cost += results.size();
+		tuples.insert(tuples.end(), results.begin(), results.end());
+	}
+
+	rpcDelete::response_type response;
+	if (cost < limit) {
+		if (auto r = db::Principal::discard(ctx.meta(common::space_id_v), req.id()); r == false) {
+			throw err::RpcPrincipalsNotFound();
+		}
+
+		auto r = response.mutable_failed_tuple_ids();
+		for (const auto &t : tuples) {
+			try {
+				db::Tuple::discard(t.id());
+			} catch (...) {
+				*r->Add() = t.id();
+			}
+		}
+	} else {
+		cost *= -1;
+	}
+
+	response.set_cost(cost);
+	return {grpcxx::status::code_t::ok, response};
 }
 
 template <>

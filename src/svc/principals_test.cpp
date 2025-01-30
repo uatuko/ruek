@@ -15,7 +15,8 @@ protected:
 		db::testing::setup();
 
 		// Clear data
-		db::pg::exec("truncate table principals cascade;");
+		db::pg::exec("truncate table principals;");
+		db::pg::exec("truncate table tuples;");
 	}
 
 	static void TearDownTestSuite() { db::testing::teardown(); }
@@ -156,7 +157,9 @@ TEST_F(svc_PrincipalsTest, Delete) {
 		rpcDelete::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(1, result.response->cost());
+		EXPECT_EQ(0, result.response->failed_tuple_ids_size());
 	}
 
 	// Success: delete with space-id
@@ -178,7 +181,70 @@ TEST_F(svc_PrincipalsTest, Delete) {
 		rpcDelete::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
 		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(1, result.response->cost());
+		EXPECT_EQ(0, result.response->failed_tuple_ids_size());
+	}
+
+	// Success: delete with referencing relation tuples
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest.Delete-with_relation_tuples",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_PrincipalsTest.Delete-with_relation_tuples",
+			.relation    = "relation",
+		});
+		tuple.rPrincipalId(principal.id());
+		ASSERT_NO_THROW(tuple.store());
+
+		tuple = db::Tuple({
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_PrincipalsTest.Delete-with_relation_tuples",
+		});
+		tuple.lPrincipalId(principal.id());
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcDelete::request_type request;
+		request.set_id(principal.id());
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(3, result.response->cost());
+		EXPECT_EQ(0, result.response->failed_tuple_ids_size());
+	}
+
+	// Success: with cost limit
+	{
+		db::Principal principal({
+			.id = "id:svc_PrincipalsTest.Delete-with_cost_limit",
+		});
+		ASSERT_NO_THROW(principal.store());
+
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_PrincipalsTest.Delete-with_cost_limit",
+			.relation    = "relation",
+		});
+		tuple.rPrincipalId(principal.id());
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcDelete::request_type request;
+		request.set_id(principal.id());
+		request.set_cost_limit(1);
+
+		rpcDelete::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		ASSERT_TRUE(result.response);
+		EXPECT_EQ(-1, result.response->cost());
+		EXPECT_EQ(0, result.response->failed_tuple_ids_size());
 	}
 
 	// Error: not found
