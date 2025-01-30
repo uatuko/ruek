@@ -11,12 +11,12 @@ protected:
 		db::testing::setup();
 
 		// Clear data
-		db::pg::exec("truncate table principals cascade;");
+		db::pg::exec("truncate table principals;");
 	}
 
 	void SetUp() {
 		// Clear data before each test
-		db::pg::exec("delete from principals cascade;");
+		db::pg::exec("delete from principals;");
 	}
 
 	static void TearDownTestSuite() { db::testing::teardown(); }

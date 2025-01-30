@@ -15,7 +15,7 @@ protected:
 		db::testing::setup();
 
 		// Clear data
-		db::pg::exec("truncate table principals cascade;");
+		db::pg::exec("truncate table principals;");
 		db::pg::exec("truncate table tuples;");
 	}
 
@@ -1145,7 +1145,7 @@ TEST_F(svc_RelationsTest, Delete) {
 		std::string_view spaceId = "space_id:svc_RelationsTest.Delete-with_principals";
 
 		db::Principal left({
-			.id      = "id:ssvc_RelationsTest.Delete-with_principals_left",
+			.id      = "id:svc_RelationsTest.Delete-with_principals_left",
 			.spaceId = std::string(spaceId),
 		});
 		ASSERT_NO_THROW(left.store());

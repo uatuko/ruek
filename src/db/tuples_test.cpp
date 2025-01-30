@@ -12,7 +12,7 @@ protected:
 		db::testing::setup();
 
 		// Clear data
-		db::pg::exec("truncate table principals cascade;");
+		db::pg::exec("truncate table principals;");
 		db::pg::exec("truncate table tuples;");
 	}
 
