@@ -1217,6 +1217,61 @@ TEST_F(svc_RelationsTest, Delete) {
 	}
 }
 
+TEST_F(svc_RelationsTest, DeleteById) {
+	grpcxx::context ctx;
+	svc::Relations  svc;
+
+	// Success: delete
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.Delete",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.Delete",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		rpcDeleteById::request_type request;
+		request.set_id(tuple.id());
+
+		rpcDeleteById::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDeleteById>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
+		EXPECT_TRUE(result.response);
+
+		EXPECT_FALSE(db::Tuple::discard({}, tuple.id()));
+	}
+
+	// Error: not found not found (space-id mismatch)
+	{
+		db::Tuple tuple({
+			.lEntityId   = "left",
+			.lEntityType = "svc_RelationsTest.Delete-space_id_mismatch",
+			.relation    = "relation",
+			.rEntityId   = "right",
+			.rEntityType = "svc_RelationsTest.Delete-space_id_mismatch",
+		});
+		ASSERT_NO_THROW(tuple.store());
+
+		grpcxx::detail::request r(1);
+		r.header(std::string(svc::common::space_id_v), "invalid");
+
+		grpcxx::context ctx(r);
+
+		rpcDeleteById::request_type request;
+		request.set_id(tuple.id());
+
+		rpcDeleteById::result_type result;
+		EXPECT_NO_THROW(result = svc.call<rpcDeleteById>(ctx, request));
+		EXPECT_EQ(grpcxx::status::code_t::not_found, result.status.code());
+		EXPECT_EQ("CAUSI1tydWVrOjIuMi4yLjQwNF0gUmVsYXRpb24gbm90IGZvdW5k", result.status.details());
+		EXPECT_FALSE(result.response);
+
+		EXPECT_TRUE(db::Tuple::discard({}, tuple.id()));
+	}
+}
+
 TEST_F(svc_RelationsTest, ListLeft) {
 	grpcxx::context ctx;
 	svc::Relations  svc;

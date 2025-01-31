@@ -28,4 +28,5 @@ using RpcPrincipalsAlreadyExists = basic_error<"ruek:2.1.1.409", "Principal alre
 using RpcPrincipalsNotFound      = basic_error<"ruek:2.1.2.404", "Principal not found">;
 
 using RpcRelationsInvalidStrategy = basic_error<"ruek:2.2.1.400", "Invalid relations strategy">;
+using RpcRelationsNotFound        = basic_error<"ruek:2.2.2.404", "Relation not found">;
 } // namespace err

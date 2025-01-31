@@ -254,6 +254,16 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 }
 
 template <>
+rpcDeleteById::result_type Impl::call<rpcDeleteById>(
+	grpcxx::context &ctx, const rpcDeleteById::request_type &req) {
+	if (auto r = db::Tuple::discard(ctx.meta(common::space_id_v), req.id()); r == false) {
+		throw err::RpcRelationsNotFound();
+	}
+
+	return {grpcxx::status::code_t::ok, rpcDeleteById::response_type()};
+}
+
+template <>
 rpcListLeft::result_type Impl::call<rpcListLeft>(
 	grpcxx::context &ctx, const rpcListLeft::request_type &req) {
 
@@ -360,6 +370,9 @@ google::rpc::Status Impl::exception() noexcept {
 		status.set_message(std::string(e.str()));
 	} catch (const err::RpcRelationsInvalidStrategy &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
+	} catch (const err::RpcRelationsNotFound &e) {
+		status.set_code(google::rpc::NOT_FOUND);
 		status.set_message(std::string(e.str()));
 	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);
