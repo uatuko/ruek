@@ -248,6 +248,8 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 			ctx.meta(common::space_id_v), left, right, req.relation(), req.strand());
 		r) {
 		db::Tuple::discard(ctx.meta(common::space_id_v), r->id());
+	} else {
+		throw err::RpcRelationsNotFound();
 	}
 
 	return {grpcxx::status::code_t::ok, rpcDelete::response_type()};

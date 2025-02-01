@@ -1184,7 +1184,7 @@ TEST_F(svc_RelationsTest, Delete) {
 		EXPECT_FALSE(db::Tuple::discard(spaceId, tuple.id()));
 	}
 
-	// Success: not found (strand mismatch)
+	// Error: not found (strand mismatch)
 	{
 		db::Tuple tuple({
 			.lEntityId   = "left",
@@ -1210,8 +1210,9 @@ TEST_F(svc_RelationsTest, Delete) {
 
 		rpcDelete::result_type result;
 		EXPECT_NO_THROW(result = svc.call<rpcDelete>(ctx, request));
-		EXPECT_EQ(grpcxx::status::code_t::ok, result.status.code());
-		EXPECT_TRUE(result.response);
+		EXPECT_EQ(grpcxx::status::code_t::not_found, result.status.code());
+		EXPECT_EQ("CAUSI1tydWVrOjIuMi4yLjQwNF0gUmVsYXRpb24gbm90IGZvdW5k", result.status.details());
+		EXPECT_FALSE(result.response);
 
 		EXPECT_TRUE(db::Tuple::discard({}, tuple.id()));
 	}

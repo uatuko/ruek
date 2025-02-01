@@ -29,7 +29,7 @@ TEST_F(db_PrincipalsTest, discard) {
 	ASSERT_NO_THROW(principal.store());
 
 	bool result = false;
-	ASSERT_NO_THROW(result = db::Principal::discard("", principal.id()));
+	ASSERT_NO_THROW(result = db::Principal::discard({}, principal.id()));
 	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(

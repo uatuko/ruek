@@ -59,12 +59,13 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 
 	rpcDelete::response_type response;
 	if (cost < limit) {
-		if (auto r = db::Principal::discard(ctx.meta(common::space_id_v), req.id()); r == false) {
+		auto spaceId = ctx.meta(common::space_id_v);
+
+		if (auto r = db::Principal::discard(spaceId, req.id()); r == false) {
 			throw err::RpcPrincipalsNotFound();
 		}
 
 		auto r = response.mutable_failed_tuple_ids();
-		auto spaceId = ctx.meta(common::space_id_v);
 		for (const auto &t : tuples) {
 			try {
 				db::Tuple::discard(spaceId, t.id());
