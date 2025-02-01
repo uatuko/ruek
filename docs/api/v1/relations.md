@@ -16,12 +16,15 @@ service Relations {}
 - [(rpc) Delete (`ruek.api.v1.Relations.Delete`)](#rpc-delete-ruekapiv1relationsdelete)
   - [Request message](#request-message-2)
   - [Response message](#response-message-2)
-- [(rpc) ListLeft (`ruek.api.v1.Relations.ListLeft`)](#rpc-listleft-ruekapiv1relationslistleft)
+- [(rpc) Delete by Id (`ruek.api.v1.Relations.DeleteById`)](#rpc-delete-by-id-ruekapiv1relationsdeletebyid)
   - [Request message](#request-message-3)
   - [Response message](#response-message-3)
-- [(rpc) ListRight (`ruek.api.v1.Relations.ListRight`)](#rpc-listright-ruekapiv1relationslistright)
+- [(rpc) ListLeft (`ruek.api.v1.Relations.ListLeft`)](#rpc-listleft-ruekapiv1relationslistleft)
   - [Request message](#request-message-4)
   - [Response message](#response-message-4)
+- [(rpc) ListRight (`ruek.api.v1.Relations.ListRight`)](#rpc-listright-ruekapiv1relationslistright)
+  - [Request message](#request-message-5)
+  - [Response message](#response-message-5)
 - [Messages](#messages)
   - [Entity](#entity)
   - [Tuple](#tuple)
@@ -31,6 +34,8 @@ service Relations {}
   - [RelationsCreateResponse](#relationscreateresponse)
   - [RelationsDeleteRequest](#relationsdeleterequest)
   - [RelationsDeleteResponse](#relationsdeleteresponse)
+  - [RelationsDeleteByIdRequest](#relationsdeletebyidrequest)
+  - [RelationsDeleteByIdResponse](#relationsdeletebyidresponse)
   - [RelationsListLeftRequest](#relationslistleftrequest)
   - [RelationsListLeftResponse](#relationslistleftresponse)
   - [RelationsListRightRequest](#relationslistrightrequest)
@@ -89,6 +94,23 @@ rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse);
 ### Response message
 
 [`RelationsDeleteResponse`](#relationsdeleteresponse)
+
+
+## (rpc) Delete by Id (`ruek.api.v1.Relations.DeleteById`)
+
+Delete an existing relation using the relation tuple id.
+
+```proto
+rpc Delete(RelationsDeleteByIdRequest) returns (RelationsDeleteByIdResponse);
+```
+
+### Request message
+
+[`RelationsDeleteByIdRequest`](#relationsdeletebyidrequest)
+
+### Response message
+
+[`RelationsDeleteByIdResponse`](#relationsdeletebyidresponse)
 
 
 ## (rpc) ListLeft (`ruek.api.v1.Relations.ListLeft`)
@@ -216,6 +238,17 @@ rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse);
 
 | Field  | Type | Description |
 | ------ | ---- | ----------- |
+
+### RelationsDeleteByIdRequest
+
+| Field  | Type     | Description |
+| ------ | -------- | ----------- |
+| id     | `string` | Relation tuple id to delete. |
+
+### RelationsDeleteByIdResponse
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
 
 ### RelationsListLeftRequest
 
