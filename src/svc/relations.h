@@ -65,6 +65,10 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 	grpcxx::context &ctx, const rpcDelete::request_type &req);
 
 template <>
+rpcDeleteById::result_type Impl::call<rpcDeleteById>(
+	grpcxx::context &ctx, const rpcDeleteById::request_type &req);
+
+template <>
 rpcListLeft::result_type Impl::call<rpcListLeft>(
 	grpcxx::context &ctx, const rpcListLeft::request_type &req);
 

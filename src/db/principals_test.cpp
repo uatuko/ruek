@@ -11,12 +11,12 @@ protected:
 		db::testing::setup();
 
 		// Clear data
-		db::pg::exec("truncate table principals cascade;");
+		db::pg::exec("truncate table principals;");
 	}
 
 	void SetUp() {
 		// Clear data before each test
-		db::pg::exec("delete from principals cascade;");
+		db::pg::exec("delete from principals;");
 	}
 
 	static void TearDownTestSuite() { db::testing::teardown(); }
@@ -29,7 +29,7 @@ TEST_F(db_PrincipalsTest, discard) {
 	ASSERT_NO_THROW(principal.store());
 
 	bool result = false;
-	ASSERT_NO_THROW(result = db::Principal::discard("", principal.id()));
+	ASSERT_NO_THROW(result = db::Principal::discard({}, principal.id()));
 	EXPECT_TRUE(result);
 
 	std::string_view qry = R"(

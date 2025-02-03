@@ -6,6 +6,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/rpc/code.pb.h>
 
+#include "db/principals.h"
 #include "db/tuplets.h"
 #include "encoding/b32.h"
 #include "err/errors.h"
@@ -141,6 +142,14 @@ rpcCreate::result_type Impl::call<rpcCreate>(
 		}
 	}
 
+	if (req.has_left_principal_id()) {
+		db::Principal::retrieve(ctx.meta(common::space_id_v), req.left_principal_id());
+	}
+
+	if (req.has_right_principal_id()) {
+		db::Principal::retrieve(ctx.meta(common::space_id_v), req.right_principal_id());
+	}
+
 	auto tuple = map(ctx, req);
 	tuple.store();
 
@@ -238,10 +247,22 @@ rpcDelete::result_type Impl::call<rpcDelete>(
 	if (auto r = db::Tuple::lookup(
 			ctx.meta(common::space_id_v), left, right, req.relation(), req.strand());
 		r) {
-		db::Tuple::discard(r->id());
+		db::Tuple::discard(ctx.meta(common::space_id_v), r->id());
+	} else {
+		throw err::RpcRelationsNotFound();
 	}
 
 	return {grpcxx::status::code_t::ok, rpcDelete::response_type()};
+}
+
+template <>
+rpcDeleteById::result_type Impl::call<rpcDeleteById>(
+	grpcxx::context &ctx, const rpcDeleteById::request_type &req) {
+	if (auto r = db::Tuple::discard(ctx.meta(common::space_id_v), req.id()); r == false) {
+		throw err::RpcRelationsNotFound();
+	}
+
+	return {grpcxx::status::code_t::ok, rpcDeleteById::response_type()};
 }
 
 template <>
@@ -340,17 +361,20 @@ google::rpc::Status Impl::exception() noexcept {
 
 	try {
 		std::rethrow_exception(std::current_exception());
+	} catch (const err::DbPrincipalNotFound &e) {
+		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
 	} catch (const err::DbTupleAlreadyExists &e) {
 		status.set_code(google::rpc::ALREADY_EXISTS);
 		status.set_message(std::string(e.str()));
 	} catch (const err::DbTupleInvalidData &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
 		status.set_message(std::string(e.str()));
-	} catch (const err::DbTupleInvalidKey &e) {
-		status.set_code(google::rpc::INVALID_ARGUMENT);
-		status.set_message(std::string(e.str()));
 	} catch (const err::RpcRelationsInvalidStrategy &e) {
 		status.set_code(google::rpc::INVALID_ARGUMENT);
+		status.set_message(std::string(e.str()));
+	} catch (const err::RpcRelationsNotFound &e) {
+		status.set_code(google::rpc::NOT_FOUND);
 		status.set_message(std::string(e.str()));
 	} catch (const std::exception &e) {
 		status.set_code(google::rpc::INTERNAL);

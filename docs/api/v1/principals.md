@@ -175,14 +175,17 @@ rpc Update(PrincipalsUpdateRequest) returns (Principal);
 
 ### PrincipalsDeleteRequest
 
-| Field   | Type      | Description |
-| ------- | --------- | ----------- |
-| id      | `string`  | |
+| Field      | Type                | Description |
+| ---------- | ------------------- | ----------- |
+| id         | `string`            | |
+| cost_limit | (optional) `uint32` | A value between `1` and `65535` to limit the delete cost (default `1000`). |
 
 ### PrincipalsDeleteResponse
 
-| Field   | Type                | Description |
-| ------- | ------------------- | ----------- |
+| Field            | Type       | Description |
+| ---------------- | -----------| ----------- |
+| cost             | `int32`    | Delete cost. A negative cost indicates the delete cost exceeded the limit and the delete action was aborted. |
+| failed_tuple_ids | `[]string` | List of relation tuple ids that were referencing the deleted principal but failed to delete. The caller _must_ delete these tuples to ensure data consistency. |
 
 ### PrincipalsListRequest
 

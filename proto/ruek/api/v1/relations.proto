@@ -8,6 +8,7 @@ service Relations {
 	rpc Check(RelationsCheckRequest) returns (RelationsCheckResponse);
 	rpc Create(RelationsCreateRequest) returns (RelationsCreateResponse);
 	rpc Delete(RelationsDeleteRequest) returns (RelationsDeleteResponse);
+	rpc DeleteById(RelationsDeleteByIdRequest) returns (RelationsDeleteByIdResponse);
 	rpc ListLeft(RelationsListLeftRequest) returns (RelationsListLeftResponse);
 	rpc ListRight(RelationsListRightRequest) returns (RelationsListRightResponse);
 }
@@ -148,6 +149,12 @@ message RelationsDeleteRequest {
 }
 
 message RelationsDeleteResponse {}
+
+message RelationsDeleteByIdRequest {
+	string id = 1;
+}
+
+message RelationsDeleteByIdResponse {}
 
 message RelationsListLeftRequest {
 	oneof right {
