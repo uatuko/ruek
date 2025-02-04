@@ -2,10 +2,10 @@
 #
 
 # build
-.build
+.build/
 
 # local settings
-.local.env
+.env.local
 .vscode/
 
 # temporary files
