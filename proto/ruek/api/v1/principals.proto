@@ -34,7 +34,7 @@ message PrincipalsDeleteRequest {
 	string id = 1;
 
 	// Limits the delete cost. The value must be within `1` and `65535`. Defaults to `1000`.
-	optional uint32 cost_limit = 7;
+	optional uint32 cost_limit = 2;
 }
 
 message PrincipalsDeleteResponse {
